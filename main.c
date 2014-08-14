@@ -11,15 +11,14 @@ main(int argc,char **argv)
 	t = trie_new();
 
 	trie_insert(t, "A");
-	trie_insert(t, "B");
-	/*
-	trie_insert(t, "ActiveRecord::Base");
-	trie_insert(t, "ActiveRecord::Persistance");
-	*/
+	trie_insert(t, "AB");
+	trie_insert(t, "ABC");
+	trie_insert(t, "ACB");
+	trie_insert(t, "BCA");
 
 	if ((str = calloc(64, sizeof(str))) == NULL)
 		err(1, "calloc");
-	trie_print(t, str, 64);
+	str = trie_print(t, str, 64);
 	free(str);
 	trie_free(t);
 

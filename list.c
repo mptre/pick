@@ -32,20 +32,25 @@ list_free(struct list *l)
 }
 
 void
-list_print(struct list *l, char *str, int maxlen)
+list_print(struct list *l, char *buf, int maxlen)
 {
-	char *lstr;
+	char *brbuf;
 
 	if (l == NULL)
 		return;
 
-	if ((lstr = strdup(str)) == NULL)
-		err(1, "strdup");
+	/*
+	 * When branching into the next child of the children trie list, the
+	 * branch has to have it's own copy of the buffer to avoid
+	 * interference between branches.
+	 */
+	if ((brbuf = calloc(maxlen, sizeof(brbuf))) == NULL)
+		err(1, "calloc");
+	strcpy(brbuf, buf);
+	brbuf = trie_print(l->value, brbuf, maxlen);
+	free(brbuf);
 
-	trie_print(l->value, lstr, maxlen);
-	list_print(l->next, lstr, maxlen);
-
-	free(lstr);
+	list_print(l->next, buf, maxlen);
 }
 
 void

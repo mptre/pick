@@ -30,17 +30,17 @@ trie_free(struct trie *t)
 	free(t);
 }
 
-void
+char *
 trie_print(struct trie *t, char *str, int maxlen)
 {
 	int len;
 
 	if (t == NULL)
-		return;
+		return str;
 
 	if ((len = strlen(str)) == maxlen - 1) {
                 maxlen = 2 * maxlen;
-                if ((realloc(str, maxlen)) == NULL)
+                if ((str = realloc(str, maxlen * sizeof(str))) == NULL)
 			err(1, "realloc");
 	}
 
@@ -50,16 +50,12 @@ trie_print(struct trie *t, char *str, int maxlen)
 		printf("%s\n", str);
 	else 
 		list_print(t->children, str, maxlen);
+
+	return str;
 }
 
 void
 trie_insert(struct trie *t, char *str)
 {
-	if (str[0] == '\0')
-		return;
-
-	if (t->children == NULL)
-		t->children = list_new();
-
 	list_insert(t->children, str);
 }
