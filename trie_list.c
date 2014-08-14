@@ -32,32 +32,32 @@ trie_list_free(struct trie_list *l)
 }
 
 char *
-_trie_print(struct trie *t, char *str, int maxlen)
+_trie_print(struct trie *t, char *buf, int bufsize)
 {
 	int len;
 
 	if (t == NULL)
-		return str;
+		return buf;
 
-	if ((len = strlen(str)) == maxlen - 1) {
-                maxlen = 2 * maxlen;
-                if ((str = realloc(str, maxlen * sizeof(str))) == NULL)
+	if ((len = strlen(buf)) == bufsize - 1) {
+                bufsize = 2 * bufsize;
+                if ((buf = realloc(buf, bufsize * sizeof(buf))) == NULL)
 			err(1, "realloc");
 	}
 
-	str[len] = t->ch;
+	buf[len] = t->ch;
 
-	if (str[len] == '\0')
-		printf("%s\n", str);
+	if (buf[len] == '\0')
+		printf("%s\n", buf);
 	else 
-		trie_list_print(t->children, str, maxlen);
+		trie_list_print(t->children, buf, bufsize);
 
-	return str;
+	return buf;
 }
 
 
 void
-trie_list_print(struct trie_list *l, char *buf, int maxlen)
+trie_list_print(struct trie_list *l, char *buf, int bufsize)
 {
 	char *brbuf;
 
@@ -69,13 +69,62 @@ trie_list_print(struct trie_list *l, char *buf, int maxlen)
 	 * branch has to have it's own copy of the buffer to avoid
 	 * interference between branches.
 	 */
-	if ((brbuf = calloc(maxlen, sizeof(brbuf))) == NULL)
+	if ((brbuf = calloc(bufsize, sizeof(brbuf))) == NULL)
 		err(1, "calloc");
 	strcpy(brbuf, buf);
-	brbuf = _trie_print(l->trie, brbuf, maxlen);
+	brbuf = _trie_print(l->trie, brbuf, bufsize);
 	free(brbuf);
 
-	trie_list_print(l->next, buf, maxlen);
+	trie_list_print(l->next, buf, bufsize);
+}
+
+struct str_list *
+_trie_all_strs(struct trie *t, char *buf, int bufsize, struct str_list *sl)
+{
+	int len;
+
+	if (t == NULL)
+		return sl;
+
+	len = strlen(buf);
+
+	buf[len] = t->ch;
+
+	if (buf[len] == '\0') {
+		if ((sl->str = strdup(buf)) == NULL)
+			err(1, "strdup");
+		sl->next = str_list_new();
+		sl = sl->next;
+	} else  {
+		sl = trie_list_all_strs(t->children, buf, bufsize, sl);
+	}
+
+	return sl;
+}
+
+struct str_list *
+trie_list_all_strs(struct trie_list *l, char *buf, int bufsize, struct str_list *sl)
+{
+	char *brbuf;
+	int len;
+
+	if (l == NULL)
+		return sl;
+
+	/*
+	 * When branching into the next child of the children trie list, the
+	 * branch has to have it's own copy of the buffer to avoid
+	 * interference between branches.
+	 */
+	if ((len = strlen(buf)) == bufsize - 1)
+                bufsize = 2 * bufsize;
+	if ((brbuf = calloc(bufsize, sizeof(char))) == NULL)
+		err(1, "calloc");
+	strcpy(brbuf, buf);
+	sl = _trie_all_strs(l->trie, brbuf, bufsize, sl);
+	free(brbuf);
+
+	return trie_list_all_strs(l->next, buf, bufsize, sl);
 }
 
 void
