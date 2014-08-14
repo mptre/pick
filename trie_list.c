@@ -91,10 +91,10 @@ _trie_all_strs(struct trie *t, char *buf, int bufsize, struct str_list *sl)
 	buf[len] = t->ch;
 
 	if (buf[len] == '\0') {
-		if ((sl->str = strdup(buf)) == NULL)
-			err(1, "strdup");
 		sl->next = str_list_new();
 		sl = sl->next;
+		if ((sl->str = strdup(buf)) == NULL)
+			err(1, "strdup");
 	} else  {
 		sl = trie_list_all_strs(t->children, buf, bufsize, sl);
 	}

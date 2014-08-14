@@ -53,13 +53,21 @@ struct str_list *
 trie_all_strs(struct trie *t)
 {
 	char *buf;
+	struct str_list *head;
 	struct str_list *l;
 
-	l = str_list_new();
 	if ((buf = calloc(bufsize, sizeof(char))) == NULL)
 		err(1, "calloc");
-	trie_list_all_strs(t->children, buf, bufsize, l);
+	head = str_list_new();
+	trie_list_all_strs(t->children, buf, bufsize, head);
 	free(buf);
+
+	/*
+	 * head->str is set filled in trie_list_all_strs and is therefore cut
+	 * off and freed.
+	 */
+	l = head->next;
+	free(head);
 
 	return l;
 }

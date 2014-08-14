@@ -21,7 +21,7 @@ str_list_new()
 void
 str_list_print(struct str_list *l)
 {
-	if (l == NULL || l->str == NULL)
+	if (l == NULL)
 		return;
 
 	printf("%s\n", l->str);
