@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "list.h"
+#include "trie_list.h"
 #include "trie.h"
+
+static const int bufsize = 64;
 
 struct trie *
 trie_new()
@@ -14,8 +16,7 @@ trie_new()
 	if ((root = malloc(sizeof(struct trie))) == NULL)
 		err(1, "malloc");
 
-	root->ch = 'r';
-	root->children = list_new();
+	root->children = trie_list_new();
 
 	return root;
 }
@@ -26,36 +27,23 @@ trie_free(struct trie *t)
 	if (t == NULL)
 		return;
 
-	list_free(t->children);
+	trie_list_free(t->children);
 	free(t);
 }
 
-char *
-trie_print(struct trie *t, char *str, int maxlen)
+void
+trie_print(struct trie *t)
 {
-	int len;
+	char *buf;
 
-	if (t == NULL)
-		return str;
-
-	if ((len = strlen(str)) == maxlen - 1) {
-                maxlen = 2 * maxlen;
-                if ((str = realloc(str, maxlen * sizeof(str))) == NULL)
-			err(1, "realloc");
-	}
-
-	str[len] = t->ch;
-
-	if (str[len] == '\0')
-		printf("%s\n", str);
-	else 
-		list_print(t->children, str, maxlen);
-
-	return str;
+	if ((buf = calloc(bufsize, sizeof(buf))) == NULL)
+		err(1, "calloc");
+	trie_list_print(t->children, buf, bufsize);
+	free(buf);
 }
 
 void
 trie_insert(struct trie *t, char *str)
 {
-	list_insert(t->children, str);
+	trie_list_insert(t->children, str);
 }

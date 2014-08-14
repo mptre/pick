@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <err.h>
+
 #include "trie.h"
 
 int
 main(int argc,char **argv)
 {
 	struct trie *t;
-	char *str;
 	
 	t = trie_new();
 
@@ -16,10 +16,7 @@ main(int argc,char **argv)
 	trie_insert(t, "ACB");
 	trie_insert(t, "BCA");
 
-	if ((str = calloc(64, sizeof(str))) == NULL)
-		err(1, "calloc");
-	str = trie_print(t, str, 64);
-	free(str);
+	trie_print(t);
 	trie_free(t);
 
 	return 0;

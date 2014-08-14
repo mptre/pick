@@ -1,16 +1,16 @@
 #ifndef TRIE_H
 #define TRIE_H
 
-#include "list.h"
+#include "trie_list.h"
 
 struct trie {
 	char ch;
-	struct list *children;
+	struct trie_list *children;
 };
 
 struct trie	*trie_new();
 void		 trie_free(struct trie *);
-char		*trie_print(struct trie *, char *, int);
+void		 trie_print(struct trie *);
 void		 trie_insert(struct trie *, char *);
 
 #endif /* TRIE_H */
