@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <err.h>
 
-#include "trie.h"
+#include "io.h"
 #include "str_list.h"
+#include "trie.h"
 
 int
 main(int argc,char **argv)
@@ -11,7 +12,7 @@ main(int argc,char **argv)
 	struct trie *t;
 	struct str_list *l;
 	
-	t = trie_new();
+	t = read_choices();
 
 	trie_insert(t, "A");
 	trie_insert(t, "AB");
