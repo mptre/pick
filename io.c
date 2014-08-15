@@ -1,29 +1,37 @@
+#include <err.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "io.h"
 #include "trie.h"
 
 void
-chomp(char *str)
+chomp(char *str, ssize_t len)
 {
-	int last;
-	last = strlen(str) - 1;
-	if (str[last] == '\n')
-		str[last] = '\0';
+	if (str[len - 1] == '\n')
+		str[len - 1] = '\0';
 }
 
 struct trie *
 read_choices()
 {
 	struct trie *t;
-	char string[80];
+	char *line;
+	size_t n;
+	ssize_t len;
 
 	t = trie_new();
-	while (fgets(string, 80, stdin) != NULL) {
-		chomp(string);
-		trie_insert(t, string);
+	for (;;) {
+		line = NULL;
+		n = 0;
+		if ((len = getline(&line, &n, stdin)) == -1)
+			break;
+		chomp(line, len);
+		trie_insert(t, line);
+		free(line);
 	}
 
+	free(line);
 	return t;
 }
