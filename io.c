@@ -33,7 +33,7 @@ read_choices()
 		if ((len = getline(&line, &n, stdin)) == -1)
 			break;
 		chomp(line, len);
-		c = choice_new(line, 0);
+		c = choice_new(line, 1);
 		SLIST_INSERT_HEAD(cs, c, choices);
 		free(line);
 	}

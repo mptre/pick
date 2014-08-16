@@ -17,12 +17,8 @@ main(int argc,char **argv)
 
 	cs = read_choices();
 
-	choices_score(cs, "ab");
-	choices_sort(cs);
-
 	sel = run_ui(cs);
 	printf("%s\n", sel);
-	free(sel);
 
 	while (!SLIST_EMPTY(cs)) {
 		np = SLIST_FIRST(cs);
