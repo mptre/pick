@@ -1,10 +1,10 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <bsd/sys/queue.h>
 
 #include "io.h"
-#include "trie.h"
+#include "choice.h"
 
 void
 chomp(char *str, ssize_t len)
@@ -13,25 +13,31 @@ chomp(char *str, ssize_t len)
 		str[len - 1] = '\0';
 }
 
-struct trie *
+struct choices *
 read_choices()
 {
-	struct trie *t;
+	struct choices *cs;
+	struct choice *c;
 	char *line;
 	size_t n;
 	ssize_t len;
 
-	t = trie_new();
+	if ((cs = malloc(sizeof(struct choices))) == NULL)
+		err(1, "malloc");
+
+	SLIST_INIT(cs);
+
 	for (;;) {
 		line = NULL;
 		n = 0;
 		if ((len = getline(&line, &n, stdin)) == -1)
 			break;
 		chomp(line, len);
-		trie_insert(t, line);
+		c = choice_new(line, 0);
+		SLIST_INSERT_HEAD(cs, c, choices);
 		free(line);
 	}
 
 	free(line);
-	return t;
+	return cs;
 }

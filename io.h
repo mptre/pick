@@ -1,8 +1,8 @@
 #ifndef IO_H
 #define IO_H
 
-#include "trie.h"
+#include "choice.h"
 
-struct trie	*read_choices();
+struct choices  *read_choices();
 
 #endif /* IO_H */

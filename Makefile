@@ -1,8 +1,8 @@
 %.o: %.c
 	gcc -g -Wall -Wextra -pedantic-errors -Wno-unused-parameter -Werror -c $<
 
-pick: main.o str_list.o trie_list.o trie.o io.o
-	gcc $^ -o $@
+pick: main.o choice.o io.o ui.o
+	gcc $^ -lform -lmenu -lncurses -o $@
 
 clean:
 	rm -f *.o pick

@@ -1,35 +1,37 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <err.h>
+#include <stdlib.h>
+#include <string.h>
+#include <bsd/sys/queue.h>
 
+#include "choice.h"
 #include "io.h"
-#include "str_list.h"
-#include "trie.h"
+#include "ui.h"
 
 int
 main(int argc,char **argv)
 {
-	struct trie *t;
-	struct str_list *l;
-	
-	t = read_choices();
 
-	trie_insert(t, "A");
-	trie_insert(t, "AB");
-	trie_insert(t, "ABC");
-	trie_insert(t, "ACB");
-	trie_insert(t, "BCA");
+	struct choices *cs;
+	char *sel;
+	struct choice *np;
 
-	trie_print(t);
+	cs = read_choices();
 
-	printf("---------------------------\n");
+	choices_score(cs, "ab");
+	choices_sort(cs);
 
-	l = trie_all_strs(t);
+	sel = run_ui(cs);
+	printf("%s\n", sel);
+	free(sel);
 
-	str_list_print(l); 
+	while (!SLIST_EMPTY(cs)) {
+		np = SLIST_FIRST(cs);
+		SLIST_REMOVE_HEAD(cs, choices);
+		free(np->str);
+		free(np);
+	}
 
-	str_list_free(l);
-	trie_free(t);
+	free(cs);
 
 	return 0;
 }
