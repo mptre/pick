@@ -13,22 +13,35 @@
 #include "choices.h"
 #include "ui.h"
 
+int stdoutfd;
+
 void
 start_curses()
 {
-    freopen("/dev/tty", "r", stdin);
-    setlocale(LC_ALL, "");
-    initscr();
-    cbreak();
-    noecho();
-    intrflush(stdscr, FALSE);
-    keypad(stdscr, TRUE);
+	int fd;
+
+	freopen("/dev/tty", "r", stdin);
+	setlocale(LC_ALL, "");
+	fflush(stdout);
+	stdoutfd = dup(STDOUT_FILENO);
+	fd = open("/dev/tty", O_WRONLY);
+	dup2(fd, STDOUT_FILENO);
+	close(fd);
+	initscr();
+	cbreak();
+	noecho();
+	intrflush(stdscr, FALSE);
+	keypad(stdscr, TRUE);
 }
 
 void
 stop_curses()
 {
-    endwin();
+
+	endwin();
+	fflush(stdout);
+	dup2(stdoutfd, STDOUT_FILENO);
+	close(stdoutfd);
 }
 
 void
@@ -160,7 +173,7 @@ get_selected(struct choices *cs)
 			size += size;
 			if ((query = realloc(query, size * sizeof(char))) == NULL)
 				err(1, "realloc");
-	    	}
+		}
 		put_line(0, query, len, 0);
 		vis_choices = put_choices(cs, sel);
 		move(0, pos);
