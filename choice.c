@@ -35,8 +35,10 @@ match_len(char *str, char *query)
 				for (;; ++x) {
 					if (str[x] == '\0')
 						return len;
-					if (tolower(str[x]) == tolower(query[j]))
+					if (tolower(str[x]) == tolower(query[j])) {
+						++x;
 						break;
+					}
 				}
 			if (len == 0 || len > x - i + 1)
 				len = x - i + 1;
