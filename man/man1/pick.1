@@ -1,0 +1,48 @@
+.Dd August 17, 2014
+.Dt PICK 1
+.Os
+.Sh NAME
+.Nm pick
+.Nd fuzzy select anything
+.Sh SYNOPSIS
+.Nm pick
+.Sh DESCRIPTION
+.Nm pick
+allows users to select from set of choices using an
+.Xr ncurses 3X
+interface with fuzzy search functionality.
+.Pp
+.Nm pick
+accepts a list of choices as input and produces the selected choice as output.
+.Pp
+The
+.Nm pick
+.Xr ncurses 3X
+interface is operated with the following keys:
+.Bl -tag
+.It Ic "Printable characters"
+Printable characters are added to the search query input field and will refine
+the current search query.
+.It Ic "Left\&/Right"
+Move the cursor left and right in the search query input field.
+.It Ic Backspace
+Delete one character to the left of the cursor in the search query input field.
+.It Ic "Up\&/Down"
+Select between choices matching the current search query.
+.It Ic Enter
+Output the currently selected choice and exit.
+.El
+.Sh EXAMPLES
+.Nm pick
+can be used to select anything and is very effective when combined with utilites
+like
+.Xr xargs 1 .
+.Pp
+Select a file in the current directory to open using
+.Xr xdg-open 1 :
+.Bd -literal -offset indent
+find -type f | pick | xargs xdg-open
+.Ed
+.Sh AUTHORS
+.An "Calle Erlandsson" Aq calle@thoughtbot.com
+.An "thoughtbot" Aq hello@thoughtbot.com
