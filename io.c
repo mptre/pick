@@ -5,6 +5,7 @@
 
 #include "io.h"
 #include "choice.h"
+#include "choices.h"
 
 void
 chomp(char *str, ssize_t len)
@@ -14,7 +15,7 @@ chomp(char *str, ssize_t len)
 }
 
 struct choices *
-read_choices()
+get_choices()
 {
 	struct choices *cs;
 	struct choice *c;
@@ -40,4 +41,10 @@ read_choices()
 
 	free(line);
 	return cs;
+}
+
+void
+put_choice(struct choice *c)
+{
+	printf("%s\n", c->str);
 }

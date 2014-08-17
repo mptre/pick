@@ -2,7 +2,8 @@
 #define UI_H
 
 #include "choice.h"
+#include "choices.h"
 
-char    *run_ui(struct choices *);
+struct choice    *get_selected(struct choices *);
 
 #endif /* UI_H */

@@ -9,10 +9,7 @@ struct choice {
     SLIST_ENTRY(choice) choices;          /* List. */
 };
 
-SLIST_HEAD(choices, choice);
-
 struct choice   *choice_new(char *, float);
-void             choices_score(struct choices *, char *);
-void             choices_sort(struct choices *);
+void             choice_free(struct choice *);
 
 #endif /* CHOICHE_H */
