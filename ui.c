@@ -112,7 +112,7 @@ run_ui(struct choices *cs)
 	while((ch = getch()) != ERR) {
 		switch(ch) {
 		case 10: /* Enter */
-			if (nchoices > 1) {
+			if (nchoices > 0) {
 				free_ui();
 				free(q);
 				return sel_choice(cs, sel)->str;
