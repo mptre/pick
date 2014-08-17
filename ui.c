@@ -31,19 +31,72 @@ free_ui()
     endwin();
 }
 
+void
+mvaddln(int y, char *str, int len, int so)
+{
+	if (so)
+		standout();
+	if (len > 0)
+		mvaddstr(y, 0, str);
+	move(y, len);
+	for (; len < COLS; ++len)
+		addch(' ');
+	if (so)
+		standend();
+}
+
+int
+draw_choices(struct choices *cs, int sel)
+{
+	struct choice *c;
+	int nchoices;
+	int i;
+
+	nchoices = 0;
+	SLIST_FOREACH(c, cs, choices) {
+		if (nchoices + 1 == LINES)
+			break;
+		if (c->score > 0) {
+			mvaddln(nchoices + 1, c->str, strlen(c->str), nchoices == sel);
+			++nchoices;
+		}
+	}
+	for (i = nchoices; i < LINES; ++i)
+		mvaddln(i + 1, "", 0, 0);
+
+	return nchoices;
+}
+
+struct choice *
+sel_choice(struct choices *cs, int sel)
+{
+	struct choice *c;
+	int i;
+
+	i = 0;
+	SLIST_FOREACH(c, cs, choices) {
+		if (c->score > 0) {
+			if (i == sel) {
+				return c;
+			}
+			++i;
+		}
+	}
+	return NULL;
+}
+
 char *
 run_ui(struct choices *cs)
 {
-	struct choice *c;
 	int ch;
 	char *q;
 	size_t pos;
 	size_t size;
 	size_t len;
 	int sel;
-	int i;
+	int nchoices;
 
-	size = 3;
+	size = 64;
 	if ((q = calloc(size, sizeof(char))) == NULL)
 		err(1, "calloc");
 
@@ -52,30 +105,20 @@ run_ui(struct choices *cs)
 	sel = 0;
 
 	init_ui();
-	i = 0;
-	SLIST_FOREACH(c, cs, choices) {
-		if (i + 1 == LINES)
-			break;
-		if (c->score > 0) {
-			if (i == sel)
-				standout();
-			mvaddstr(i + 1, 0, c->str);
-			if (i == sel)
-				standend();
-			++i;
-		}
-	}
+	nchoices = draw_choices(cs, sel);
 	move(0, pos);
 	refresh();
 
 	while((ch = getch()) != ERR) {
 		switch(ch) {
 		case 10: /* Enter */
-			free_ui();
-			free(q);
-			return "picked";
+			if (nchoices > 1) {
+				free_ui();
+				free(q);
+				return sel_choice(cs, sel)->str;
+			}
 		case KEY_DOWN:
-			if (sel < LINES - 2)
+			if (sel < nchoices - 1)
 				++sel;
 			break;
 		case KEY_UP:
@@ -90,13 +133,14 @@ run_ui(struct choices *cs)
 			if (pos < len)
 				++pos;
 			break;
-		case 127:
+		case 127: /* Backspace */
 			if (pos > 0) {
 				memmove(q + pos - 1, q + pos, len - pos + 1);
 				--pos;
 				--len;
 				choices_score(cs, q);
 				choices_sort(cs);
+				sel = 0;
 			}
 			break;
 		default:
@@ -107,6 +151,7 @@ run_ui(struct choices *cs)
 				q[++len] = '\0';
 				choices_score(cs, q);
 				choices_sort(cs);
+				sel = 0;
 			}
 			break;
 		}
@@ -115,27 +160,8 @@ run_ui(struct choices *cs)
 			if ((q = realloc(q, size * sizeof(char))) == NULL)
 				err(1, "realloc");
 	    	}
-		if (len > 0)
-			mvaddstr(0, 0, q);
-		move(0, len);
-		for (i = len; i < COLS; ++i)
-			addch(' ');
-		i = 0;
-		SLIST_FOREACH(c, cs, choices) {
-			if (i + 1 == LINES)
-				break;
-			if (c->score > 0) {
-				if (i == sel)
-					standout();
-				mvaddstr(i + 1, 0, c->str);
-				if (i == sel)
-					standend();
-				++i;
-			}
-		}
-		for (; i < LINES; ++i)
-			mvaddstr(i + 1, 0, "                               ");
-
+		mvaddln(0, q, len, 0);
+		nchoices = draw_choices(cs, sel);
 		move(0, pos);
 		refresh();
 	}
