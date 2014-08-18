@@ -33,20 +33,25 @@ Supply the `-v` option to display the version of `pick` that is running.
 The `pick` `ncurses(3X)` interface is operated with the following keys:
 
 * <kbd>Printable characters</kbd>
+
   Printable characters are added to the search query input field and will refine
   the current search query.
 
 * <kbd>Left</kbd>/<kbd>Right</kbd>
+
   Move the cursor left and right in the search query input field.
 
 * <kbd>Backspace</kbd>
+
   Delete one character to the left of the cursor in the search query input
   field.
 
 * <kbd>Up</kbd>/<kbd>Down</kbd>
+
   Select between choices matching the current search query.
 
 * <kbd>Enter</kbd>
+
   Output the currently selected choice and exit.
 
 `pick` can be used to select anything and is very effective when combined with
