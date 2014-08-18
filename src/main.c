@@ -37,7 +37,7 @@ main(int argc,char **argv)
 void
 usage()
 {
-	fprintf(stderr, "usage: pick [-h]\n");
+	fprintf(stderr, "usage: pick [-h] [-v]\n");
 	fprintf(stderr, "    -h      display this help message and exit\n");
 	fprintf(stderr, "    -v      display the version and exit\n");
 	exit(EX_USAGE);
