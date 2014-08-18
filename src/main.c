@@ -4,10 +4,12 @@
 #include <unistd.h>
 
 #include "choices.h"
+#include "config.h"
 #include "io.h"
 #include "ui.h"
 
 void usage();
+void version();
 
 int
 main(int argc,char **argv)
@@ -15,8 +17,10 @@ main(int argc,char **argv)
 	int ch;
 	struct choices *cs;
 
-	while ((ch = getopt(argc, argv, "h")) != -1)
+	while ((ch = getopt(argc, argv, "hv")) != -1)
 		switch (ch) {
+		case 'v':
+			version();
 		default:
 			usage();
 		}
@@ -35,5 +39,13 @@ usage()
 {
 	fprintf(stderr, "usage: pick [-h]\n");
 	fprintf(stderr, "    -h      display this help message and exit\n");
+	fprintf(stderr, "    -v      display the version and exit\n");
 	exit(EX_USAGE);
+}
+
+void
+version()
+{
+	printf("%s\n", PACKAGE_VERSION);
+	exit(EX_OK);
 }
