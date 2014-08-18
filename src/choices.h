@@ -1,7 +1,11 @@
 #ifndef CHOICES_H
 #define CHOICES_H
 
-#include <bsd/sys/queue.h>
+#ifdef HAVE_FULL_QUEUE_H
+#include <sys/queue.h>
+#else /* HAVE_FULL_QUEUE_H */
+#include "compat/queue.h"
+#endif /* HAVE_FULL_QUEUE_H */
 
 #include "choice.h"
 

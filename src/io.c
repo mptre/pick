@@ -1,7 +1,12 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <bsd/sys/queue.h>
+
+#ifdef HAVE_FULL_QUEUE_H
+#include <sys/queue.h>
+#else /* HAVE_FULL_QUEUE_H */
+#include "compat/queue.h"
+#endif /* HAVE_FULL_QUEUE_H */
 
 #include "io.h"
 #include "choice.h"

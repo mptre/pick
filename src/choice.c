@@ -1,4 +1,3 @@
-#include <bsd/sys/queue.h>
 #include <ctype.h>
 #include <err.h>
 #include <stdlib.h>
