@@ -20,7 +20,7 @@ Installation
 Usage
 -----
 
-    pick [-h] [-v]
+    pick [-h] [-v] [-q QUERY]
 
 `pick` accepts a list of choices as input and produces the selected choice as
 output.
@@ -29,6 +29,8 @@ Supply the `-h` option to display a usage message with a list of the available
 options.
 
 Supply the `-v` option to display the version of `pick` that is running.
+
+Supply the `-q` option and a string to pre-populate the search query.
 
 The `pick` `ncurses(3X)` interface is operated with the following keys:
 

@@ -105,27 +105,35 @@ selected(struct choices *cs, int sel)
 }
 
 struct choice *
-get_selected(struct choices *cs)
+get_selected(struct choices *cs, char *initial_query)
 {
 	int ch;
 	char *query;
-	size_t pos;
-	size_t size;
-	size_t len;
+	size_t query_pos;
+	size_t query_size;
+	size_t query_len;
+	size_t initial_query_len;
 	int sel;
 	int vis_choices;
 
-	size = 64;
-	if ((query = calloc(size, sizeof(char))) == NULL)
+	initial_query_len = strlen(initial_query);
+	query_size = 64;
+	if (query_size < initial_query_len + 1)
+		query_size = initial_query_len + 1;
+	if ((query = calloc(query_size, sizeof(char))) == NULL)
 		err(1, "calloc");
+	strcpy(query, initial_query);
 
-	pos = 0;
-	len = 0;
+	query_pos = initial_query_len;
+	query_len = initial_query_len;
 	sel = 0;
 
+	choices_score(cs, query);
+	choices_sort(cs);
 	start_curses();
+	put_line(0, query, query_len, 0);
 	vis_choices = put_choices(cs, sel);
-	move(0, pos);
+	move(0, query_pos);
 	refresh();
 
 	while((ch = getch()) != ERR) {
@@ -145,18 +153,21 @@ get_selected(struct choices *cs)
 				--sel;
 			break;
 		case KEY_LEFT:
-			if (pos > 0)
-				--pos;
+			if (query_pos > 0)
+				--query_pos;
 			break;
 		case KEY_RIGHT:
-			if (pos < len)
-				++pos;
+			if (query_pos < query_len)
+				++query_pos;
 			break;
 		case 127: /* Backspace */
-			if (pos > 0) {
-				memmove(query + pos - 1, query + pos, len - pos + 1);
-				--pos;
-				--len;
+			if (query_pos > 0) {
+				memmove(
+				    query + query_pos - 1,
+				    query + query_pos,
+				    query_len - query_pos + 1);
+				--query_pos;
+				--query_len;
 				choices_score(cs, query);
 				choices_sort(cs);
 				sel = 0;
@@ -164,24 +175,29 @@ get_selected(struct choices *cs)
 			break;
 		default:
 			if (ch > 31 && ch < 127) { /* Printable chars */
-				if (pos < len)
-					memmove(query + pos + 1, query + pos, len - pos);
-				query[pos++] = ch;
-				query[++len] = '\0';
+				if (query_pos < query_len)
+					memmove(
+					    query + query_pos + 1,
+					    query + query_pos,
+					    query_len - query_pos);
+				query[query_pos++] = ch;
+				query[++query_len] = '\0';
 				choices_score(cs, query);
 				choices_sort(cs);
 				sel = 0;
 			}
 			break;
 		}
-		if (len == size - 1) {
-			size += size;
-			if ((query = realloc(query, size * sizeof(char))) == NULL)
+		if (query_len == query_size - 1) {
+			query_size += query_size;
+			if ((query = realloc(
+					    query,
+					    query_size * sizeof(char))) == NULL)
 				err(1, "realloc");
 		}
-		put_line(0, query, len, 0);
+		put_line(0, query, query_len, 0);
 		vis_choices = put_choices(cs, sel);
-		move(0, pos);
+		move(0, query_pos);
 		refresh();
 	}
 
