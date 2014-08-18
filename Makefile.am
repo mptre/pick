@@ -1,2 +1,6 @@
 AUTOMAKE_OPTIONS=foreign
 SUBDIRS=src man
+EXTRA_DIST=INSTALL.md INSTALL.md.in
+
+INSTALL.md: INSTALL.md.in
+	sed -e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $@.in > $@
