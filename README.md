@@ -20,10 +20,13 @@ Installation
 Usage
 -----
 
-    pick
+    pick [-h]
 
 `pick` accepts a list of choices as input and produces the selected choice as
 output.
+
+Supply the `-h` option to display a usage message with a list of the available
+options.
 
 The `pick` `ncurses(3X)` interface is operated with the following keys:
 

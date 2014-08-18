@@ -6,6 +6,7 @@
 .Nd fuzzy select anything
 .Sh SYNOPSIS
 .Nm pick
+.Op Fl h
 .Sh DESCRIPTION
 .Nm pick
 allows users to select from a set of choices using an
@@ -14,6 +15,13 @@ interface with fuzzy search functionality.
 .Pp
 .Nm pick
 accepts a list of choices as input and produces the selected choice as output.
+.Pp
+.Nm pick
+supports these options and arguments:
+.Bl -tag
+.It Fl h
+display a help message and exit.
+.El
 .Pp
 The
 .Nm pick
