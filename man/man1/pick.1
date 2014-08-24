@@ -20,7 +20,7 @@ accepts a list of choices as input and produces the selected choice as output.
 .Pp
 .Nm pick
 supports these options and arguments:
-.Bl -tag
+.Bl -tag -width "\&-q QUERY"
 .It Fl h
 display a help message and exit.
 .It Fl v
@@ -33,18 +33,31 @@ The
 .Nm pick
 .Xr ncurses 3X
 interface is operated with the following keys:
-.Bl -tag
-.It Ic "Printable characters"
-Printable characters are added to the search query input field and will refine
-the current search query.
-.It Ic "Left\&/Right"
-Move the cursor left and right in the search query input field.
-.It Ic Backspace
-Delete one character to the left of the cursor in the search query input field.
+.Bl -tag -width Backspace
 .It Ic "Up\&/Down"
 Select between choices matching the current search query.
 .It Ic Enter
 Output the currently selected choice and exit.
+.It Ic "Printable characters"
+Printable characters are added to the search query input field and will refine
+the current search query.
+.It Ic "Left\&/Right or Ctrl\&-B\&/Ctrl\&-F"
+Move the cursor left and right in the search query input field.
+.It Ic "Ctrl\&-A"
+Move the cursor to the beginning of the line in the search query input field.
+.It Ic "Ctrl\&-E"
+Move the cursor to the end of the line in the search query input field.
+.It Ic Backspace
+Delete one character to the left of the cursor in the search query input field.
+.It Ic "Ctrl\&-D"
+Delete the character under the cursor in the search query input field.
+.It Ic "Ctrl\&-W"
+Delete to the beginning of the closest word to the left in the search query
+input field.
+.It Ic "Ctrl\&-U"
+Delete to the beginning of the line in the search query input field.
+.It Ic "Ctrl\&-K"
+Delete to the end of the line in the search query input field.
 .El
 .Sh EXAMPLES
 .Nm pick

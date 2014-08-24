@@ -18,6 +18,17 @@
 #include "choices.h"
 #include "ui.h"
 
+#define KEY_CTRL_A 1
+#define KEY_CTRL_B 2
+#define KEY_CTRL_D 4
+#define KEY_CTRL_E 5
+#define KEY_CTRL_F 6
+#define KEY_CTRL_K 11
+#define KEY_CTRL_U 21
+#define KEY_CTRL_W 23
+#define KEY_DEL 127
+#define KEY_REAL_ENTER 10 /* curses.h defines KEY_ENTER to be Ctrl-Enter */
+
 int stdoutfd;
 
 void
@@ -104,19 +115,39 @@ selected(struct choices *cs, int sel)
 	return NULL;
 }
 
+void
+filter_choices(struct choices *cs, char *query, int *sel)
+{
+	choices_score(cs, query);
+	choices_sort(cs);
+	*sel = 0;
+}
+
+void
+del_chars_between(char *str, size_t len, size_t start, size_t end)
+{
+	memmove(
+	    str + start,
+	    str + end,
+	    len - end + 1);
+}
+
 struct choice *
 get_selected(struct choices *cs, char *initial_query)
 {
 	int ch;
 	char *query;
-	size_t query_pos;
+	size_t cursor_pos;
 	size_t query_size;
 	size_t query_len;
 	size_t initial_query_len;
 	int sel;
 	int vis_choices;
+	int word_pos;
 
 	initial_query_len = strlen(initial_query);
+	cursor_pos = initial_query_len;
+	query_len = initial_query_len;
 	query_size = 64;
 	if (query_size < initial_query_len + 1)
 		query_size = initial_query_len + 1;
@@ -124,21 +155,17 @@ get_selected(struct choices *cs, char *initial_query)
 		err(1, "calloc");
 	strcpy(query, initial_query);
 
-	query_pos = initial_query_len;
-	query_len = initial_query_len;
-	sel = 0;
-
-	choices_score(cs, query);
-	choices_sort(cs);
+	filter_choices(cs, query, &sel);
 	start_curses();
+
 	put_line(0, query, query_len, 0);
 	vis_choices = put_choices(cs, sel);
-	move(0, query_pos);
+	move(0, cursor_pos);
 	refresh();
 
 	while((ch = getch()) != ERR) {
 		switch(ch) {
-		case 10: /* Enter */
+		case KEY_REAL_ENTER:
 			if (vis_choices > 0) {
 				stop_curses();
 				free(query);
@@ -152,39 +179,93 @@ get_selected(struct choices *cs, char *initial_query)
 			if (sel > 0)
 				--sel;
 			break;
+		case KEY_CTRL_B:
 		case KEY_LEFT:
-			if (query_pos > 0)
-				--query_pos;
+			if (cursor_pos > 0)
+				--cursor_pos;
 			break;
+		case KEY_CTRL_F:
 		case KEY_RIGHT:
-			if (query_pos < query_len)
-				++query_pos;
+			if (cursor_pos < query_len)
+				++cursor_pos;
 			break;
-		case 127: /* Backspace */
-			if (query_pos > 0) {
-				memmove(
-				    query + query_pos - 1,
-				    query + query_pos,
-				    query_len - query_pos + 1);
-				--query_pos;
+		case KEY_BACKSPACE:
+		case KEY_DEL:
+			if (cursor_pos > 0) {
+				del_chars_between(
+				    query,
+				    query_len,
+				    cursor_pos - 1,
+				    cursor_pos);
+				--cursor_pos;
 				--query_len;
-				choices_score(cs, query);
-				choices_sort(cs);
-				sel = 0;
+				filter_choices(cs, query, &sel);
 			}
+			break;
+		case KEY_CTRL_D:
+			if (cursor_pos < query_len) {
+				del_chars_between(
+				    query,
+				    query_len,
+				    cursor_pos,
+				    cursor_pos + 1);
+				--query_len;
+				filter_choices(cs, query, &sel);
+			}
+			break;
+		case KEY_CTRL_U:
+			del_chars_between(
+			    query,
+			    query_len,
+			    0,
+			    cursor_pos);
+			query_len -= cursor_pos;
+			cursor_pos = 0;
+			filter_choices(cs, query, &sel);
+			break;
+		case KEY_CTRL_K:
+			del_chars_between(
+			    query,
+			    query_len,
+			    cursor_pos + 1,
+			    query_len);
+			query_len = cursor_pos;
+			filter_choices(cs, query, &sel);
+			break;
+		case KEY_CTRL_W:
+			if (cursor_pos > 0) {
+				for (word_pos = cursor_pos - 1;
+				    word_pos > 0;
+				    --word_pos)
+					if (query[word_pos] != ' ' &&
+					    query[word_pos - 1] == ' ')
+						break;
+				del_chars_between(
+				    query,
+				    query_len,
+				    word_pos,
+				    cursor_pos);
+				query_len -= cursor_pos - word_pos;
+				cursor_pos = word_pos;
+				filter_choices(cs, query, &sel);
+			}
+			break;
+		case KEY_CTRL_A:
+			cursor_pos = 0;
+			break;
+		case KEY_CTRL_E:
+			cursor_pos = query_len;
 			break;
 		default:
 			if (ch > 31 && ch < 127) { /* Printable chars */
-				if (query_pos < query_len)
+				if (cursor_pos < query_len)
 					memmove(
-					    query + query_pos + 1,
-					    query + query_pos,
-					    query_len - query_pos);
-				query[query_pos++] = ch;
+					    query + cursor_pos + 1,
+					    query + cursor_pos,
+					    query_len - cursor_pos);
+				query[cursor_pos++] = ch;
 				query[++query_len] = '\0';
-				choices_score(cs, query);
-				choices_sort(cs);
-				sel = 0;
+				filter_choices(cs, query, &sel);
 			}
 			break;
 		}
@@ -197,7 +278,7 @@ get_selected(struct choices *cs, char *initial_query)
 		}
 		put_line(0, query, query_len, 0);
 		vis_choices = put_choices(cs, sel);
-		move(0, query_pos);
+		move(0, cursor_pos);
 		refresh();
 	}
 
