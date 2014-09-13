@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <bsd/string.h>
 
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
@@ -80,18 +81,37 @@ put_choices(struct choices *cs, int sel)
 	struct choice *c;
 	int vis_choices;
 	int i;
+	char *line;
+	size_t len;
+	size_t llen;
+
+	llen = 64;
+	if ((line = malloc(sizeof(char) * llen)) == NULL)
+		err(1, "malloc");
 
 	vis_choices = 0;
 	SLIST_FOREACH(c, cs, choices) {
+		len = strlen(c->str) + strlen(c->desc) + 1;
+		while (len > llen) {
+			llen = llen * 2;
+			if ((line = realloc(line, llen)) == NULL) {
+				err(1, "realloc");
+			}
+		}
+		strlcpy(line, c->str, llen);
+		strlcat(line, " ", llen);
+		strlcat(line, c->desc, llen);
+
 		if (vis_choices == LINES - 1 || c->score == 0)
 			break;
 		put_line(
 		    vis_choices + 1,
-		    c->str,
-		    strlen(c->str),
+		    line,
+		    len,
 		    vis_choices == sel);
 		++vis_choices;
 	}
+	free(line);
 	for (i = vis_choices + 1; i < LINES; ++i)
 		put_line(i, "", 0, 0);
 

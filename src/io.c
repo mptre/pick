@@ -1,6 +1,7 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
@@ -20,13 +21,18 @@ chomp(char *str, ssize_t len)
 }
 
 struct choices *
-get_choices()
+get_choices(int parse_desc)
 {
 	struct choices *cs;
 	struct choice *c;
 	char *line;
+	char *desc;
+	char *ifs;
 	size_t n;
 	ssize_t len;
+
+	if ((ifs = getenv("IFS")) == NULL)
+		ifs = " ";
 
 	if ((cs = malloc(sizeof(struct choices))) == NULL)
 		err(1, "malloc");
@@ -35,11 +41,14 @@ get_choices()
 
 	for (;;) {
 		line = NULL;
+		desc = "";
 		n = 0;
 		if ((len = getline(&line, &n, stdin)) == -1)
 			break;
 		chomp(line, len);
-		c = choice_new(line, 1);
+		if (parse_desc)
+			strtok_r(line, ifs, &desc);
+		c = choice_new(line, desc, 1);
 		SLIST_INSERT_HEAD(cs, c, choices);
 		free(line);
 	}
@@ -49,7 +58,9 @@ get_choices()
 }
 
 void
-put_choice(struct choice *c)
+put_choice(struct choice *c, int output_desc)
 {
 	printf("%s\n", c->str);
+	if (output_desc)
+		printf("%s\n", c->desc);
 }

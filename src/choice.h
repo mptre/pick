@@ -9,11 +9,12 @@
 
 struct choice {
     char *str;
+    char *desc;
     float score;
     SLIST_ENTRY(choice) choices;          /* List. */
 };
 
-struct choice   *choice_new(char *, float);
+struct choice   *choice_new(char *, char *, float);
 void             choice_free(struct choice *);
 
 #endif /* CHOICHE_H */
