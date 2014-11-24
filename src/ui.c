@@ -32,13 +32,19 @@
 #define KEY_DEL 127
 #define KEY_REAL_ENTER 10 /* curses.h defines KEY_ENTER to be Ctrl-Enter */
 
+#define EX_SIG 128
+#define EX_SIGINT (EX_SIG + SIGINT)
+
 int stdoutfd;
+
+void int_handler();
 
 void
 start_curses()
 {
 	int fd;
 
+	signal(SIGINT, int_handler);
 	freopen("/dev/tty", "r", stdin);
 	setlocale(LC_ALL, "");
 	fflush(stdout);
@@ -61,6 +67,13 @@ stop_curses()
 	fflush(stdout);
 	dup2(stdoutfd, STDOUT_FILENO);
 	close(stdoutfd);
+}
+
+void
+int_handler()
+{
+	stop_curses();
+	exit(EX_SIGINT);
 }
 
 void
