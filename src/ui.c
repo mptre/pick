@@ -24,6 +24,8 @@
 #define KEY_CTRL_D 4
 #define KEY_CTRL_E 5
 #define KEY_CTRL_F 6
+#define KEY_CTRL_N 14
+#define KEY_CTRL_P 16
 #define KEY_CTRL_K 11
 #define KEY_CTRL_U 21
 #define KEY_CTRL_W 23
@@ -191,10 +193,12 @@ get_selected(struct choices *cs, char *initial_query)
 				free(query);
 				return selected(cs, sel);
 			}
+		case KEY_CTRL_N:
 		case KEY_DOWN:
 			if (sel < vis_choices - 1)
 				++sel;
 			break;
+		case KEY_CTRL_P:
 		case KEY_UP:
 			if (sel > 0)
 				--sel;
