@@ -8,15 +8,10 @@ AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([memmove setlocale strdup])
-AC_SEARCH_LIBS([strlcpy], [bsd], [], [
-  AC_MSG_ERROR([unable to find strlcpy() function. Try to install libbsd])
-])
+AC_CHECK_FUNCS([memmove setlocale strdup strlcpy strlcat])
 AC_SEARCH_LIBS([initscr], [ncurses], [], [
   AC_MSG_ERROR([unable to find initscr() function. Try to install ncurses])
 ])
-
-AC_CHECK_HEADERS([bsd/string.h])
 
 # sys/queue.h exists on most systems, but its capabilities vary a great deal.
 # Test for required macros.

@@ -20,3 +20,4 @@ install-sh
 missing
 pick-*.tar.gz
 stamp-h1
+.dirstamp

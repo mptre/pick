@@ -9,15 +9,19 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef HAVE_BSD_STRING_H
-#include <bsd/string.h>
-#endif
-
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
 #else /* HAVE_FULL_QUEUE_H */
 #include "compat/queue.h"
 #endif /* HAVE_FULL_QUEUE_H */
+
+#ifndef HAVE_STRLCPY
+#include "compat/strlcpy.h"
+#endif /* !HAVE_STRLCPY */
+
+#ifndef HAVE_STRLCAT
+#include "compat/strlcat.h"
+#endif /* !HAVE_STRLCAT */
 
 #include "choice.h"
 #include "choices.h"
@@ -192,7 +196,7 @@ get_selected(struct choices *cs, char *initial_query)
 		query_size = initial_query_len + 1;
 	if ((query = calloc(query_size, sizeof(char))) == NULL)
 		err(1, "calloc");
-	strcpy(query, initial_query);
+	strlcpy(query, initial_query, query_size);
 
 	filter_choices(cs, query, &sel);
 	start_curses();
