@@ -63,7 +63,6 @@ void
 stop_curses()
 {
 	endwin();
-	refresh();
 	fflush(stdout);
 	dup2(stdoutfd, STDOUT_FILENO);
 	close(stdoutfd);
