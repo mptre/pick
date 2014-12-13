@@ -1,3 +1,4 @@
+#include "config.h"
 #include <curses.h>
 #include <err.h>
 #include <fcntl.h>
@@ -7,7 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef HAVE_BSD_STRING_H
 #include <bsd/string.h>
+#endif
 
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
