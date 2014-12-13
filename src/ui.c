@@ -49,7 +49,8 @@ start_curses()
 	int fd;
 
 	signal(SIGINT, int_handler);
-	freopen("/dev/tty", "r", stdin);
+	if (freopen("/dev/tty", "r", stdin) == NULL)
+		err(1, "freopen");
 	setlocale(LC_ALL, "");
 	fflush(stdout);
 	stdoutfd = dup(STDOUT_FILENO);
