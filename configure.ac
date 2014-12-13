@@ -9,6 +9,11 @@ AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove setlocale strdup])
+AC_SEARCH_LIBS([strlcpy], [bsd], [], [
+  AC_MSG_ERROR([unable to find strlcpy() function])
+])
+
+AC_CHECK_HEADERS([bsd/string.h])
 
 # sys/queue.h exists on most systems, but its capabilities vary a great deal.
 # Test for required macros.
