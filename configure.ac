@@ -10,7 +10,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove setlocale strdup])
 AC_SEARCH_LIBS([strlcpy], [bsd], [], [
-  AC_MSG_ERROR([unable to find strlcpy() function])
+  AC_MSG_ERROR([unable to find strlcpy() function. Try to install libbsd])
 ])
 AC_SEARCH_LIBS([initscr], [ncurses], [], [
   AC_MSG_ERROR([unable to find initscr() function. Try to install ncurses])
