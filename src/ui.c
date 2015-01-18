@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
 
 #ifdef HAVE_BSD_STRING_H
 #include <bsd/string.h>
@@ -50,7 +49,8 @@ start_curses()
 	int fd;
 
 	signal(SIGINT, int_handler);
-	assert(freopen("/dev/tty", "r", stdin));
+	if (freopen("/dev/tty", "r", stdin) == NULL)
+		err(1, "freopen");
 	setlocale(LC_ALL, "");
 	fflush(stdout);
 	stdoutfd = dup(STDOUT_FILENO);
