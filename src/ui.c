@@ -84,7 +84,7 @@ int_handler()
 	exit(EX_SIGINT);
 }
 
-	void
+void
 put_line(int y, char *str, int len, int so, int mpos, int mlen)
 {
 	if (so)
@@ -143,8 +143,8 @@ put_choices(struct choices *cs, int sel)
 		    line,
 		    len,
 		    vis_choices == sel,
-				c->mpos,
-				c->mlen);
+		    c->mpos,
+		    c->mlen);
 		++vis_choices;
 	}
 	free(line);
