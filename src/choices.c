@@ -14,7 +14,7 @@
 #include "choices.h"
 
 size_t
-min_match_length(char *str, char *query, size_t *match_start_po)
+min_match_length(char *str, char *query, size_t *start_pos)
 {
 	size_t mlen;
 	size_t mstart;
@@ -22,31 +22,27 @@ min_match_length(char *str, char *query, size_t *match_start_po)
 	size_t mpos;
 	int matched = 0;
 
-	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart) {
+	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart)
 		if (tolower(str[mstart]) == tolower(query[0])) {
 			if (matched == 0) {
 				matched = 1;
-				*match_start_po = mstart;
+				*start_pos = mstart;
 			}
 
-			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos) {
+			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos)
 				for (;; ++mpos) {
-					if (str[mpos] == '\0') {
-						return mlen;
-					}
+					if (str[mpos] == '\0')
+            return mlen;
 
 					if (tolower(str[mpos]) == tolower(query[qpos])) {
 						++mpos;
 						break;
 					}
 				}
-			}
 
-			if (mlen == 0 || mlen > mpos - mstart + 1) {
-				mlen = mpos - mstart + 1;
-			}
+			if (mlen == 0 || mlen > mpos - mstart + 1)
+        mlen = mpos - mstart + 1;
 		}
-	}
 
 	return mlen;
 }
