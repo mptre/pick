@@ -84,32 +84,29 @@ int_handler()
 	exit(EX_SIGINT);
 }
 
-void
-put_line(int y, char *str, int len, int so, int start_pos, int match_len)
+	void
+put_line(int y, char *str, int len, int so, int mpos, int mlen)
 {
-  if (so)
-    standout();
+	if (so)
+		standout();
 
-  if (len > 0) {
-    for (int i = 0; str[i] != '\0'; i++) {
-      if (i == start_pos) {
-        attron(A_UNDERLINE);
-      }
+	if (len > 0) {
+		for (int i = 0; str[i] != '\0'; i++) {
+			if (i == mpos)
+				attron(A_UNDERLINE);
 
-      if (i >= start_pos + match_len - 1) {
-        attroff(A_UNDERLINE);
-      }
+			if (i >= mpos + mlen - 1)
+				attroff(A_UNDERLINE);
 
-      mvaddch(y, i, str[i]);
-    }
-  }
+			mvaddch(y, i, str[i]);
+		}
+	}
 
-  move(y, len);
-
-  for (; len < COLS; ++len)
-    addch(' ');
-  if (so)
-    standend();
+	move(y, len);
+	for (; len < COLS; ++len)
+		addch(' ');
+	if (so)
+		standend();
 }
 
 int
@@ -146,8 +143,8 @@ put_choices(struct choices *cs, int sel)
 		    line,
 		    len,
 		    vis_choices == sel,
-        c->mpos,
-        c->mlen);
+				c->mpos,
+				c->mlen);
 		++vis_choices;
 	}
 	free(line);
