@@ -324,6 +324,7 @@ get_selected(struct choices *cs, char *initial_query)
 		put_line(0, query, query_len, 0);
 		vis_choices = put_choices(cs, sel);
 		move(0, cursor_pos);
+		chgat(0, cursor_pos, 1, (void *)A_STANDOUT);
 		refresh();
 	}
 
