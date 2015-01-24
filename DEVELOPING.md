@@ -10,6 +10,16 @@ To build from a fresh checkout:
     ./configure
     make
 
+Editing
+-------
+
+Use these Vim settings for the correct indention and formatting:
+
+```
+setlocal sw=0 ts=8 noet
+setlocal cinoptions=:0,t0,+4,(4
+```
+
 Release
 -------
 
