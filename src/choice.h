@@ -1,3 +1,4 @@
+#include <stdio.h>
 #ifndef CHOICE_H
 #define CHOICE_H
 
@@ -11,6 +12,8 @@ struct choice {
     char *str;
     char *desc;
     float score;
+    size_t start_pos;
+    size_t match_len;
     SLIST_ENTRY(choice) choices;          /* List. */
 };
 
