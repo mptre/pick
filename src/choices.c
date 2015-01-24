@@ -14,20 +14,17 @@
 #include "choices.h"
 
 size_t
-min_match_length(char *str, char *query, size_t *start_pos)
+min_match_length(char *str, char *query, int *start_pos)
 {
 	size_t mlen;
 	size_t mstart;
 	size_t qpos;
 	size_t mpos;
-	int matched = 0;
 
 	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart)
 		if (tolower(str[mstart]) == tolower(query[0])) {
-			if (matched == 0) {
-				matched = 1;
+			if (*start_pos == -1)
 				*start_pos = mstart;
-			}
 
 			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos)
 				for (;; ++mpos) {
@@ -45,7 +42,7 @@ min_match_length(char *str, char *query, size_t *start_pos)
 }
 
 float
-score_str(char *str, char *query, size_t *mpos, size_t *mlen)
+score_str(char *str, char *query, int *mpos, size_t *mlen)
 {
 	size_t slen;
 	size_t qlen;
@@ -65,7 +62,7 @@ void
 choices_score(struct choices *cs, char *query)
 {
 	struct choice *c;
-	size_t mpos = 0;
+	int mpos = 0;
 	size_t mlen = 0;
 
 	SLIST_FOREACH(c, cs, choices) {
