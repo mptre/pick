@@ -14,55 +14,48 @@
 #include "choices.h"
 
 size_t
-min_match_length(char *candidate, char *query, size_t *match_start_po)
+min_match_length(char *str, char *query, size_t *match_start_po)
 {
-	size_t min_match_len;
-	size_t match_start_pos;
-	size_t query_pos;
-	size_t match_pos;
+	size_t mlen;
+	size_t mstart;
+	size_t qpos;
+	size_t mpos;
+	int matched = 0;
 
-  int matched = 0;
+	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart) {
+		if (tolower(str[mstart]) == tolower(query[0])) {
+			if (matched == 0) {
+				matched = 1;
+				*match_start_po = mstart;
+			}
 
-  // loop over query candidateing
-	for (min_match_len = 0, match_start_pos = 0; candidate[match_start_pos] != '\0'; ++match_start_pos) {
-    // check if there's a match with the first query character
-		if (tolower(candidate[match_start_pos]) == tolower(query[0])) {
-      if (matched == 0) {
-        matched = 1;
-        *match_start_po = match_start_pos;
-      }
-      // loop over remaining characters in the query candidateing
-			for (query_pos = 1, match_pos = match_start_pos + 1; query[query_pos] != '\0'; ++query_pos) {
+			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos) {
+				for (;; ++mpos) {
+					if (str[mpos] == '\0') {
+						return mlen;
+					}
 
-        // see if there's a matching character in
-        // the remaining characters of the filename
-				for (;; ++match_pos) {
-					if (candidate[match_pos] == '\0') {
-						return min_match_len;
-          }
-
-					if (tolower(candidate[match_pos]) == tolower(query[query_pos])) {
-						++match_pos;
-						break; // move on to next query character
+					if (tolower(str[mpos]) == tolower(query[qpos])) {
+						++mpos;
+						break;
 					}
 				}
-      }
+			}
 
-      size_t curr_match_len = match_pos - match_start_pos + 1;
-			if (min_match_len == 0 || min_match_len > curr_match_len)
-				min_match_len = curr_match_len;
+			if (mlen == 0 || mlen > mpos - mstart + 1) {
+				mlen = mpos - mstart + 1;
+			}
 		}
-  }
+	}
 
-	return min_match_len;
+	return mlen;
 }
 
 float
-score_str(char *str, char *query, size_t *start_pos, size_t *match_len)
+score_str(char *str, char *query, size_t *mpos, size_t *mlen)
 {
 	size_t slen;
 	size_t qlen;
-	size_t mlen;
 
 	slen = strlen(str);
 	qlen = strlen(query);
@@ -70,24 +63,22 @@ score_str(char *str, char *query, size_t *start_pos, size_t *match_len)
 		return 1;
 	if (slen == 0)
 		return 0;
-	if ((mlen = min_match_length(str, query, start_pos)) == 0)
+	if ((*mlen = min_match_length(str, query, mpos)) == 0)
 		return 0;
-  *match_len = mlen;
-	return (float)qlen / (float)mlen / (float)slen;
+	return (float)qlen / (float)*mlen / (float)slen;
 }
-
 
 void
 choices_score(struct choices *cs, char *query)
 {
 	struct choice *c;
-  size_t start_pos = 0;
-  size_t match_len = 0;
+	size_t mpos = 0;
+	size_t mlen = 0;
 
 	SLIST_FOREACH(c, cs, choices) {
-		c->score = score_str(c->str, query, &start_pos, &match_len);
-    c->start_pos = start_pos;
-    c->match_len = match_len;
+		c->score = score_str(c->str, query, &mpos, &mlen);
+		c->mpos = mpos;
+		c->mlen = mlen;
 	}
 }
 

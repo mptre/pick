@@ -92,11 +92,13 @@ put_line(int y, char *str, int len, int so, int start_pos, int match_len)
 
   if (len > 0) {
     for (int i = 0; str[i] != '\0'; i++) {
-      if(i == start_pos)
+      if (i == start_pos) {
         attron(A_UNDERLINE);
+      }
 
-      if(i >= start_pos + match_len - 1)
+      if (i >= start_pos + match_len - 1) {
         attroff(A_UNDERLINE);
+      }
 
       mvaddch(y, i, str[i]);
     }
@@ -144,8 +146,8 @@ put_choices(struct choices *cs, int sel)
 		    line,
 		    len,
 		    vis_choices == sel,
-        c->start_pos,
-        c->match_len);
+        c->mpos,
+        c->mlen);
 		++vis_choices;
 	}
 	free(line);
