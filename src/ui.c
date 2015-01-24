@@ -89,7 +89,6 @@ put_line(int y, char *str, int len, int so, int mpos, int mlen)
 {
 	if (so)
 		standout();
-
 	if (len > 0)
 		for (int i = 0; str[i] != '\0'; i++) {
 			if (i == mpos)
@@ -100,7 +99,6 @@ put_line(int y, char *str, int len, int so, int mpos, int mlen)
 
 			mvaddch(y, i, str[i]);
 		}
-
 	move(y, len);
 	for (; len < COLS; ++len)
 		addch(' ');

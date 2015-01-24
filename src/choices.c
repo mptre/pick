@@ -33,17 +33,14 @@ min_match_length(char *str, char *query, size_t *start_pos)
 				for (;; ++mpos) {
 					if (str[mpos] == '\0')
 						return mlen;
-
 					if (tolower(str[mpos]) == tolower(query[qpos])) {
 						++mpos;
 						break;
 					}
 				}
-
 			if (mlen == 0 || mlen > mpos - mstart + 1)
 				mlen = mpos - mstart + 1;
 		}
-
 	return mlen;
 }
 
