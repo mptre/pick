@@ -32,7 +32,7 @@ min_match_length(char *str, char *query, size_t *start_pos)
 			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos)
 				for (;; ++mpos) {
 					if (str[mpos] == '\0')
-            return mlen;
+						return mlen;
 
 					if (tolower(str[mpos]) == tolower(query[qpos])) {
 						++mpos;
@@ -41,7 +41,7 @@ min_match_length(char *str, char *query, size_t *start_pos)
 				}
 
 			if (mlen == 0 || mlen > mpos - mstart + 1)
-        mlen = mpos - mstart + 1;
+				mlen = mpos - mstart + 1;
 		}
 
 	return mlen;
