@@ -14,7 +14,7 @@
 #include "choices.h"
 
 size_t
-min_match_length(char *str, char *query)
+min_match_length(char *str, char *query, int *start_pos)
 {
 	size_t mlen;
 	size_t mstart;
@@ -23,6 +23,9 @@ min_match_length(char *str, char *query)
 
 	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart)
 		if (tolower(str[mstart]) == tolower(query[0])) {
+			if (*start_pos == -1)
+				*start_pos = mstart;
+
 			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos)
 				for (;; ++mpos) {
 					if (str[mpos] == '\0')
@@ -39,31 +42,33 @@ min_match_length(char *str, char *query)
 }
 
 float
-score_str(char *str, char *query)
+score_str(char *str, char *query, int *mpos, size_t *mlen)
 {
 	size_t slen;
 	size_t qlen;
-	size_t mlen;
 
 	slen = strlen(str);
 	qlen = strlen(query);
 	if (qlen == 0)
-		return 1;	
+		return 1;
 	if (slen == 0)
 		return 0;
-	if ((mlen = min_match_length(str, query)) == 0)
+	if ((*mlen = min_match_length(str, query, mpos)) == 0)
 		return 0;
-	return (float)qlen / (float)mlen / (float)slen;
+	return (float)qlen / (float)*mlen / (float)slen;
 }
-
 
 void
 choices_score(struct choices *cs, char *query)
 {
 	struct choice *c;
+	int mpos = 0;
+	size_t mlen = 0;
 
 	SLIST_FOREACH(c, cs, choices) {
-		c->score = score_str(c->str, query);
+		c->score = score_str(c->str, query, &mpos, &mlen);
+		c->mpos = mpos;
+		c->mlen = mlen;
 	}
 }
 

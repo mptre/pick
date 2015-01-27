@@ -11,6 +11,8 @@ struct choice {
     char *str;
     char *desc;
     float score;
+    int mpos;
+    int mlen;
     SLIST_ENTRY(choice) choices;          /* List. */
 };
 

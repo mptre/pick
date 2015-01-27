@@ -85,12 +85,20 @@ int_handler()
 }
 
 void
-put_line(int y, char *str, int len, int so)
+put_line(int y, char *str, int len, int so, int mpos, int mlen)
 {
 	if (so)
 		standout();
 	if (len > 0)
-		mvaddstr(y, 0, str);
+		for (int i = 0; str[i] != '\0'; i++) {
+			if (i == mpos)
+				attron(A_UNDERLINE);
+
+			if (i >= mpos + mlen - 1)
+				attroff(A_UNDERLINE);
+
+			mvaddch(y, i, str[i]);
+		}
 	move(y, len);
 	for (; len < COLS; ++len)
 		addch(' ');
@@ -131,12 +139,14 @@ put_choices(struct choices *cs, int sel)
 		    vis_choices + 1,
 		    line,
 		    len,
-		    vis_choices == sel);
+		    vis_choices == sel,
+		    c->mpos,
+		    c->mlen);
 		++vis_choices;
 	}
 	free(line);
 	for (i = vis_choices + 1; i < LINES; ++i)
-		put_line(i, "", 0, 0);
+		put_line(i, "", 0, 0, 0, 0);
 
 	return vis_choices;
 }
@@ -201,7 +211,7 @@ get_selected(struct choices *cs, char *initial_query)
 	filter_choices(cs, query, &sel);
 	start_curses();
 
-	put_line(0, query, query_len, 0);
+	put_line(0, query, query_len, 0, 0, 0);
 	vis_choices = put_choices(cs, sel);
 	move(0, cursor_pos);
 	refresh();
@@ -321,7 +331,7 @@ get_selected(struct choices *cs, char *initial_query)
 					    query_size * sizeof(char))) == NULL)
 				err(1, "realloc");
 		}
-		put_line(0, query, query_len, 0);
+		put_line(0, query, query_len, 0, 0, 0);
 		vis_choices = put_choices(cs, sel);
 		move(0, cursor_pos);
 		refresh();
