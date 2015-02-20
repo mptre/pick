@@ -1,5 +1,7 @@
 #include "config.h"
+#include <termios.h>
 #include <curses.h>
+#include <term.h>
 #include <err.h>
 #include <fcntl.h>
 #include <locale.h>
@@ -39,48 +41,63 @@
 #define KEY_CTRL_W 23
 #define KEY_DEL 127
 #define KEY_REAL_ENTER 10 /* curses.h defines KEY_ENTER to be Ctrl-Enter */
+#define KEY_ESCAPE 27
+#define KEY_BRACKET 91
+#define KEY_RAW_O 79
+#define KEY_RAW_DOWN 66
+#define KEY_RAW_UP 65
+#define KEY_RAW_LEFT 68
+#define KEY_RAW_RIGHT 67
 
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
-int stdoutfd;
+void	 int_handler();
+int	 tty_putc(int);
+void	 putstrat(int, int, char *);
+void	 move_cursor_to(int, int);
+void	 tty_putp(const char *str);
 
-void int_handler();
+FILE *tty;
+struct termios oldattr;
+int using_alternate_screen;
 
 void
-start_curses()
+start_ui()
 {
-	int fd;
+	struct termios newattr;
+	if ((tty = fopen("/dev/tty", "w+")) == NULL) {
+		err(1, "fopen");
+	}
+	tcgetattr(fileno(tty), &oldattr);
+	newattr = oldattr;
+	newattr.c_lflag &= ~(ICANON | ECHO);
+	newattr.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(fileno(tty), TCSANOW, &newattr);
+	setupterm((char *)0, fileno(tty), (int *)0);
+	if (using_alternate_screen) {
+		tty_putp(enter_ca_mode);
+	}
+	tty_putp(clear_screen);
 
 	signal(SIGINT, int_handler);
-	if (freopen("/dev/tty", "r", stdin) == NULL)
-		err(1, "freopen");
-	setlocale(LC_ALL, "");
-	fflush(stdout);
-	stdoutfd = dup(STDOUT_FILENO);
-	fd = open("/dev/tty", O_WRONLY);
-	dup2(fd, STDOUT_FILENO);
-	close(fd);
-	initscr();
-	cbreak();
-	noecho();
-	intrflush(stdscr, FALSE);
-	keypad(stdscr, TRUE);
 }
 
 void
-stop_curses()
+stop_ui()
 {
-	endwin();
-	fflush(stdout);
-	dup2(stdoutfd, STDOUT_FILENO);
-	close(stdoutfd);
+	tty_putp(clear_screen);
+	if (using_alternate_screen) {
+		tty_putp(exit_ca_mode);
+	}
+	tcsetattr(fileno(tty), TCSANOW, &oldattr);
+	fclose(tty);
 }
 
 void
 int_handler()
 {
-	stop_curses();
+	stop_ui();
 	exit(EX_SIGINT);
 }
 
@@ -88,14 +105,14 @@ void
 put_line(int y, char *str, int len, int so)
 {
 	if (so)
-		standout();
+		tty_putp(enter_standout_mode);
 	if (len > 0)
-		mvaddstr(y, 0, str);
-	move(y, len);
+		putstrat(y, 0, str);
+	move_cursor_to(y, len);
 	for (; len < COLS; ++len)
-		addch(' ');
+		tty_putc(' ');
 	if (so)
-		standend();
+		tty_putp(exit_standout_mode);
 }
 
 int
@@ -176,7 +193,7 @@ del_chars_between(char *str, size_t len, size_t start, size_t end)
 }
 
 struct choice *
-get_selected(struct choices *cs, char *initial_query)
+get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
 {
 	int ch;
 	char *query;
@@ -188,6 +205,7 @@ get_selected(struct choices *cs, char *initial_query)
 	int vis_choices;
 	int word_pos;
 
+	using_alternate_screen = use_alternate_screen;
 	initial_query_len = strlen(initial_query);
 	cursor_pos = initial_query_len;
 	query_len = initial_query_len;
@@ -199,38 +217,34 @@ get_selected(struct choices *cs, char *initial_query)
 	strlcpy(query, initial_query, query_size);
 
 	filter_choices(cs, query, &sel);
-	start_curses();
+	start_ui();
 
 	put_line(0, query, query_len, 0);
 	vis_choices = put_choices(cs, sel);
-	move(0, cursor_pos);
-	refresh();
+	move_cursor_to(0, cursor_pos);
+	tty_putp(cursor_normal);
 
-	while((ch = getch()) != ERR) {
+	while((ch = getc(tty)) != ERR) {
 		switch(ch) {
 		case KEY_REAL_ENTER:
 			if (vis_choices > 0) {
-				stop_curses();
+				stop_ui();
 				free(query);
 				return selected(cs, sel);
 			}
 		case KEY_CTRL_N:
-		case KEY_DOWN:
 			if (sel < vis_choices - 1)
 				++sel;
 			break;
 		case KEY_CTRL_P:
-		case KEY_UP:
 			if (sel > 0)
 				--sel;
 			break;
 		case KEY_CTRL_B:
-		case KEY_LEFT:
 			if (cursor_pos > 0)
 				--cursor_pos;
 			break;
 		case KEY_CTRL_F:
-		case KEY_RIGHT:
 			if (cursor_pos < query_len)
 				++cursor_pos;
 			break;
@@ -301,6 +315,36 @@ get_selected(struct choices *cs, char *initial_query)
 		case KEY_CTRL_E:
 			cursor_pos = query_len;
 			break;
+		case KEY_ESCAPE:
+			if((ch = getc(tty)) != ERR) {
+				if (ch == KEY_BRACKET || ch == KEY_RAW_O) {
+					if((ch = getc(tty)) != ERR) {
+						switch (ch) {
+						case KEY_RAW_DOWN:
+							if (sel < vis_choices - 1)
+								++sel;
+							break;
+						case KEY_RAW_UP:
+							if (sel > 0)
+								--sel;
+							break;
+						case KEY_RAW_LEFT:
+							if (cursor_pos > 0)
+								--cursor_pos;
+							break;
+						case KEY_RAW_RIGHT:
+							if (cursor_pos < query_len)
+								++cursor_pos;
+							break;
+						}
+					} else {
+						err(1, "getc");
+					}
+				}
+			} else {
+				err(1, "getc");
+			}
+			break;
 		default:
 			if (ch > 31 && ch < 127) { /* Printable chars */
 				if (cursor_pos < query_len)
@@ -314,6 +358,7 @@ get_selected(struct choices *cs, char *initial_query)
 			}
 			break;
 		}
+		tty_putp(cursor_invisible);
 		if (query_len == query_size - 1) {
 			query_size += query_size;
 			if ((query = realloc(
@@ -323,9 +368,37 @@ get_selected(struct choices *cs, char *initial_query)
 		}
 		put_line(0, query, query_len, 0);
 		vis_choices = put_choices(cs, sel);
-		move(0, cursor_pos);
-		refresh();
+		move_cursor_to(0, cursor_pos);
+		tty_putp(cursor_normal);
 	}
 
-	err(1, "getch");
+	err(1, "getc");
+}
+
+int
+tty_putc(int c)
+{
+	return putc(c, tty);
+}
+
+void
+putstrat(int y, int x, char *str)
+{
+	int i;
+	move_cursor_to(y, x);
+	for (i = 0; str[i] != '\0'; i++) {
+		tty_putc(str[i]);
+	}
+}
+
+void
+move_cursor_to(int y, int x)
+{
+	tty_putp(tgoto(cursor_address, x, y));
+}
+
+void
+tty_putp(const char *str)
+{
+	tputs(str, 1, tty_putc);
 }

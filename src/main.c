@@ -17,13 +17,15 @@ main(int argc,char **argv)
 	int ch;
 	int display_desc;
 	int output_desc;
+	int use_alternate_screen;
 	char *query;
 	struct choices *cs;
 
 	display_desc = 0;
 	output_desc = 0;
+	use_alternate_screen = 1;
 	query = "";
-	while ((ch = getopt(argc, argv, "hvdoq:")) != -1)
+	while ((ch = getopt(argc, argv, "hvdoq:X")) != -1)
 		switch (ch) {
 		case 'v':
 			version();
@@ -36,6 +38,9 @@ main(int argc,char **argv)
 		case 'q':
 			query = optarg;
 			break;
+		case 'X':
+			use_alternate_screen = 0;
+			break;
 		default:
 			usage();
 		}
@@ -45,7 +50,7 @@ main(int argc,char **argv)
 	output_desc = output_desc && display_desc;
 
 	cs = get_choices(display_desc);
-	put_choice(get_selected(cs, query), output_desc);
+	put_choice(get_selected(cs, query, use_alternate_screen), output_desc);
 	choices_free(cs);
 	return EX_OK;
 }

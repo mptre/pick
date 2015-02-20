@@ -10,6 +10,7 @@
 .Op Fl v
 .Op Fl q Ar QUERY
 .Op Fl d Op Fl o
+.Op Fl X
 .Sh DESCRIPTION
 .Nm pick
 allows users to select from a set of choices using an
@@ -40,6 +41,13 @@ Both parts will be displayed but only the first part will be used when
 searching.
 .It Fl o
 output description of selected on exit.
+.It Fl X
+disable the use of the alternate screen terminal feature. This is required when running
+.Nm pick
+using
+.Fn system
+from within
+.Xr vim 1 .
 .El
 .Pp
 The
