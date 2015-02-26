@@ -1,0 +1,34 @@
+# Maintainer: Calle Erlandsson <calle@thoughtbot.com>
+pkgname=pick
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Fuzzy text selection utility"
+arch=('x86_64')
+url="https://github.com/thoughtbot/pick/"
+license=('MIT')
+source=("$pkgname-$pkgver.tar.gz"
+        "$pkgname-$pkgver.tar.gz.asc")
+validpgpkeys=('47B22252BF6914DF964BB50C24735DD835689C84')
+md5sums=('4bbb53c96719e6d1f5d439c535cbb5ab'
+         'SKIP')
+sha256sums=('6d59ef6a64d69ea95ee39a9e56d3cc4d9eadefe916022e70aa5105a806e2e0e9'
+            'SKIP')
+sha512sums=('0809900936c3438ea5d6831a6a1b1820d1bcb1c8be5f1d1fe9fb9f0787a4a56495e88ff56932c147d18a1569db48d5598153535ef1d30c6afc82fe08e5148d47'
+            'SKIP')
+
+build() {
+    cd "$pkgname-$pkgver"
+    ./configure --prefix=/usr
+    make
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    make -k check
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    make DESTDIR="$pkgdir/" install
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/${pkgname}/LICENSE"
+}
