@@ -64,12 +64,14 @@ main(int argc,char **argv)
 void
 usage()
 {
-	fprintf(stderr, "usage: pick [-h] [-v] [-q QUERY] [-d [-o]] \n");
+	fprintf(stderr, "usage: pick [-h] [-v] [-q QUERY] [-d [-o]] [-x | -X]\n");
 	fprintf(stderr, "    -h          output this help message and exit\n");
 	fprintf(stderr, "    -v          output the version and exit\n");
 	fprintf(stderr, "    -q QUERY    supply an initial search query\n");
 	fprintf(stderr, "    -d          read and display descriptions\n");
 	fprintf(stderr, "    -o          output description of selected on exit\n");
+	fprintf(stderr, "    -x          enable alternate screen\n");
+	fprintf(stderr, "    -X          disable alternate screen\n");
 	exit(EX_USAGE);
 }
 
