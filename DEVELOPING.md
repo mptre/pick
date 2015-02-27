@@ -51,3 +51,7 @@ Release
 
 6. [Announce the release on
    GitHub](https://github.com/thoughtbot/pick/releases/new).
+
+7. Release Homebrew package by running:
+
+        make release

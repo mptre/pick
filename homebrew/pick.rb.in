@@ -1,0 +1,16 @@
+require "formula"
+
+class Pick < Formula
+  homepage "http://thoughtbot.github.io/@PACKAGE@/"
+  url "https://github.com/thoughtbot/@PACKAGE@/releases/download/v@PACKAGE_VERSION@/@DIST_ARCHIVES@"
+  sha1 "@DIST_SHA@"
+
+  def install
+    system "./configure", "--prefix=#{prefix}"
+    system "make", "install"
+  end
+
+  test do
+    system "#{bin}/pick", "-v"
+  end
+end
