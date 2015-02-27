@@ -9,7 +9,7 @@ license=('MIT')
 source=('https://github.com/thoughtbot/pick/releases/download/v1.1.0/pick-1.1.0.tar.gz'
         'https://github.com/thoughtbot/pick/releases/download/v1.1.0/pick-1.1.0.tar.gz.asc')
 validpgpkeys=('47B22252BF6914DF964BB50C24735DD835689C84')
-sha1sums=('cec167acc776065c055ab13a918d4e0300dca2f8'
+sha1sums=('8b035e64cc5faea407e73cce01ca039e3ce3b4ac'
           'SKIP')
 
 build() {
