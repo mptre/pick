@@ -28,7 +28,7 @@ main(int argc,char **argv)
 		use_alternate_screen = 0;
 	}
 	query = "";
-	while ((ch = getopt(argc, argv, "hvdoq:X")) != -1)
+	while ((ch = getopt(argc, argv, "hvdoq:xX")) != -1)
 		switch (ch) {
 		case 'v':
 			version();
@@ -40,6 +40,9 @@ main(int argc,char **argv)
 			break;
 		case 'q':
 			query = optarg;
+			break;
+		case 'x':
+			use_alternate_screen = 1;
 			break;
 		case 'X':
 			use_alternate_screen = 0;
