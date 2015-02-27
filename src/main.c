@@ -24,6 +24,9 @@ main(int argc,char **argv)
 	display_desc = 0;
 	output_desc = 0;
 	use_alternate_screen = 1;
+	if (getenv("VIM") != NULL) {
+		use_alternate_screen = 0;
+	}
 	query = "";
 	while ((ch = getopt(argc, argv, "hvdoq:X")) != -1)
 		switch (ch) {
