@@ -1,0 +1,30 @@
+# Maintainer: Calle Erlandsson <calle@thoughtbot.com>
+pkgname=@PACKAGE@
+pkgver=@PACKAGE_VERSION@
+pkgrel=1
+pkgdesc='Fuzzy text selection utility'
+arch=('x86_64')
+url='https://github.com/thoughtbot/@PACKAGE@/'
+license=('MIT')
+source=('https://github.com/thoughtbot/@PACKAGE@/releases/download/v@PACKAGE_VERSION@/@DIST_ARCHIVES@'
+        'https://github.com/thoughtbot/@PACKAGE@/releases/download/v@PACKAGE_VERSION@/@DIST_ARCHIVES@.asc')
+validpgpkeys=('47B22252BF6914DF964BB50C24735DD835689C84')
+sha1sums=('@DIST_SHA@'
+          'SKIP')
+
+build() {
+    cd "$pkgname-$pkgver"
+    ./configure --prefix=/usr
+    make
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    make -k check
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    make DESTDIR="$pkgdir/" install
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/${pkgname}/LICENSE"
+}
