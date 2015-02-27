@@ -32,7 +32,7 @@ release_build_homebrew: DIST_SHA
 	git clone git@github.com:thoughtbot/homebrew-formulae.git homebrew-formulae
 	$(edit_package) homebrew/pick.rb.in > homebrew-formulae/Formula/pick.rb
 	cd homebrew-formulae &&\
-		git addd Formula/pick.rb &&\
+		git add Formula/pick.rb &&\
 		git commit -am "pick: Release version $(PACKAGE_VERSION)"
 
 release_push_homebrew:
