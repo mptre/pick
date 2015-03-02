@@ -55,5 +55,7 @@ release_push_arch:
 release_clean_arch:
 	rm -rf release-arch
 
-DIST_SHA: Makefile distcheck
+DIST_SHA: Makefile
+	rm $(srcdir)/$(DIST_ARCHIVES)
+	wget "https://github.com/thoughtbot/$(PACKAGE)/releases/download/v$(PACKAGE_VERSION)/$(DIST_ARCHIVES)" -O $(srcdir)/$(DIST_ARCHIVES)
 	$(eval DIST_SHA := $(shell shasum $(srcdir)/$(DIST_ARCHIVES) | cut -d' ' -f1))
