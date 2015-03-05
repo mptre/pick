@@ -58,30 +58,17 @@ git ls-files | pick | xargs less # Select a file in the current git repository t
 cd $(find . -type d | pick)      # Select a directory to cd into
 ```
 
-Pick can also easily be used from within Vim with this VimL function:
+Pick can also easily be used from within Vim both using `system()` and `!`. For
+ready-to-map functions, see [the pick.vim Vim plugin]. For an examples of how to
+call `pick(1)` from within Vim, see [the pick.vim source code].
 
-```viml
-function! PickCommand(choice_command, pick_args, vim_command)
-  try
-    let selection = system(a:choice_command . " | ./src/pick" . a:pick_args)
-  catch /Vim:Interrupt/
-    " Swallow the ^C so that the redraw below happens; otherwise there will be
-    " leftovers from pick on the screen
-    redraw!
-    return
-  endtry
-  redraw!
-  exec a:vim_command . " " . selection
-endfunction
-```
-
-Then map keys to call this function:
-
-```viml
-nnoremap <leader>e :call PickCommand("git ls-files", "", ":e")<cr>
-```
+***Please note:*** pick requires a fully functional terminal to run and
+therefore cannot be run from within gvim or MacVim.
 
 See the `pick(1)` man page for detailed usage instructions and more examples.
+
+[the pick.vim Vim plugin]: https://github.com/thoughtbot/pick.vim/
+[the pick.vim source code]: https://github.com/thoughtbot/pick.vim/blob/master/plugin/pick.vim
 
 ## Copyright
 
