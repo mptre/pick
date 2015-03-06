@@ -59,7 +59,7 @@ cd $(find . -type d | pick)      # Select a directory to cd into
 ```
 
 Pick can also easily be used from within Vim both using `system()` and `!`. For
-ready-to-map functions, see [the pick.vim Vim plugin]. For an examples of how to
+ready-to-map functions, see [the pick.vim Vim plugin]. For examples of how to
 call `pick(1)` from within Vim, see [the pick.vim source code].
 
 ***Please note:*** pick requires a fully functional terminal to run and
