@@ -66,7 +66,7 @@ void
 start_ui()
 {
 	struct termios newattr;
-	if ((tty = fopen("/dev/tty", "w+")) == NULL) {
+	if ((tty = fopen("/dev/tty", "a+")) == NULL) {
 		err(1, "fopen");
 	}
 	tcgetattr(fileno(tty), &oldattr);
