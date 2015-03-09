@@ -72,7 +72,6 @@ start_ui()
 	tcgetattr(fileno(tty), &oldattr);
 	newattr = oldattr;
 	newattr.c_lflag &= ~(ICANON | ECHO);
-	newattr.c_lflag &= ~(ICANON | ECHO);
 	tcsetattr(fileno(tty), TCSANOW, &newattr);
 	setupterm((char *)0, fileno(tty), (int *)0);
 	if (using_alternate_screen) {
