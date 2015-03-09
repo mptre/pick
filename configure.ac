@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([pick], [1.1.0], [hello@thoughtbot.com])
+AC_INIT([pick], [1.1.1], [hello@thoughtbot.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
