@@ -72,6 +72,6 @@ See the `pick(1)` man page for detailed usage instructions and more examples.
 
 ## Copyright
 
-Copyright (c) 2014 Calle Erlandsson & thoughtbot, Inc.
+Copyright (c) 2015 Calle Erlandsson & thoughtbot, Inc.
 
 Lead by Calle Erlandsson & thoughtbot, Inc.
