@@ -9,7 +9,7 @@ AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove setlocale strdup strlcpy strlcat])
-AC_SEARCH_LIBS([initscr], [ncurses], [], [
+AC_SEARCH_LIBS([initscr], [ncursesw ncurses], [], [
   AC_MSG_ERROR([unable to find initscr() function. Try to install ncurses])
 ])
 
@@ -44,6 +44,13 @@ AC_TRY_LINK([
 	#endif
 ], [
 AC_DEFINE(HAVE_FULL_QUEUE_H,, Define if sys/queue.h includes required macros)
+])
+
+AC_TRY_LINK([
+	#include <ncursesw/curses.h>
+	#include <ncursesw/term.h>
+], [], [
+AC_DEFINE(HAVE_NCURSESW_H,, Define if ncursesw is available)
 ])
 
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile])

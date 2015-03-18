@@ -1,7 +1,5 @@
 #include "config.h"
 #include <termios.h>
-#include <curses.h>
-#include <term.h>
 #include <err.h>
 #include <fcntl.h>
 #include <locale.h>
@@ -10,6 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef HAVE_NCURSESW_H
+#include <ncursesw/curses.h>
+#include <ncursesw/term.h>
+#else
+#include <curses.h>
+#include <term.h>
+#endif
 
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
