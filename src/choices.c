@@ -20,18 +20,23 @@ min_match_length(char *str, char *query)
 	size_t mstart;
 	size_t qpos;
 	size_t mpos;
+	int query_char;
+	int query_start;
 
+	query_start = tolower((unsigned char)query[0]);
 	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart)
-		if (tolower(str[mstart]) == tolower(query[0])) {
-			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos)
+		if (tolower((unsigned char)str[mstart]) == query_start) {
+			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0'; ++qpos) {
+				query_char = tolower((unsigned char)query[qpos]);
 				for (;; ++mpos) {
 					if (str[mpos] == '\0')
 						return mlen;
-					if (tolower(str[mpos]) == tolower(query[qpos])) {
+					if (tolower((unsigned)str[mpos]) == query_char) {
 						++mpos;
 						break;
 					}
 				}
+			}
 			if (mlen == 0 || mlen > mpos - mstart + 1)
 				mlen = mpos - mstart + 1;
 		}
