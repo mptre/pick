@@ -83,7 +83,9 @@ merge(struct choice *front, struct choice *back)
 	c = &head;
 
 	while (front != NULL && back != NULL) {
-		if (front->score > back->score) {
+		if (front->score > back->score ||
+                (front->score == back->score &&
+                 strcmp(front->str, back->str) < 0)) {
 			c->choices.sle_next = front;
 			c = front;
 			front = front->choices.sle_next;
