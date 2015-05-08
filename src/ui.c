@@ -64,7 +64,8 @@ void	 putstrat(int, int, char *);
 void	 move_cursor_to(int, int);
 void	 tty_putp(const char *str);
 
-FILE *tty;
+FILE *tty_out;
+FILE *tty_in;
 struct termios oldattr;
 int using_alternate_screen;
 
@@ -72,14 +73,19 @@ void
 start_ui()
 {
 	struct termios newattr;
-	if ((tty = fopen("/dev/tty", "a+")) == NULL) {
+
+	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
 		err(1, "fopen");
 	}
-	tcgetattr(fileno(tty), &oldattr);
+	tcgetattr(fileno(tty_in), &oldattr);
 	newattr = oldattr;
 	newattr.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(fileno(tty), TCSANOW, &newattr);
-	setupterm((char *)0, fileno(tty), (int *)0);
+	tcsetattr(fileno(tty_in), TCSANOW, &newattr);
+
+	if ((tty_out = fopen("/dev/tty", "w")) == NULL) {
+		err(1, "fopen");
+	}
+	setupterm((char *)0, fileno(tty_out), (int *)0);
 	if (using_alternate_screen) {
 		tty_putp(enter_ca_mode);
 	}
@@ -91,12 +97,14 @@ start_ui()
 void
 stop_ui()
 {
+	tcsetattr(fileno(tty_in), TCSANOW, &oldattr);
+	fclose(tty_in);
+
 	tty_putp(clear_screen);
 	if (using_alternate_screen) {
 		tty_putp(exit_ca_mode);
 	}
-	tcsetattr(fileno(tty), TCSANOW, &oldattr);
-	fclose(tty);
+	fclose(tty_out);
 }
 
 void
@@ -229,7 +237,7 @@ get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
 	move_cursor_to(0, cursor_pos);
 	tty_putp(cursor_normal);
 
-	while((ch = getc(tty)) != ERR) {
+	while((ch = getc(tty_in)) != ERR) {
 		switch(ch) {
 		case KEY_REAL_ENTER:
 			if (vis_choices > 0) {
@@ -321,9 +329,9 @@ get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
 			cursor_pos = query_len;
 			break;
 		case KEY_ESCAPE:
-			if((ch = getc(tty)) != ERR) {
+			if((ch = getc(tty_in)) != ERR) {
 				if (ch == KEY_BRACKET || ch == KEY_RAW_O) {
-					if((ch = getc(tty)) != ERR) {
+					if((ch = getc(tty_in)) != ERR) {
 						switch (ch) {
 						case KEY_RAW_DOWN:
 							if (sel < vis_choices - 1)
@@ -383,7 +391,7 @@ get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
 int
 tty_putc(int c)
 {
-	return putc(c, tty);
+	return putc(c, tty_out);
 }
 
 void
