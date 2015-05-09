@@ -74,7 +74,15 @@ tty_restore()
 int
 tty_getc()
 {
-	return getc(tty_in);
+	int c;
+
+	c = getc(tty_in);
+
+	if (c == ERR) {
+		err(1, "getc");
+	}
+
+	return c;
 }
 
 int

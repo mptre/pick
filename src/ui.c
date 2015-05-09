@@ -94,7 +94,8 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	move_cursor_to(0, cursor_position);
 	tty_putp(cursor_normal);
 
-	while((key = tty_getc()) != ERR) {
+	for (;;) {
+		key = tty_getc();
 		switch(key) {
 		case KEY_REAL_ENTER:
 			if (visible_choices_count > 0) {
@@ -199,42 +200,38 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			cursor_position = query_length;
 			break;
 		case KEY_ESCAPE:
-			if((key = tty_getc()) != ERR) {
-				if (key == KEY_BRACKET || key == KEY_RAW_O) {
-					if((key = tty_getc()) != ERR) {
-						switch (key) {
-						case KEY_RAW_DOWN:
-							if (selection < visible_choices_count - 1) {
-								++selection;
-							}
+			key = tty_getc();
 
-							break;
-						case KEY_RAW_UP:
-							if (selection > 0) {
-								--selection;
-							}
+			if (key == KEY_BRACKET || key == KEY_RAW_O) {
+				key = tty_getc();
 
-							break;
-						case KEY_RAW_LEFT:
-							if (cursor_position > 0) {
-								--cursor_position;
-							}
-
-							break;
-						case KEY_RAW_RIGHT:
-							if (cursor_position <
-							    query_length) {
-								++cursor_position;
-							}
-
-							break;
-						}
-					} else {
-						err(1, "tty_getc");
+				switch (key) {
+				case KEY_RAW_DOWN:
+					if (selection < visible_choices_count - 1) {
+						++selection;
 					}
+
+					break;
+				case KEY_RAW_UP:
+					if (selection > 0) {
+						--selection;
+					}
+
+					break;
+				case KEY_RAW_LEFT:
+					if (cursor_position > 0) {
+						--cursor_position;
+					}
+
+					break;
+				case KEY_RAW_RIGHT:
+					if (cursor_position <
+					    query_length) {
+						++cursor_position;
+					}
+
+					break;
 				}
-			} else {
-				err(1, "tty_getc");
 			}
 
 			break;
@@ -271,8 +268,6 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		move_cursor_to(0, cursor_position);
 		tty_putp(cursor_normal);
 	}
-
-	err(1, "tty_getc");
 }
 
 static void
