@@ -11,7 +11,7 @@ struct choice {
     char *str;
     char *desc;
     float score;
-    SLIST_ENTRY(choice) choices;          /* List. */
+    SLIST_ENTRY(choice) choices;
 };
 
 struct choice	*choice_new(char *, char *, float);
