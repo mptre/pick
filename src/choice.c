@@ -7,26 +7,26 @@
 #include "choice.h"
 
 struct choice *
-choice_new(char *str, char *desc, float score)
+choice_new(char *string, char *description, float score)
 {
-	struct choice *c;
+	struct choice *choice;
 
-	c = malloc(sizeof(struct choice));
-	if (c == NULL) {
+	choice = malloc(sizeof(struct choice));
+	if (choice == NULL) {
 		err(1, "malloc");
 	}
 
-	c->str = strdup(str);
-	c->desc = strdup(desc);
-	c->score = score;
+	choice->string = strdup(string);
+	choice->description = strdup(description);
+	choice->score = score;
 
-	return c;
+	return choice;
 }
 
 void
-choice_free(struct choice *c)
+choice_free(struct choice *choice)
 {
-	free(c->str);
-	free(c->desc);
-	free(c);
+	free(choice->string);
+	free(choice->description);
+	free(choice);
 }

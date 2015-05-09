@@ -15,22 +15,22 @@ int
 main(int argc, char **argv)
 {
 	char *query = "";
-	int ch, use_alternate_screen;
-	int display_desc = 0;
-	int output_desc = 0;
-	struct choices *cs;
+	int option, use_alternate_screen;
+	int display_descriptions = 0;
+	int output_description = 0;
+	struct choices *choices;
 
 	use_alternate_screen = getenv("VIM") == NULL;
 
-	while ((ch = getopt(argc, argv, "hvdoq:xX")) != -1) {
-		switch (ch) {
+	while ((option = getopt(argc, argv, "hvdoq:xX")) != -1) {
+		switch (option) {
 		case 'v':
 			version();
 		case 'd':
-			display_desc = 1;
+			display_descriptions = 1;
 			break;
 		case 'o':
-			output_desc = 1;
+			output_description = 1;
 			break;
 		case 'q':
 			query = optarg;
@@ -50,17 +50,18 @@ main(int argc, char **argv)
 	argv += optind;
 
 	/*
-	 * Only output descriptions if descriptions are read and displayed in
-	 * the list of choices.
+	 * Only output description if descriptions are read and displayed in the
+	 * list of choices.
 	 */
-	output_desc = output_desc && display_desc;
+	output_description = output_description && display_descriptions;
 
-	cs = io_read_choices(display_desc);
+	choices = io_read_choices(display_descriptions);
 
-	io_print_choice(ui_selected_choice(cs, query, use_alternate_screen),
-	    output_desc);
+	io_print_choice(
+	    ui_selected_choice(choices, query, use_alternate_screen),
+	    output_description);
 
-	choices_free(cs);
+	choices_free(choices);
 
 	return EX_OK;
 }

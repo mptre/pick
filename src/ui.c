@@ -58,40 +58,40 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
-static void start_ui();
-static void stop_ui();
-static void int_handler();
-static void put_line(int, char *, int, int);
-static int put_choices(struct choices *, int);
-static struct choice *selected(struct choices *, int);
+static void tty_init();
+static void tty_restore();
+static void handle_interrupt();
+static void print_line(int, char *, int, int);
+static int print_choices(struct choices *, int);
+static struct choice *selected_choice(struct choices *, int);
 static void filter_choices(struct choices *, char *, int *);
-static void del_chars_between(char *, size_t, size_t, size_t);
+static void delete_between(char *, size_t, size_t, size_t);
 static int tty_putc(int);
-static void putstrat(int, int, char *);
+static void print_string_at(int, int, char *);
 static void move_cursor_to(int, int);
 static void tty_putp(const char *);
 
 FILE *tty_out;
 FILE *tty_in;
-struct termios oldattr;
+struct termios original_attributes;
 int using_alternate_screen;
 
 struct choice *
-ui_selected_choice(struct choices *cs, char *initial_query,
+ui_selected_choice(struct choices *choices, char *initial_query,
     int use_alternate_screen)
 {
 	char *query;
-	int ch, sel, vis_choices, word_pos;
-	size_t cursor_pos, query_size, query_len, initial_query_len;
+	int key, selection, visible_choices_count, word_position;
+	size_t cursor_position, query_size, query_length, initial_query_length;
 
 	using_alternate_screen = use_alternate_screen;
-	initial_query_len = strlen(initial_query);
-	cursor_pos = initial_query_len;
-	query_len = initial_query_len;
+	initial_query_length = strlen(initial_query);
+	cursor_position = initial_query_length;
+	query_length = initial_query_length;
 	query_size = 64;
 
-	if (query_size < initial_query_len + 1) {
-		query_size = initial_query_len + 1;
+	if (query_size < initial_query_length + 1) {
+		query_size = initial_query_length + 1;
 	}
 
 	query = calloc(query_size, sizeof(char));
@@ -101,146 +101,145 @@ ui_selected_choice(struct choices *cs, char *initial_query,
 
 	strlcpy(query, initial_query, query_size);
 
-	filter_choices(cs, query, &sel);
-	start_ui();
+	filter_choices(choices, query, &selection);
+	tty_init();
 
-	put_line(0, query, query_len, 0);
-	vis_choices = put_choices(cs, sel);
-	move_cursor_to(0, cursor_pos);
+	print_line(0, query, query_length, 0);
+	visible_choices_count = print_choices(choices, selection);
+	move_cursor_to(0, cursor_position);
 	tty_putp(cursor_normal);
 
-	while((ch = getc(tty_in)) != ERR) {
-		switch(ch) {
+	while((key = getc(tty_in)) != ERR) {
+		switch(key) {
 		case KEY_REAL_ENTER:
-			if (vis_choices > 0) {
-				stop_ui();
+			if (visible_choices_count > 0) {
+				tty_restore();
 				free(query);
-				return selected(cs, sel);
+				return selected_choice(choices, selection);
 			}
 		case KEY_CTRL_N:
-			if (sel < vis_choices - 1) {
-				++sel;
+			if (selection < visible_choices_count - 1) {
+				++selection;
 			}
 
 			break;
 		case KEY_CTRL_P:
-			if (sel > 0) {
-				--sel;
+			if (selection > 0) {
+				--selection;
 			}
 
 			break;
 		case KEY_CTRL_B:
-			if (cursor_pos > 0) {
-				--cursor_pos;
+			if (cursor_position > 0) {
+				--cursor_position;
 			}
 
 			break;
 		case KEY_CTRL_F:
-			if (cursor_pos < query_len) {
-				++cursor_pos;
+			if (cursor_position < query_length) {
+				++cursor_position;
 			}
 
 			break;
 		case KEY_BACKSPACE:
 		case KEY_DEL:
-			if (cursor_pos > 0) {
-				del_chars_between(
+			if (cursor_position > 0) {
+				delete_between(
 				    query,
-				    query_len,
-				    cursor_pos - 1,
-				    cursor_pos);
-				--cursor_pos;
-				--query_len;
-				filter_choices(cs, query, &sel);
+				    query_length,
+				    cursor_position - 1,
+				    cursor_position);
+				--cursor_position;
+				--query_length;
+				filter_choices(choices, query, &selection);
 			}
 
 			break;
 		case KEY_CTRL_D:
-			if (cursor_pos < query_len) {
-				del_chars_between(
+			if (cursor_position < query_length) {
+				delete_between(
 				    query,
-				    query_len,
-				    cursor_pos,
-				    cursor_pos + 1);
-				--query_len;
-				filter_choices(cs, query, &sel);
+				    query_length,
+				    cursor_position,
+				    cursor_position + 1);
+				--query_length;
+				filter_choices(choices, query, &selection);
 			}
 
 			break;
 		case KEY_CTRL_U:
-			del_chars_between(
+			delete_between(
 			    query,
-			    query_len,
+			    query_length,
 			    0,
-			    cursor_pos);
-			query_len -= cursor_pos;
-			cursor_pos = 0;
-			filter_choices(cs, query, &sel);
+			    cursor_position);
+			query_length -= cursor_position;
+			cursor_position = 0;
+			filter_choices(choices, query, &selection);
 			break;
 		case KEY_CTRL_K:
-			del_chars_between(
+			delete_between(
 			    query,
-			    query_len,
-			    cursor_pos + 1,
-			    query_len);
-			query_len = cursor_pos;
-			filter_choices(cs, query, &sel);
+			    query_length,
+			    cursor_position + 1,
+			    query_length);
+			query_length = cursor_position;
+			filter_choices(choices, query, &selection);
 			break;
 		case KEY_CTRL_W:
-			if (cursor_pos > 0) {
-				for (word_pos = cursor_pos - 1;
-				    word_pos > 0;
-				    --word_pos) {
-					if (query[word_pos] != ' ' &&
-					    query[word_pos - 1] == ' ') {
+			if (cursor_position > 0) {
+				for (word_position = cursor_position - 1;
+				    word_position > 0;
+				    --word_position) {
+					if (query[word_position] != ' ' &&
+					    query[word_position - 1] == ' ') {
 						break;
 					}
 				}
 
-				del_chars_between(
+				delete_between(
 				    query,
-				    query_len,
-				    word_pos,
-				    cursor_pos);
-				query_len -= cursor_pos - word_pos;
-				cursor_pos = word_pos;
-				filter_choices(cs, query, &sel);
+				    query_length,
+				    word_position,
+				    cursor_position);
+				query_length -= cursor_position - word_position;
+				cursor_position = word_position;
+				filter_choices(choices, query, &selection);
 			}
 			break;
 		case KEY_CTRL_A:
-			cursor_pos = 0;
+			cursor_position = 0;
 			break;
 		case KEY_CTRL_E:
-			cursor_pos = query_len;
+			cursor_position = query_length;
 			break;
 		case KEY_ESCAPE:
-			if((ch = getc(tty_in)) != ERR) {
-				if (ch == KEY_BRACKET || ch == KEY_RAW_O) {
-					if((ch = getc(tty_in)) != ERR) {
-						switch (ch) {
+			if((key = getc(tty_in)) != ERR) {
+				if (key == KEY_BRACKET || key == KEY_RAW_O) {
+					if((key = getc(tty_in)) != ERR) {
+						switch (key) {
 						case KEY_RAW_DOWN:
-							if (sel < vis_choices -
-							    1) {
-								++sel;
+							if (selection < visible_choices_count - 1) {
+								++selection;
 							}
 
 							break;
 						case KEY_RAW_UP:
-							if (sel > 0) {
-								--sel;
+							if (selection > 0) {
+								--selection;
 							}
 
 							break;
 						case KEY_RAW_LEFT:
-							if (cursor_pos > 0) {
-								--cursor_pos;
+							if (cursor_position > 0) {
+								--cursor_position;
 							}
 
 							break;
 						case KEY_RAW_RIGHT:
-							if (cursor_pos <
-							    query_len) {
-								++cursor_pos;
+							if (cursor_position <
+							    query_length) {
+								++cursor_position;
 							}
 
 							break;
@@ -255,17 +254,17 @@ ui_selected_choice(struct choices *cs, char *initial_query,
 
 			break;
 		default:
-			if (ch > 31 && ch < 127) { /* Printable chars */
-				if (cursor_pos < query_len) {
+			if (key > 31 && key < 127) { /* Printable chars */
+				if (cursor_position < query_length) {
 					memmove(
-					    query + cursor_pos + 1,
-					    query + cursor_pos,
-					    query_len - cursor_pos);
+					    query + cursor_position + 1,
+					    query + cursor_position,
+					    query_length - cursor_position);
 				}
 
-				query[cursor_pos++] = ch;
-				query[++query_len] = '\0';
-				filter_choices(cs, query, &sel);
+				query[cursor_position++] = key;
+				query[++query_length] = '\0';
+				filter_choices(choices, query, &selection);
 			}
 
 			break;
@@ -273,7 +272,7 @@ ui_selected_choice(struct choices *cs, char *initial_query,
 
 		tty_putp(cursor_invisible);
 
-		if (query_len == query_size - 1) {
+		if (query_length == query_size - 1) {
 			query_size += query_size;
 
 			query = realloc(query, query_size * sizeof(char));
@@ -282,9 +281,9 @@ ui_selected_choice(struct choices *cs, char *initial_query,
 			}
 		}
 
-		put_line(0, query, query_len, 0);
-		vis_choices = put_choices(cs, sel);
-		move_cursor_to(0, cursor_pos);
+		print_line(0, query, query_length, 0);
+		visible_choices_count = print_choices(choices, selection);
+		move_cursor_to(0, cursor_position);
 		tty_putp(cursor_normal);
 	}
 
@@ -292,20 +291,22 @@ ui_selected_choice(struct choices *cs, char *initial_query,
 }
 
 static void
-start_ui()
+tty_init()
 {
-	struct termios newattr;
+	struct termios new_attributes;
 
-	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
+	tty_in = fopen("/dev/tty", "r");
+	if (tty_in == NULL) {
 		err(1, "fopen");
 	}
 
-	tcgetattr(fileno(tty_in), &oldattr);
-	newattr = oldattr;
-	newattr.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(fileno(tty_in), TCSANOW, &newattr);
+	tcgetattr(fileno(tty_in), &original_attributes);
+	new_attributes = original_attributes;
+	new_attributes.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
-	if ((tty_out = fopen("/dev/tty", "w")) == NULL) {
+	tty_out = fopen("/dev/tty", "w");
+	if (tty_out == NULL) {
 		err(1, "fopen");
 	}
 
@@ -317,13 +318,13 @@ start_ui()
 
 	tty_putp(clear_screen);
 
-	signal(SIGINT, int_handler);
+	signal(SIGINT, handle_interrupt);
 }
 
 static void
-stop_ui()
+tty_restore()
 {
-	tcsetattr(fileno(tty_in), TCSANOW, &oldattr);
+	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
 
 	tty_putp(clear_screen);
@@ -336,96 +337,98 @@ stop_ui()
 }
 
 static void
-int_handler()
+handle_interrupt()
 {
-	stop_ui();
+	tty_restore();
 	exit(EX_SIGINT);
 }
 
 static void
-put_line(int y, char *str, int len, int so)
+print_line(int y, char *string, int length, int standout)
 {
-	if (so) {
+	if (standout) {
 		tty_putp(enter_standout_mode);
 	}
 
-	if (len > 0) {
-		putstrat(y, 0, str);
+	if (length > 0) {
+		print_string_at(y, 0, string);
 	}
 
-	move_cursor_to(y, len);
+	move_cursor_to(y, length);
 
-	for (; len < COLS; ++len) {
+	for (; length < COLS; ++length) {
 		tty_putc(' ');
 	}
 
-	if (so) {
+	if (standout) {
 		tty_putp(exit_standout_mode);
 	}
 }
 
 static int
-put_choices(struct choices *cs, int sel)
+print_choices(struct choices *choices, int selection)
 {
 	char *line;
 	int i;
-	int vis_choices = 0;
-	size_t len;
-	size_t llen = 64;
-	struct choice *c;
+	int visible_choices_count = 0;
+	size_t length;
+	size_t line_length = 64;
+	struct choice *choice;
 
-	line = calloc(sizeof(char), llen);
+	line = calloc(sizeof(char), line_length);
 	if (line == NULL) {
 		err(1, "calloc");
 	}
 
-	SLIST_FOREACH(c, cs, choices) {
-		len = strlen(c->str) + strlen(c->desc) + 1;
+	SLIST_FOREACH(choice, choices, choices) {
+		length = strlen(choice->string) + strlen(choice->description) +
+		    1;
 
-		while (len > llen) {
-			llen = llen * 2;
+		while (length > line_length) {
+			line_length = line_length * 2;
 
-			line = realloc(line, llen);
+			line = realloc(line, line_length);
 			if (line == NULL) {
 				err(1, "realloc");
 			}
 		}
 
-		strlcpy(line, c->str, llen);
-		strlcat(line, " ", llen);
-		strlcat(line, c->desc, llen);
+		strlcpy(line, choice->string, line_length);
+		strlcat(line, " ", line_length);
+		strlcat(line, choice->description, line_length);
 
-		if (vis_choices == LINES - 1 || c->score == 0) {
+		if (visible_choices_count == LINES - 1 || choice->score == 0) {
 			break;
 		}
 
-		put_line(vis_choices + 1, line, len, vis_choices == sel);
+		print_line(visible_choices_count + 1, line, length,
+		    visible_choices_count == selection);
 
-		++vis_choices;
+		++visible_choices_count;
 	}
 
 	free(line);
 
-	for (i = vis_choices + 1; i < LINES; ++i) {
-		put_line(i, "", 0, 0);
+	for (i = visible_choices_count + 1; i < LINES; ++i) {
+		print_line(i, "", 0, 0);
 	}
 
-	return vis_choices;
+	return visible_choices_count;
 }
 
 static struct choice *
-selected(struct choices *cs, int sel)
+selected_choice(struct choices *choices, int selection)
 {
-	struct choice *c;
+	struct choice *choice;
 	int i = 0;
 
-	SLIST_FOREACH(c, cs, choices) {
-		if (c->score == 0) {
+	SLIST_FOREACH(choice, choices, choices) {
+		if (choice->score == 0) {
 			break;
 		}
 
-		if (i == sel) {
-			return c;
+		if (i == selection) {
+			return choice;
 		}
 
 		++i;
@@ -435,34 +438,34 @@ selected(struct choices *cs, int sel)
 }
 
 static void
-filter_choices(struct choices *cs, char *query, int *sel)
+filter_choices(struct choices *choices, char *query, int *selection)
 {
-	choices_score(cs, query);
-	choices_sort(cs);
-	*sel = 0;
+	choices_score(choices, query);
+	choices_sort(choices);
+	*selection = 0;
 }
 
 static void
-del_chars_between(char *str, size_t len, size_t start, size_t end)
+delete_between(char *string, size_t length, size_t start, size_t end)
 {
-	memmove(str + start, str + end, len - end + 1);
+	memmove(string + start, string + end, length - end + 1);
 }
 
 static int
-tty_putc(int c)
+tty_putc(int choice)
 {
-	return putc(c, tty_out);
+	return putc(choice, tty_out);
 }
 
 static void
-putstrat(int y, int x, char *str)
+print_string_at(int y, int x, char *string)
 {
 	int i;
 
 	move_cursor_to(y, x);
 
-	for (i = 0; str[i] != '\0'; i++) {
-		tty_putc(str[i]);
+	for (i = 0; string[i] != '\0'; i++) {
+		tty_putc(string[i]);
 	}
 }
 
@@ -473,7 +476,7 @@ move_cursor_to(int y, int x)
 }
 
 static void
-tty_putp(const char *str)
+tty_putp(const char *string)
 {
-	tputs(str, 1, tty_putc);
+	tputs(string, 1, tty_putc);
 }
