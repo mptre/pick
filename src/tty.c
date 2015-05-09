@@ -16,6 +16,7 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
+static int raw_tty_putc(int);
 static void handle_interrupt();
 
 FILE *tty_out;
@@ -85,18 +86,26 @@ tty_getc()
 	return c;
 }
 
-int
-tty_putc(int choice)
+void
+tty_putc(int c)
 {
-	return putc(choice, tty_out);
+	if (raw_tty_putc(c) == EOF) {
+		err(1, "raw_tty_putc");
+	}
 }
 
 void
 tty_putp(const char *string)
 {
-	if (tputs(string, 1, tty_putc) == ERR) {
+	if (tputs(string, 1, raw_tty_putc) == ERR) {
 		err(1, "tputs");
 	}
+}
+
+static int
+raw_tty_putc(int c)
+{
+    return putc(c, tty_out);
 }
 
 static void
