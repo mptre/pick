@@ -94,7 +94,9 @@ tty_putc(int choice)
 void
 tty_putp(const char *string)
 {
-	tputs(string, 1, tty_putc);
+	if (tputs(string, 1, tty_putc) == ERR) {
+		err(1, "tputs");
+	}
 }
 
 static void
