@@ -60,7 +60,6 @@ static struct choice *selected_choice(struct choices *, int);
 static void filter_choices(struct choices *, char *, int *);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_string_at(int, int, char *);
-static void move_cursor_to(int, int);
 
 struct choice *
 ui_selected_choice(struct choices *choices, char *initial_query,
@@ -91,8 +90,8 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 
 	print_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(choices, selection);
-	move_cursor_to(0, cursor_position);
-	tty_putp(cursor_normal);
+	tty_move_cursor_to(0, cursor_position);
+	tty_show_cursor();
 
 	for (;;) {
 		key = tty_getc();
@@ -252,7 +251,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			break;
 		}
 
-		tty_putp(cursor_invisible);
+		tty_hide_cursor();
 
 		if (query_length == query_size - 1) {
 			query_size += query_size;
@@ -265,8 +264,8 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 
 		print_line(0, query, query_length, 0);
 		visible_choices_count = print_choices(choices, selection);
-		move_cursor_to(0, cursor_position);
-		tty_putp(cursor_normal);
+		tty_move_cursor_to(0, cursor_position);
+		tty_show_cursor();
 	}
 }
 
@@ -274,21 +273,21 @@ static void
 print_line(int y, char *string, int length, int standout)
 {
 	if (standout) {
-		tty_putp(enter_standout_mode);
+		tty_enter_standout_mode();
 	}
 
 	if (length > 0) {
 		print_string_at(y, 0, string);
 	}
 
-	move_cursor_to(y, length);
+	tty_move_cursor_to(y, length);
 
 	for (; length < COLS; ++length) {
 		tty_putc(' ');
 	}
 
 	if (standout) {
-		tty_putp(exit_standout_mode);
+		tty_exit_standout_mode();
 	}
 }
 
@@ -383,15 +382,9 @@ print_string_at(int y, int x, char *string)
 {
 	int i;
 
-	move_cursor_to(y, x);
+	tty_move_cursor_to(y, x);
 
 	for (i = 0; string[i] != '\0'; i++) {
 		tty_putc(string[i]);
 	}
-}
-
-static void
-move_cursor_to(int y, int x)
-{
-	tty_putp(tgoto(cursor_address, x, y));
 }

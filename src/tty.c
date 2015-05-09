@@ -16,6 +16,7 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
+static void tty_putp(const char *);
 static int raw_tty_putc(int);
 static void handle_interrupt();
 
@@ -95,6 +96,36 @@ tty_putc(int c)
 }
 
 void
+tty_show_cursor()
+{
+	tty_putp(cursor_normal);
+}
+
+void
+tty_hide_cursor()
+{
+	tty_putp(cursor_invisible);
+}
+
+void
+tty_enter_standout_mode()
+{
+	tty_putp(enter_standout_mode);
+}
+
+void
+tty_exit_standout_mode()
+{
+	tty_putp(exit_standout_mode);
+}
+
+void
+tty_move_cursor_to(int y, int x)
+{
+	tty_putp(tgoto(cursor_address, x, y));
+}
+
+static void
 tty_putp(const char *string)
 {
 	if (tputs(string, 1, raw_tty_putc) == ERR) {
