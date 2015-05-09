@@ -8,10 +8,10 @@
 #endif /* HAVE_FULL_QUEUE_H */
 
 struct choice {
-    char *str;
-    char *desc;
-    float score;
-    SLIST_ENTRY(choice) choices;
+	char *str;
+	char *desc;
+	float score;
+	SLIST_ENTRY(choice) choices;
 };
 
 struct choice	*choice_new(char *, char *, float);

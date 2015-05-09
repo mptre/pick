@@ -19,19 +19,21 @@ static void chomp(char *, ssize_t);
 struct choices *
 get_choices(int parse_desc)
 {
-	struct choices *cs;
-	struct choice *c;
-	char *line;
-	char *desc;
-	char *ifs;
+	char *line, *desc, *ifs;
 	size_t n;
 	ssize_t len;
+	struct choice *c;
+	struct choices *cs;
 
-	if ((ifs = getenv("IFS")) == NULL)
+	ifs = getenv("IFS");
+	if (ifs == NULL) {
 		ifs = " ";
+	}
 
-	if ((cs = malloc(sizeof(struct choices))) == NULL)
+	cs = malloc(sizeof(struct choices));
+	if (cs == NULL) {
 		err(1, "malloc");
+	}
 
 	SLIST_INIT(cs);
 
@@ -39,17 +41,26 @@ get_choices(int parse_desc)
 		line = NULL;
 		desc = "";
 		n = 0;
-		if ((len = getline(&line, &n, stdin)) == -1)
+
+		len = getline(&line, &n, stdin);
+		if (len == -1) {
 			break;
+		}
+
 		chomp(line, len);
-		if (parse_desc)
+
+		if (parse_desc) {
 			strtok_r(line, ifs, &desc);
+		}
+
 		c = choice_new(line, desc, 1);
 		SLIST_INSERT_HEAD(cs, c, choices);
+
 		free(line);
 	}
 
 	free(line);
+
 	return cs;
 }
 
@@ -57,13 +68,16 @@ void
 put_choice(struct choice *c, int output_desc)
 {
 	printf("%s\n", c->str);
-	if (output_desc)
+
+	if (output_desc) {
 		printf("%s\n", c->desc);
+	}
 }
 
 static void
 chomp(char *str, ssize_t len)
 {
-	if (str[len - 1] == '\n')
+	if (str[len - 1] == '\n') {
 		str[len - 1] = '\0';
+	}
 }

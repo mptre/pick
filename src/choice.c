@@ -10,12 +10,16 @@ struct choice *
 choice_new(char *str, char *desc, float score)
 {
 	struct choice *c;
-	
-	if ((c = malloc(sizeof(struct choice))) == NULL)
+
+	c = malloc(sizeof(struct choice));
+	if (c == NULL) {
 		err(1, "malloc");
+	}
+
 	c->str = strdup(str);
 	c->desc = strdup(desc);
 	c->score = score;
+
 	return c;
 }
 

@@ -44,29 +44,30 @@ choices_free(struct choices *cs)
 		SLIST_REMOVE_HEAD(cs, choices);
 		choice_free(c);
 	}
+
 	free(cs);
 }
 
 size_t
 min_match_length(char *str, char *query)
 {
-	size_t mlen;
-	size_t mstart;
-	size_t qpos;
-	size_t mpos;
-	int query_char;
-	int query_start;
+	size_t mlen, mstart, qpos, mpos;
+	int query_char, query_start;
 
 	query_start = tolower((unsigned char)query[0]);
-	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart)
+
+	for (mlen = 0, mstart = 0; str[mstart] != '\0'; ++mstart) {
 		if (tolower((unsigned char)str[mstart]) == query_start) {
 			for (qpos = 1, mpos = mstart + 1; query[qpos] != '\0';
 			    ++qpos) {
 				query_char =
 				    tolower((unsigned char)query[qpos]);
+
 				for (;; ++mpos) {
-					if (str[mpos] == '\0')
+					if (str[mpos] == '\0') {
 						return mlen;
+					}
+
 					if (tolower((unsigned char)str[mpos]) ==
 					    query_char) {
 						++mpos;
@@ -74,27 +75,35 @@ min_match_length(char *str, char *query)
 					}
 				}
 			}
-			if (mlen == 0 || mlen > mpos - mstart + 1)
+			if (mlen == 0 || mlen > mpos - mstart + 1) {
 				mlen = mpos - mstart + 1;
+			}
 		}
+	}
 	return mlen;
 }
 
 static float
 score_str(char *str, char *query)
 {
-	size_t slen;
-	size_t qlen;
-	size_t mlen;
+	size_t slen, qlen, mlen;
 
 	slen = strlen(str);
 	qlen = strlen(query);
-	if (qlen == 0)
+
+	if (qlen == 0) {
 		return 1;	
-	if (slen == 0)
+	}
+
+	if (slen == 0) {
 		return 0;
-	if ((mlen = min_match_length(str, query)) == 0)
+	}
+
+	mlen = min_match_length(str, query);
+	if (mlen == 0) {
 		return 0;
+	}
+
 	return (float)qlen / (float)mlen / (float)slen;
 }
 
@@ -103,12 +112,13 @@ merge(struct choice *front, struct choice *back)
 {
 	struct choice head;
 	struct choice *c;
+
 	c = &head;
 
 	while (front != NULL && back != NULL) {
 		if (front->score > back->score ||
-                (front->score == back->score &&
-                 strcmp(front->str, back->str) < 0)) {
+		    (front->score == back->score &&
+		     strcmp(front->str, back->str) < 0)) {
 			c->choices.sle_next = front;
 			c = front;
 			front = front->choices.sle_next;
@@ -118,10 +128,12 @@ merge(struct choice *front, struct choice *back)
 			back = back->choices.sle_next;
 		}
 	}
-	if (front != NULL)
+
+	if (front != NULL) {
 		c->choices.sle_next = front;
-	else
+	} else {
 		c->choices.sle_next = back;
+	}
 
 	return head.choices.sle_next;
 }
@@ -129,11 +141,11 @@ merge(struct choice *front, struct choice *back)
 static struct choice *
 sort(struct choice *c)
 {
-	struct choice *front;
-	struct choice *back;
+	struct choice *front, *back;
 
-	if (c == NULL || c->choices.sle_next == NULL)
+	if (c == NULL || c->choices.sle_next == NULL) {
 		return c;
+	}
 
 	front = c;
 	back = c->choices.sle_next;
@@ -142,6 +154,7 @@ sort(struct choice *c)
 		c = c->choices.sle_next;
 		back = back->choices.sle_next->choices.sle_next;
 	}
+
 	back = c->choices.sle_next;
 	c->choices.sle_next = NULL;
 
