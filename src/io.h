@@ -4,7 +4,7 @@
 #include "choices.h"
 #include "choice.h"
 
-struct choices  *get_choices(int);
-void             put_choice(struct choice *, int);
+struct choices	*get_choices(int);
+void		 put_choice(struct choice *, int);
 
 #endif /* IO_H */

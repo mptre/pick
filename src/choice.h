@@ -14,7 +14,7 @@ struct choice {
     SLIST_ENTRY(choice) choices;          /* List. */
 };
 
-struct choice   *choice_new(char *, char *, float);
-void             choice_free(struct choice *);
+struct choice	*choice_new(char *, char *, float);
+void		 choice_free(struct choice *);
 
 #endif /* CHOICHE_H */
