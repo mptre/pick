@@ -1,9 +1,7 @@
 #include "config.h"
-#include <termios.h>
 #include <err.h>
 #include <fcntl.h>
 #include <locale.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +32,7 @@
 #include "choice.h"
 #include "choices.h"
 #include "ui.h"
+#include "tty.h"
 
 #define KEY_CTRL_A 1
 #define KEY_CTRL_B 2
@@ -55,26 +54,13 @@
 #define KEY_RAW_LEFT 68
 #define KEY_RAW_RIGHT 67
 
-#define EX_SIG 128
-#define EX_SIGINT (EX_SIG + SIGINT)
-
-static void tty_init();
-static void tty_restore();
-static void handle_interrupt();
 static void print_line(int, char *, int, int);
 static int print_choices(struct choices *, int);
 static struct choice *selected_choice(struct choices *, int);
 static void filter_choices(struct choices *, char *, int *);
 static void delete_between(char *, size_t, size_t, size_t);
-static int tty_putc(int);
 static void print_string_at(int, int, char *);
 static void move_cursor_to(int, int);
-static void tty_putp(const char *);
-
-FILE *tty_out;
-FILE *tty_in;
-struct termios original_attributes;
-int using_alternate_screen;
 
 struct choice *
 ui_selected_choice(struct choices *choices, char *initial_query,
@@ -84,7 +70,6 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	int key, selection, visible_choices_count, word_position;
 	size_t cursor_position, query_size, query_length, initial_query_length;
 
-	using_alternate_screen = use_alternate_screen;
 	initial_query_length = strlen(initial_query);
 	cursor_position = initial_query_length;
 	query_length = initial_query_length;
@@ -102,14 +87,14 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	strlcpy(query, initial_query, query_size);
 
 	filter_choices(choices, query, &selection);
-	tty_init();
+	tty_init(use_alternate_screen);
 
 	print_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(choices, selection);
 	move_cursor_to(0, cursor_position);
 	tty_putp(cursor_normal);
 
-	while((key = getc(tty_in)) != ERR) {
+	while((key = tty_getc()) != ERR) {
 		switch(key) {
 		case KEY_REAL_ENTER:
 			if (visible_choices_count > 0) {
@@ -214,9 +199,9 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			cursor_position = query_length;
 			break;
 		case KEY_ESCAPE:
-			if((key = getc(tty_in)) != ERR) {
+			if((key = tty_getc()) != ERR) {
 				if (key == KEY_BRACKET || key == KEY_RAW_O) {
-					if((key = getc(tty_in)) != ERR) {
+					if((key = tty_getc()) != ERR) {
 						switch (key) {
 						case KEY_RAW_DOWN:
 							if (selection < visible_choices_count - 1) {
@@ -245,11 +230,11 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 							break;
 						}
 					} else {
-						err(1, "getc");
+						err(1, "tty_getc");
 					}
 				}
 			} else {
-				err(1, "getc");
+				err(1, "tty_getc");
 			}
 
 			break;
@@ -287,60 +272,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		tty_putp(cursor_normal);
 	}
 
-	err(1, "getc");
-}
-
-static void
-tty_init()
-{
-	struct termios new_attributes;
-
-	tty_in = fopen("/dev/tty", "r");
-	if (tty_in == NULL) {
-		err(1, "fopen");
-	}
-
-	tcgetattr(fileno(tty_in), &original_attributes);
-	new_attributes = original_attributes;
-	new_attributes.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
-
-	tty_out = fopen("/dev/tty", "w");
-	if (tty_out == NULL) {
-		err(1, "fopen");
-	}
-
-	setupterm((char *)0, fileno(tty_out), (int *)0);
-
-	if (using_alternate_screen) {
-		tty_putp(enter_ca_mode);
-	}
-
-	tty_putp(clear_screen);
-
-	signal(SIGINT, handle_interrupt);
-}
-
-static void
-tty_restore()
-{
-	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
-	fclose(tty_in);
-
-	tty_putp(clear_screen);
-
-	if (using_alternate_screen) {
-		tty_putp(exit_ca_mode);
-	}
-
-	fclose(tty_out);
-}
-
-static void
-handle_interrupt()
-{
-	tty_restore();
-	exit(EX_SIGINT);
+	err(1, "tty_getc");
 }
 
 static void
@@ -451,12 +383,6 @@ delete_between(char *string, size_t length, size_t start, size_t end)
 	memmove(string + start, string + end, length - end + 1);
 }
 
-static int
-tty_putc(int choice)
-{
-	return putc(choice, tty_out);
-}
-
 static void
 print_string_at(int y, int x, char *string)
 {
@@ -473,10 +399,4 @@ static void
 move_cursor_to(int y, int x)
 {
 	tty_putp(tgoto(cursor_address, x, y));
-}
-
-static void
-tty_putp(const char *string)
-{
-	tputs(string, 1, tty_putc);
 }
