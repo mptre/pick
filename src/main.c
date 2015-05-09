@@ -55,9 +55,10 @@ main(int argc, char **argv)
 	 */
 	output_desc = output_desc && display_desc;
 
-	cs = get_choices(display_desc);
+	cs = io_read_choices(display_desc);
 
-	put_choice(get_selected(cs, query, use_alternate_screen), output_desc);
+	io_print_choice(ui_selected_choice(cs, query, use_alternate_screen),
+	    output_desc);
 
 	choices_free(cs);
 

@@ -17,7 +17,7 @@
 static void chomp(char *, ssize_t);
 
 struct choices *
-get_choices(int parse_desc)
+io_read_choices(int parse_desc)
 {
 	char *line, *desc, *ifs;
 	size_t n;
@@ -65,7 +65,7 @@ get_choices(int parse_desc)
 }
 
 void
-put_choice(struct choice *c, int output_desc)
+io_print_choice(struct choice *c, int output_desc)
 {
 	printf("%s\n", c->str);
 

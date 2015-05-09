@@ -77,7 +77,8 @@ struct termios oldattr;
 int using_alternate_screen;
 
 struct choice *
-get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
+ui_selected_choice(struct choices *cs, char *initial_query,
+    int use_alternate_screen)
 {
 	char *query;
 	int ch, sel, vis_choices, word_pos;
