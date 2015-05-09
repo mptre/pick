@@ -13,6 +13,40 @@
 #include "choice.h"
 #include "choices.h"
 
+static size_t min_match_length(char *, char *);
+static float score_str(char *, char *);
+static struct choice *merge(struct choice *, struct choice *);
+static struct choice *sort(struct choice *c);
+
+void
+choices_score(struct choices *cs, char *query)
+{
+	struct choice *c;
+
+	SLIST_FOREACH(c, cs, choices) {
+		c->score = score_str(c->str, query);
+	}
+}
+
+void
+choices_sort(struct choices *cs)
+{
+	cs->slh_first = sort(cs->slh_first);
+}
+
+void
+choices_free(struct choices *cs)
+{
+	struct choice *c;
+
+	while (!SLIST_EMPTY(cs)) {
+		c = SLIST_FIRST(cs);
+		SLIST_REMOVE_HEAD(cs, choices);
+		choice_free(c);
+	}
+	free(cs);
+}
+
 size_t
 min_match_length(char *str, char *query)
 {
@@ -46,7 +80,7 @@ min_match_length(char *str, char *query)
 	return mlen;
 }
 
-float
+static float
 score_str(char *str, char *query)
 {
 	size_t slen;
@@ -64,18 +98,7 @@ score_str(char *str, char *query)
 	return (float)qlen / (float)mlen / (float)slen;
 }
 
-
-void
-choices_score(struct choices *cs, char *query)
-{
-	struct choice *c;
-
-	SLIST_FOREACH(c, cs, choices) {
-		c->score = score_str(c->str, query);
-	}
-}
-
-struct choice *
+static struct choice *
 merge(struct choice *front, struct choice *back)
 {
 	struct choice head;
@@ -103,7 +126,7 @@ merge(struct choice *front, struct choice *back)
 	return head.choices.sle_next;
 }
 
-struct choice *
+static struct choice *
 sort(struct choice *c)
 {
 	struct choice *front;
@@ -123,23 +146,4 @@ sort(struct choice *c)
 	c->choices.sle_next = NULL;
 
 	return merge(sort(front), sort(back));
-}
-
-void
-choices_sort(struct choices *cs)
-{
-	cs->slh_first = sort(cs->slh_first);
-}
-
-void
-choices_free(struct choices *cs)
-{
-	struct choice *c;
-
-	while (!SLIST_EMPTY(cs)) {
-		c = SLIST_FIRST(cs);
-		SLIST_REMOVE_HEAD(cs, choices);
-		choice_free(c);
-	}
-	free(cs);
 }

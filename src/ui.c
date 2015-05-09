@@ -58,152 +58,23 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
-void	 int_handler();
-int	 tty_putc(int);
-void	 putstrat(int, int, char *);
-void	 move_cursor_to(int, int);
-void	 tty_putp(const char *str);
+static void start_ui();
+static void stop_ui();
+static void int_handler();
+static void put_line(int, char *, int, int);
+static int put_choices(struct choices *, int);
+static struct choice *selected(struct choices *, int);
+static void filter_choices(struct choices *, char *, int *);
+static void del_chars_between(char *, size_t, size_t, size_t);
+static int tty_putc(int);
+static void putstrat(int, int, char *);
+static void move_cursor_to(int, int);
+static void tty_putp(const char *);
 
 FILE *tty_out;
 FILE *tty_in;
 struct termios oldattr;
 int using_alternate_screen;
-
-void
-start_ui()
-{
-	struct termios newattr;
-
-	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
-		err(1, "fopen");
-	}
-	tcgetattr(fileno(tty_in), &oldattr);
-	newattr = oldattr;
-	newattr.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(fileno(tty_in), TCSANOW, &newattr);
-
-	if ((tty_out = fopen("/dev/tty", "w")) == NULL) {
-		err(1, "fopen");
-	}
-	setupterm((char *)0, fileno(tty_out), (int *)0);
-	if (using_alternate_screen) {
-		tty_putp(enter_ca_mode);
-	}
-	tty_putp(clear_screen);
-
-	signal(SIGINT, int_handler);
-}
-
-void
-stop_ui()
-{
-	tcsetattr(fileno(tty_in), TCSANOW, &oldattr);
-	fclose(tty_in);
-
-	tty_putp(clear_screen);
-	if (using_alternate_screen) {
-		tty_putp(exit_ca_mode);
-	}
-	fclose(tty_out);
-}
-
-void
-int_handler()
-{
-	stop_ui();
-	exit(EX_SIGINT);
-}
-
-void
-put_line(int y, char *str, int len, int so)
-{
-	if (so)
-		tty_putp(enter_standout_mode);
-	if (len > 0)
-		putstrat(y, 0, str);
-	move_cursor_to(y, len);
-	for (; len < COLS; ++len)
-		tty_putc(' ');
-	if (so)
-		tty_putp(exit_standout_mode);
-}
-
-int
-put_choices(struct choices *cs, int sel)
-{
-	struct choice *c;
-	int vis_choices;
-	int i;
-	char *line;
-	size_t len;
-	size_t llen;
-
-	llen = 64;
-	if ((line = malloc(sizeof(char) * llen)) == NULL)
-		err(1, "malloc");
-
-	vis_choices = 0;
-	SLIST_FOREACH(c, cs, choices) {
-		len = strlen(c->str) + strlen(c->desc) + 1;
-		while (len > llen) {
-			llen = llen * 2;
-			if ((line = realloc(line, llen)) == NULL) {
-				err(1, "realloc");
-			}
-		}
-		strlcpy(line, c->str, llen);
-		strlcat(line, " ", llen);
-		strlcat(line, c->desc, llen);
-
-		if (vis_choices == LINES - 1 || c->score == 0)
-			break;
-		put_line(
-		    vis_choices + 1,
-		    line,
-		    len,
-		    vis_choices == sel);
-		++vis_choices;
-	}
-	free(line);
-	for (i = vis_choices + 1; i < LINES; ++i)
-		put_line(i, "", 0, 0);
-
-	return vis_choices;
-}
-
-struct choice *
-selected(struct choices *cs, int sel)
-{
-	struct choice *c;
-	int i;
-
-	i = 0;
-	SLIST_FOREACH(c, cs, choices) {
-		if (c->score == 0)
-			break;
-		if (i == sel)
-			return c;
-		++i;
-	}
-	return NULL;
-}
-
-void
-filter_choices(struct choices *cs, char *query, int *sel)
-{
-	choices_score(cs, query);
-	choices_sort(cs);
-	*sel = 0;
-}
-
-void
-del_chars_between(char *str, size_t len, size_t start, size_t end)
-{
-	memmove(
-	    str + start,
-	    str + end,
-	    len - end + 1);
-}
 
 struct choice *
 get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
@@ -388,13 +259,149 @@ get_selected(struct choices *cs, char *initial_query, int use_alternate_screen)
 	err(1, "getc");
 }
 
-int
+static void
+start_ui()
+{
+	struct termios newattr;
+
+	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
+		err(1, "fopen");
+	}
+	tcgetattr(fileno(tty_in), &oldattr);
+	newattr = oldattr;
+	newattr.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(fileno(tty_in), TCSANOW, &newattr);
+
+	if ((tty_out = fopen("/dev/tty", "w")) == NULL) {
+		err(1, "fopen");
+	}
+	setupterm((char *)0, fileno(tty_out), (int *)0);
+	if (using_alternate_screen) {
+		tty_putp(enter_ca_mode);
+	}
+	tty_putp(clear_screen);
+
+	signal(SIGINT, int_handler);
+}
+
+static void
+stop_ui()
+{
+	tcsetattr(fileno(tty_in), TCSANOW, &oldattr);
+	fclose(tty_in);
+
+	tty_putp(clear_screen);
+	if (using_alternate_screen) {
+		tty_putp(exit_ca_mode);
+	}
+	fclose(tty_out);
+}
+
+static void
+int_handler()
+{
+	stop_ui();
+	exit(EX_SIGINT);
+}
+
+static void
+put_line(int y, char *str, int len, int so)
+{
+	if (so)
+		tty_putp(enter_standout_mode);
+	if (len > 0)
+		putstrat(y, 0, str);
+	move_cursor_to(y, len);
+	for (; len < COLS; ++len)
+		tty_putc(' ');
+	if (so)
+		tty_putp(exit_standout_mode);
+}
+
+static int
+put_choices(struct choices *cs, int sel)
+{
+	struct choice *c;
+	int vis_choices;
+	int i;
+	char *line;
+	size_t len;
+	size_t llen;
+
+	llen = 64;
+	if ((line = malloc(sizeof(char) * llen)) == NULL)
+		err(1, "malloc");
+
+	vis_choices = 0;
+	SLIST_FOREACH(c, cs, choices) {
+		len = strlen(c->str) + strlen(c->desc) + 1;
+		while (len > llen) {
+			llen = llen * 2;
+			if ((line = realloc(line, llen)) == NULL) {
+				err(1, "realloc");
+			}
+		}
+		strlcpy(line, c->str, llen);
+		strlcat(line, " ", llen);
+		strlcat(line, c->desc, llen);
+
+		if (vis_choices == LINES - 1 || c->score == 0)
+			break;
+		put_line(
+		    vis_choices + 1,
+		    line,
+		    len,
+		    vis_choices == sel);
+		++vis_choices;
+	}
+	free(line);
+	for (i = vis_choices + 1; i < LINES; ++i)
+		put_line(i, "", 0, 0);
+
+	return vis_choices;
+}
+
+static struct choice *
+selected(struct choices *cs, int sel)
+{
+	struct choice *c;
+	int i;
+
+	i = 0;
+	SLIST_FOREACH(c, cs, choices) {
+		if (c->score == 0)
+			break;
+		if (i == sel)
+			return c;
+		++i;
+	}
+	return NULL;
+}
+
+static void
+filter_choices(struct choices *cs, char *query, int *sel)
+{
+	choices_score(cs, query);
+	choices_sort(cs);
+	*sel = 0;
+}
+
+static void
+del_chars_between(char *str, size_t len, size_t start, size_t end)
+{
+	memmove(
+	    str + start,
+	    str + end,
+	    len - end + 1);
+}
+
+static int
 tty_putc(int c)
 {
 	return putc(c, tty_out);
 }
 
-void
+static void
 putstrat(int y, int x, char *str)
 {
 	int i;
@@ -404,13 +411,13 @@ putstrat(int y, int x, char *str)
 	}
 }
 
-void
+static void
 move_cursor_to(int y, int x)
 {
 	tty_putp(tgoto(cursor_address, x, y));
 }
 
-void
+static void
 tty_putp(const char *str)
 {
 	tputs(str, 1, tty_putc);

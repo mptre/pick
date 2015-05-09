@@ -8,8 +8,8 @@
 #include "io.h"
 #include "ui.h"
 
-void usage();
-void version();
+static void usage();
+static void version();
 
 int
 main(int argc,char **argv)
@@ -61,7 +61,7 @@ main(int argc,char **argv)
 	return EX_OK;
 }
 
-void
+static void
 usage()
 {
 	fprintf(stderr, "usage: pick [-h] [-v] [-q QUERY] [-d [-o]] [-x | -X]\n");
@@ -75,7 +75,7 @@ usage()
 	exit(EX_USAGE);
 }
 
-void
+static void
 version()
 {
 	printf("%s\n", PACKAGE_VERSION);

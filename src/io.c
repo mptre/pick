@@ -14,12 +14,7 @@
 #include "choice.h"
 #include "choices.h"
 
-void
-chomp(char *str, ssize_t len)
-{
-	if (str[len - 1] == '\n')
-		str[len - 1] = '\0';
-}
+static void chomp(char *, ssize_t);
 
 struct choices *
 get_choices(int parse_desc)
@@ -64,4 +59,11 @@ put_choice(struct choice *c, int output_desc)
 	printf("%s\n", c->str);
 	if (output_desc)
 		printf("%s\n", c->desc);
+}
+
+static void
+chomp(char *str, ssize_t len)
+{
+	if (str[len - 1] == '\n')
+		str[len - 1] = '\0';
 }
