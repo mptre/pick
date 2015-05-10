@@ -10,5 +10,7 @@ void tty_hide_cursor();
 void tty_enter_standout_mode();
 void tty_exit_standout_mode();
 void tty_move_cursor_to(int, int);
+int tty_lines();
+int tty_columns();
 
 #endif /* TTY_H */

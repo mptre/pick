@@ -7,14 +7,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef HAVE_NCURSESW_H
-#include <ncursesw/curses.h>
-#include <ncursesw/term.h>
-#else
-#include <curses.h>
-#include <term.h>
-#endif
-
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
 #else /* HAVE_FULL_QUEUE_H */
@@ -45,7 +37,7 @@
 #define KEY_CTRL_U 21
 #define KEY_CTRL_W 23
 #define KEY_DEL 127
-#define KEY_REAL_ENTER 10 /* curses.h defines KEY_ENTER to be Ctrl-Enter */
+#define KEY_ENTER 10
 #define KEY_ESCAPE 27
 #define KEY_BRACKET 91
 #define KEY_RAW_O 79
@@ -53,6 +45,7 @@
 #define KEY_RAW_UP 65
 #define KEY_RAW_LEFT 68
 #define KEY_RAW_RIGHT 67
+#define KEY_BACKSPACE 263
 
 static void print_line(int, char *, int, int);
 static int print_choices(struct choices *, int);
@@ -96,7 +89,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	for (;;) {
 		key = tty_getc();
 		switch(key) {
-		case KEY_REAL_ENTER:
+		case KEY_ENTER:
 			if (visible_choices_count > 0) {
 				tty_restore();
 				free(query);
@@ -282,7 +275,7 @@ print_line(int y, char *string, int length, int standout)
 
 	tty_move_cursor_to(y, length);
 
-	for (; length < COLS; ++length) {
+	for (; length < tty_columns(); ++length) {
 		tty_putc(' ');
 	}
 
@@ -323,7 +316,7 @@ print_choices(struct choices *choices, int selection)
 		strlcat(line, " ", line_length);
 		strlcat(line, choice->description, line_length);
 
-		if (visible_choices_count == LINES - 1 || choice->score == 0) {
+		if (visible_choices_count == tty_lines() - 1 || choice->score == 0) {
 			break;
 		}
 
@@ -335,7 +328,7 @@ print_choices(struct choices *choices, int selection)
 
 	free(line);
 
-	for (i = visible_choices_count + 1; i < LINES; ++i) {
+	for (i = visible_choices_count + 1; i < tty_lines(); ++i) {
 		print_line(i, "", 0, 0);
 	}
 

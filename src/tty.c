@@ -125,6 +125,18 @@ tty_move_cursor_to(int y, int x)
 	tty_putp(tgoto(cursor_address, x, y));
 }
 
+int
+tty_lines()
+{
+	return lines;
+}
+
+int
+tty_columns()
+{
+	return columns;
+}
+
 static void
 tty_putp(const char *string)
 {
