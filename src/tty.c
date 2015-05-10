@@ -16,6 +16,9 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
+#define ESCAPE 27
+
+static int tty_getc();
 static void tty_putp(const char *);
 static int raw_tty_putc(int);
 static void handle_interrupt();
@@ -74,17 +77,37 @@ tty_restore()
 }
 
 int
-tty_getc()
+tty_getch()
 {
-	int c;
+	int ch;
 
-	c = getc(tty_in);
+	ch = tty_getc();
 
-	if (c == ERR) {
-		err(1, "getc");
+	if (ch == ESCAPE) {
+		ch = tty_getc();
+
+		if (ch == '[' || ch == 'O') {
+			ch = tty_getc();
+
+			if (ch == 'A') {
+				return TTY_UP;
+			}
+
+			if (ch == 'B') {
+				return TTY_DOWN;
+			}
+
+			if (ch == 'C') {
+				return TTY_RIGHT;
+			}
+
+			if (ch == 'D') {
+				return TTY_LEFT;
+			}
+		}
 	}
 
-	return c;
+	return ch;
 }
 
 void
@@ -135,6 +158,20 @@ int
 tty_columns()
 {
 	return columns;
+}
+
+static int
+tty_getc()
+{
+	int c;
+
+	c = getc(tty_in);
+
+	if (c == ERR) {
+		err(1, "getc");
+	}
+
+	return c;
 }
 
 static void

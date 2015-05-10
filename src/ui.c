@@ -26,27 +26,6 @@
 #include "ui.h"
 #include "tty.h"
 
-#define KEY_CTRL_A 1
-#define KEY_CTRL_B 2
-#define KEY_CTRL_D 4
-#define KEY_CTRL_E 5
-#define KEY_CTRL_F 6
-#define KEY_CTRL_N 14
-#define KEY_CTRL_P 16
-#define KEY_CTRL_K 11
-#define KEY_CTRL_U 21
-#define KEY_CTRL_W 23
-#define KEY_DEL 127
-#define KEY_ENTER 10
-#define KEY_ESCAPE 27
-#define KEY_BRACKET 91
-#define KEY_RAW_O 79
-#define KEY_RAW_DOWN 66
-#define KEY_RAW_UP 65
-#define KEY_RAW_LEFT 68
-#define KEY_RAW_RIGHT 67
-#define KEY_BACKSPACE 263
-
 static void print_line(int, char *, int, int);
 static int print_choices(struct choices *, int);
 static struct choice *selected_choice(struct choices *, int);
@@ -87,40 +66,40 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	tty_show_cursor();
 
 	for (;;) {
-		key = tty_getc();
+		key = tty_getch();
 		switch(key) {
-		case KEY_ENTER:
+		case TTY_ENTER:
 			if (visible_choices_count > 0) {
 				tty_restore();
 				free(query);
 				return selected_choice(choices, selection);
 			}
-		case KEY_CTRL_N:
+		case TTY_CTRL_N:
 			if (selection < visible_choices_count - 1) {
 				++selection;
 			}
 
 			break;
-		case KEY_CTRL_P:
+		case TTY_CTRL_P:
 			if (selection > 0) {
 				--selection;
 			}
 
 			break;
-		case KEY_CTRL_B:
+		case TTY_CTRL_B:
 			if (cursor_position > 0) {
 				--cursor_position;
 			}
 
 			break;
-		case KEY_CTRL_F:
+		case TTY_CTRL_F:
 			if (cursor_position < query_length) {
 				++cursor_position;
 			}
 
 			break;
-		case KEY_BACKSPACE:
-		case KEY_DEL:
+		case TTY_BACKSPACE:
+		case TTY_DEL:
 			if (cursor_position > 0) {
 				delete_between(
 				    query,
@@ -133,7 +112,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			}
 
 			break;
-		case KEY_CTRL_D:
+		case TTY_CTRL_D:
 			if (cursor_position < query_length) {
 				delete_between(
 				    query,
@@ -145,7 +124,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			}
 
 			break;
-		case KEY_CTRL_U:
+		case TTY_CTRL_U:
 			delete_between(
 			    query,
 			    query_length,
@@ -155,7 +134,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			cursor_position = 0;
 			filter_choices(choices, query, &selection);
 			break;
-		case KEY_CTRL_K:
+		case TTY_CTRL_K:
 			delete_between(
 			    query,
 			    query_length,
@@ -164,7 +143,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			query_length = cursor_position;
 			filter_choices(choices, query, &selection);
 			break;
-		case KEY_CTRL_W:
+		case TTY_CTRL_W:
 			if (cursor_position > 0) {
 				for (word_position = cursor_position - 1;
 				    word_position > 0;
@@ -185,45 +164,33 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 				filter_choices(choices, query, &selection);
 			}
 			break;
-		case KEY_CTRL_A:
+		case TTY_CTRL_A:
 			cursor_position = 0;
 			break;
-		case KEY_CTRL_E:
+		case TTY_CTRL_E:
 			cursor_position = query_length;
 			break;
-		case KEY_ESCAPE:
-			key = tty_getc();
+		case TTY_DOWN:
+			if (selection < visible_choices_count - 1) {
+				++selection;
+			}
 
-			if (key == KEY_BRACKET || key == KEY_RAW_O) {
-				key = tty_getc();
+			break;
+		case TTY_UP:
+			if (selection > 0) {
+				--selection;
+			}
 
-				switch (key) {
-				case KEY_RAW_DOWN:
-					if (selection < visible_choices_count - 1) {
-						++selection;
-					}
+			break;
+		case TTY_LEFT:
+			if (cursor_position > 0) {
+				--cursor_position;
+			}
 
-					break;
-				case KEY_RAW_UP:
-					if (selection > 0) {
-						--selection;
-					}
-
-					break;
-				case KEY_RAW_LEFT:
-					if (cursor_position > 0) {
-						--cursor_position;
-					}
-
-					break;
-				case KEY_RAW_RIGHT:
-					if (cursor_position <
-					    query_length) {
-						++cursor_position;
-					}
-
-					break;
-				}
+			break;
+		case TTY_RIGHT:
+			if (cursor_position < query_length) {
+				++cursor_position;
 			}
 
 			break;
