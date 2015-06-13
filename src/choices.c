@@ -1,8 +1,7 @@
 #include <ctype.h>
-#include <err.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
@@ -12,14 +11,16 @@
 
 #include "choice.h"
 #include "choices.h"
+#include "query.h"
+#include "levenshtein.h"
 
-static size_t min_match_length(char *, char *);
-static float score(char *, char *);
+static size_t min_match_length(const char *, const char *);
+static float score(const char *, const struct query *);
 static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
 
 void
-choices_score(struct choices *choices, char *query)
+choices_score(struct choices *choices, const struct query *query)
 {
 	struct choice *choice;
 
@@ -49,7 +50,7 @@ choices_free(struct choices *choices)
 }
 
 size_t
-min_match_length(char *string, char *query)
+min_match_length(const char *string, const char *query)
 {
 	size_t match_length, match_start, query_position, match_position;
 	int query_char, query_start;
@@ -88,27 +89,72 @@ min_match_length(char *string, char *query)
 }
 
 static float
-score(char *string, char *query)
+score_standard(const char *string, size_t string_length,
+	const struct query *query)
 {
-	size_t string_length, query_length, match_length;
+	size_t match_length;
+
+	match_length = min_match_length(string, query_text(query));
+	if (match_length == 0) {
+		return 0.0;
+	}
+
+	return (float)query_length(query)
+		/ (float)match_length
+		/ (float)string_length;
+}
+
+static float
+score_levenshtein(const char *string, size_t string_length,
+	const struct query *query)
+{
+	unsigned max_distance;
+	unsigned distance;
+
+	if (query_length(query) > LEVENSHTEIN_MAX_LENGTH ||
+		string_length > LEVENSHTEIN_MAX_LENGTH)
+	{
+		return score_standard(string, string_length, query);
+	}
+
+	max_distance = 2;
+
+	distance = levenshtein_substring_match(
+		query_text(query), query_length(query),
+		string, string_length,
+		max_distance);
+
+	if (distance <= max_distance) {
+		return ((float)((max_distance + 1) - distance)) / (float)max_distance;
+	}
+	else {
+		return 0.0;
+	}
+}
+
+static float
+score(const char *string, const struct query *query)
+{
+	size_t string_length;
 
 	string_length = strlen(string);
-	query_length = strlen(query);
-
-	if (query_length == 0) {
-		return 1;	
-	}
-
 	if (string_length == 0) {
-		return 0;
+		return 0.0;
 	}
 
-	match_length = min_match_length(string, query);
-	if (match_length == 0) {
-		return 0;
+	if (query_length(query) == 0) {
+		return 1.0;
 	}
 
-	return (float)query_length / (float)match_length / (float)string_length;
+	if (query_type(query) == q_standard) {
+		return score_standard(string, string_length, query);
+	}
+	else if (query_type(query) == q_levenshtein) {
+		return score_levenshtein(string, string_length, query);
+	}
+	else {
+		return 0.0;
+	}
 }
 
 static struct choice *

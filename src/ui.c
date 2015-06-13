@@ -21,46 +21,36 @@
 #include "compat/strlcat.h"
 #endif /* !HAVE_STRLCAT */
 
+#include "query.h"
 #include "choice.h"
 #include "choices.h"
 #include "ui.h"
 #include "tty.h"
 
-static void print_line(int, char *, int, int);
+static void print_line(int, const char *, int, int);
 static int print_choices(struct choices *, int);
 static struct choice *selected_choice(struct choices *, int);
-static void filter_choices(struct choices *, char *, int *);
-static void delete_between(char *, size_t, size_t, size_t);
-static void print_string_at(int, int, char *);
+static void filter_choices(struct choices *, const struct query *, int *);
+static void print_string_at(int, int, const char *);
 
 struct choice *
-ui_selected_choice(struct choices *choices, char *initial_query,
+ui_selected_choice(struct choices *choices, char *initial_query_text,
     int use_alternate_screen)
 {
-	char *query;
+	struct query *query;
 	int key, selection, visible_choices_count, word_position;
-	size_t cursor_position, query_size, query_length, initial_query_length;
+	size_t cursor_position;
 
-	initial_query_length = strlen(initial_query);
-	cursor_position = initial_query_length;
-	query_length = initial_query_length;
-	query_size = 64;
-
-	if (query_size < initial_query_length + 1) {
-		query_size = initial_query_length + 1;
-	}
-
-	query = calloc(query_size, sizeof(char));
+	query = query_create(initial_query_text);
 	if (query == NULL) {
-		err(1, "calloc");
+		err(EXIT_FAILURE, "query allocate");
 	}
-
-	strlcpy(query, initial_query, query_size);
+	cursor_position = query_length(query);
 
 	filter_choices(choices, query, &selection);
 	tty_init(use_alternate_screen);
 
-	print_line(0, query, query_length, 0);
+	print_line(0, query_text(query), query_length(query), 0);
 	visible_choices_count = print_choices(choices, selection);
 	tty_move_cursor_to(0, cursor_position);
 	tty_show_cursor();
@@ -71,7 +61,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		case TTY_ENTER:
 			if (visible_choices_count > 0) {
 				tty_restore();
-				free(query);
+				query_destroy(query);
 				return selected_choice(choices, selection);
 			}
 		case TTY_CTRL_N:
@@ -93,7 +83,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 
 			break;
 		case TTY_CTRL_F:
-			if (cursor_position < query_length) {
+			if (cursor_position < query_length(query)) {
 				++cursor_position;
 			}
 
@@ -101,46 +91,35 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		case TTY_BACKSPACE:
 		case TTY_DEL:
 			if (cursor_position > 0) {
-				delete_between(
+				query_delete_between(
 				    query,
-				    query_length,
 				    cursor_position - 1,
 				    cursor_position);
 				--cursor_position;
-				--query_length;
 				filter_choices(choices, query, &selection);
 			}
 
 			break;
 		case TTY_CTRL_D:
-			if (cursor_position < query_length) {
-				delete_between(
+			if (cursor_position < query_length(query)) {
+				query_delete_between(
 				    query,
-				    query_length,
 				    cursor_position,
 				    cursor_position + 1);
-				--query_length;
 				filter_choices(choices, query, &selection);
 			}
 
 			break;
 		case TTY_CTRL_U:
-			delete_between(
-			    query,
-			    query_length,
-			    0,
-			    cursor_position);
-			query_length -= cursor_position;
+			query_delete_between(query, 0, cursor_position);
 			cursor_position = 0;
 			filter_choices(choices, query, &selection);
 			break;
 		case TTY_CTRL_K:
-			delete_between(
+			query_delete_between(
 			    query,
-			    query_length,
 			    cursor_position + 1,
-			    query_length);
-			query_length = cursor_position;
+			    query_length(query));
 			filter_choices(choices, query, &selection);
 			break;
 		case TTY_CTRL_W:
@@ -148,18 +127,16 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 				for (word_position = cursor_position - 1;
 				    word_position > 0;
 				    --word_position) {
-					if (query[word_position] != ' ' &&
-					    query[word_position - 1] == ' ') {
+					if (query_at(query, word_position) != ' ' &&
+					    query_at(query, word_position - 1) == ' ') {
 						break;
 					}
 				}
 
-				delete_between(
+				query_delete_between(
 				    query,
-				    query_length,
 				    word_position,
 				    cursor_position);
-				query_length -= cursor_position - word_position;
 				cursor_position = word_position;
 				filter_choices(choices, query, &selection);
 			}
@@ -168,7 +145,11 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 			cursor_position = 0;
 			break;
 		case TTY_CTRL_E:
-			cursor_position = query_length;
+			cursor_position = query_length(query);
+			break;
+		case TTY_CTRL_X:
+			query_toggle_type(query);
+			filter_choices(choices, query, &selection);
 			break;
 		case TTY_DOWN:
 			if (selection < visible_choices_count - 1) {
@@ -189,22 +170,14 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 
 			break;
 		case TTY_RIGHT:
-			if (cursor_position < query_length) {
+			if (cursor_position < query_length(query)) {
 				++cursor_position;
 			}
 
 			break;
 		default:
-			if (key > 31 && key < 127) { /* Printable chars */
-				if (cursor_position < query_length) {
-					memmove(
-					    query + cursor_position + 1,
-					    query + cursor_position,
-					    query_length - cursor_position);
-				}
-
-				query[cursor_position++] = key;
-				query[++query_length] = '\0';
+			if (query_insert(query, cursor_position, key) == 0) {
+				++cursor_position;
 				filter_choices(choices, query, &selection);
 			}
 
@@ -213,16 +186,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 
 		tty_hide_cursor();
 
-		if (query_length == query_size - 1) {
-			query_size += query_size;
-
-			query = realloc(query, query_size * sizeof(char));
-			if (query == NULL) {
-				err(1, "realloc");
-			}
-		}
-
-		print_line(0, query, query_length, 0);
+		print_line(0, query_text(query), query_length(query), 0);
 		visible_choices_count = print_choices(choices, selection);
 		tty_move_cursor_to(0, cursor_position);
 		tty_show_cursor();
@@ -230,7 +194,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 }
 
 static void
-print_line(int y, char *string, int length, int standout)
+print_line(int y, const char *string, int length, int standout)
 {
 	if (standout) {
 		tty_enter_standout_mode();
@@ -324,7 +288,8 @@ selected_choice(struct choices *choices, int selection)
 }
 
 static void
-filter_choices(struct choices *choices, char *query, int *selection)
+filter_choices(struct choices *choices, const struct query *query,
+	int *selection)
 {
 	choices_score(choices, query);
 	choices_sort(choices);
@@ -332,13 +297,7 @@ filter_choices(struct choices *choices, char *query, int *selection)
 }
 
 static void
-delete_between(char *string, size_t length, size_t start, size_t end)
-{
-	memmove(string + start, string + end, length - end + 1);
-}
-
-static void
-print_string_at(int y, int x, char *string)
+print_string_at(int y, int x, const char *string)
 {
 	int i;
 
