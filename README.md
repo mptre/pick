@@ -26,6 +26,12 @@ brew tap thoughtbot/formulae
 brew install pick
 ```
 
+### Mac OS X via MacPorts
+
+```sh
+sudo port install pick
+```
+
 ### From source
 
 1. Download the latest release from [the releases page], optionally check the
