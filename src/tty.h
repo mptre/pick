@@ -13,6 +13,7 @@
 #define TTY_CTRL_W 23
 #define TTY_DEL 127
 #define TTY_ENTER 10
+#define TTY_ALT_ENTER 266
 #define TTY_BACKSPACE 263
 #define TTY_UP 259
 #define TTY_DOWN 258

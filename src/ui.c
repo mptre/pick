@@ -40,6 +40,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	char *query;
 	int key, selection, visible_choices_count, word_position;
 	size_t cursor_position, query_size, query_length, initial_query_length;
+	struct choice *choice;
 
 	initial_query_length = strlen(initial_query);
 	cursor_position = initial_query_length;
@@ -74,6 +75,14 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 				free(query);
 				return selected_choice(choices, selection);
 			}
+
+			break;
+		case TTY_ALT_ENTER:
+			tty_restore();
+			choice = choice_new(query, "", 1);
+			SLIST_INSERT_HEAD(choices, choice, choices);
+			free(query);
+			return choice;
 		case TTY_CTRL_N:
 			if (selection < visible_choices_count - 1) {
 				++selection;

@@ -86,6 +86,10 @@ tty_getch()
 	if (ch == ESCAPE) {
 		ch = tty_getc();
 
+		if (ch == '\n') {
+			return TTY_ALT_ENTER;
+		}
+
 		if (ch == '[' || ch == 'O') {
 			ch = tty_getc();
 
