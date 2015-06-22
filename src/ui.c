@@ -74,6 +74,11 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 				free(query);
 				return selected_choice(choices, selection);
 			}
+
+			break;
+		case TTY_ALT_ENTER:
+			tty_restore();
+			return choice_new(query, "", 1);
 		case TTY_CTRL_N:
 			if (selection < visible_choices_count - 1) {
 				++selection;
