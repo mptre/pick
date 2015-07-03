@@ -21,6 +21,10 @@
 #include "compat/strlcat.h"
 #endif /* !HAVE_STRLCAT */
 
+#ifndef HAVE_REALLOCARRAY
+#include "compat/reallocarray.h"
+#endif /* !HAVE_REALLOCARRAY */
+
 #include "choice.h"
 #include "choices.h"
 #include "ui.h"
@@ -225,9 +229,9 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		if (query_length == query_size - 1) {
 			query_size += query_size;
 
-			query = realloc(query, query_size * sizeof(char));
+			query = reallocarray(query, query_size, sizeof(char));
 			if (query == NULL) {
-				err(1, "realloc");
+				err(1, "reallocarray");
 			}
 		}
 
@@ -282,9 +286,9 @@ print_choices(struct choices *choices, int selection)
 		while (length > line_length) {
 			line_length = line_length * 2;
 
-			line = realloc(line, line_length);
+			line = reallocarray(line, line_length, sizeof(char));
 			if (line == NULL) {
-				err(1, "realloc");
+				err(1, "reallocarray");
 			}
 		}
 
