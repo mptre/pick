@@ -71,6 +71,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	tty_show_cursor();
 
 	for (;;) {
+		tty_flush();
 		key = tty_getch();
 		switch(key) {
 		case TTY_ENTER:
