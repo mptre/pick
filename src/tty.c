@@ -164,6 +164,12 @@ tty_columns()
 	return columns;
 }
 
+int
+tty_flush()
+{
+	return fflush(tty_out);
+}
+
 static int
 tty_getc()
 {

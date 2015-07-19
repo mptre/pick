@@ -31,5 +31,6 @@ void tty_exit_standout_mode();
 void tty_move_cursor_to(int, int);
 int tty_lines();
 int tty_columns();
+int tty_flush();
 
 #endif /* TTY_H */
