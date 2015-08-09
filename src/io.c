@@ -39,7 +39,7 @@ io_read_choices(int read_descriptions)
 
 	for (;;) {
 		line = NULL;
-		description = "";
+		description = NULL;
 		line_size = 0;
 
 		length = getline(&line, &line_size, stdin);
@@ -51,6 +51,10 @@ io_read_choices(int read_descriptions)
 
 		if (read_descriptions) {
 			strtok_r(line, field_separator, &description);
+		}
+
+		if (description == NULL) {
+			description = "";
 		}
 
 		choice = choice_new(line, description, 1);
