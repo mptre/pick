@@ -15,6 +15,7 @@
 #include "choices.h"
 
 static void chomp(char *, ssize_t);
+static char * eager_strpbrk(const char *, const char *);
 
 struct choices *
 io_read_choices(int read_descriptions)
@@ -39,7 +40,6 @@ io_read_choices(int read_descriptions)
 
 	for (;;) {
 		line = NULL;
-		description = NULL;
 		line_size = 0;
 
 		length = getline(&line, &line_size, stdin);
@@ -49,11 +49,9 @@ io_read_choices(int read_descriptions)
 
 		chomp(line, length);
 
-		if (read_descriptions) {
-			strtok_r(line, field_separator, &description);
-		}
-
-		if (description == NULL) {
+		if (read_descriptions && (description = eager_strpbrk(line, field_separator))) {
+			*description++ = '\0';
+		} else {
 			description = "";
 		}
 
@@ -84,4 +82,15 @@ chomp(char *string, ssize_t length)
 	if (string[length - 1] == '\n') {
 		string[length - 1] = '\0';
 	}
+}
+
+static char *
+eager_strpbrk(const char *string, const char *separators) {
+	char *ptr = NULL, *tmp_ptr;
+	for (tmp_ptr = strpbrk(string, separators);
+	     tmp_ptr;
+	     tmp_ptr = strpbrk(tmp_ptr, separators)) {
+		ptr = tmp_ptr++;
+	}
+	return ptr;
 }
