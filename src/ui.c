@@ -55,7 +55,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		query_size = initial_query_length + 1;
 	}
 
-	query = calloc(query_size, sizeof(char));
+	query = calloc(query_size, sizeof(*query));
 	if (query == NULL) {
 		err(1, "calloc");
 	}
@@ -230,7 +230,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 		if (query_length == query_size - 1) {
 			query_size += query_size;
 
-			query = reallocarray(query, query_size, sizeof(char));
+			query = reallocarray(query, query_size, sizeof(*query));
 			if (query == NULL) {
 				err(1, "reallocarray");
 			}
@@ -275,7 +275,7 @@ print_choices(struct choices *choices, int selection)
 	size_t line_length = 64;
 	struct choice *choice;
 
-	line = calloc(sizeof(char), line_length);
+	line = calloc(sizeof(*line), line_length);
 	if (line == NULL) {
 		err(1, "calloc");
 	}
@@ -287,7 +287,7 @@ print_choices(struct choices *choices, int selection)
 		while (length > line_length) {
 			line_length = line_length * 2;
 
-			line = reallocarray(line, line_length, sizeof(char));
+			line = reallocarray(line, line_length, sizeof(*line));
 			if (line == NULL) {
 				err(1, "reallocarray");
 			}
