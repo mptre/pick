@@ -20,15 +20,15 @@ static char * eager_strpbrk(const char *, const char *);
 struct choices *
 io_read_choices(int read_descriptions)
 {
-	char *line, *description, *field_separator;
+	char *line, *description, *field_separators;
 	size_t line_size;
 	ssize_t length;
 	struct choice *choice;
 	struct choices *choices;
 
-	field_separator = getenv("IFS");
-	if (field_separator == NULL) {
-		field_separator = " ";
+	field_separators = getenv("IFS");
+	if (field_separators == NULL) {
+		field_separators = " ";
 	}
 
 	choices = malloc(sizeof(struct choices));
@@ -49,7 +49,7 @@ io_read_choices(int read_descriptions)
 
 		chomp(line, length);
 
-		if (read_descriptions && (description = eager_strpbrk(line, field_separator))) {
+		if (read_descriptions && (description = eager_strpbrk(line, field_separators))) {
 			*description++ = '\0';
 		} else {
 			description = "";
