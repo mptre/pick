@@ -35,7 +35,7 @@ static int print_choices(struct choices *, int);
 static struct choice *selected_choice(struct choices *, int);
 static void filter_choices(struct choices *, char *, int *);
 static void delete_between(char *, size_t, size_t, size_t);
-static void print_string_at(int, int, char *);
+static void print_string_at(int, int, char *, int);
 
 struct choice *
 ui_selected_choice(struct choices *choices, char *initial_query,
@@ -246,17 +246,21 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 static void
 print_line(int y, char *string, int length, int standout)
 {
+	int columns;
+
+	columns = tty_columns();
+
 	if (standout) {
 		tty_enter_standout_mode();
 	}
 
 	if (length > 0) {
-		print_string_at(y, 0, string);
+		print_string_at(y, 0, string, columns);
 	}
 
 	tty_move_cursor_to(y, length);
 
-	for (; length < tty_columns(); ++length) {
+	for (; length < columns; ++length) {
 		tty_putc(' ');
 	}
 
@@ -352,13 +356,13 @@ delete_between(char *string, size_t length, size_t start, size_t end)
 }
 
 static void
-print_string_at(int y, int x, char *string)
+print_string_at(int y, int x, char *string, int max_length)
 {
 	int i;
 
 	tty_move_cursor_to(y, x);
 
-	for (i = 0; string[i] != '\0'; i++) {
+	for (i = 0; string[i] != '\0' && i < max_length; i++) {
 		tty_putc(string[i]);
 	}
 }
