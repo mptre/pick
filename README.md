@@ -19,6 +19,14 @@ makepkg -s
 pacman -U pick-VERSION-x86_64.pkg.tar.xz
 ```
 
+### Debian and Ubuntu
+
+A package for Pick is available as of [Debian 9] and [Ubuntu 15.10].
+
+```sh
+apt-get install pick
+```
+
 ### Mac OS X via Homebrew
 
 ```sh
@@ -52,6 +60,8 @@ less INSTALL.md
 ```
 
 [the AUR]: https://aur.archlinux.org/packages/pick/
+[Debian 9]: https://packages.debian.org/stretch/pick
+[Ubuntu 15.10]: http://packages.ubuntu.com/wily/pick
 [the releases page]: https://github.com/thoughtbot/pick/releases/
 
 ## Usage
