@@ -9,6 +9,7 @@ pick installation
 
 2. Configure the distribution.
 
+        ./autogen.sh
         ./configure
 
 3. Build and install pick:

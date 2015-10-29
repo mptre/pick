@@ -56,7 +56,7 @@ tar -xzf pick-VERSION.tar.gz
 
 ```sh
 cd pick-VERSION
-less INSTALL.md
+less INSTALL.md.in
 ```
 
 [the AUR]: https://aur.archlinux.org/packages/pick/
