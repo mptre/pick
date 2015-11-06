@@ -1,10 +1,10 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #ifdef HAVE_FULL_QUEUE_H
 #include <sys/queue.h>
-#else /* HAVE_FULL_QUEUE_H */
-#include "compat/queue.h"
-#endif /* HAVE_FULL_QUEUE_H */
+#endif
 
 #define _WITH_GETLINE
 
@@ -12,12 +12,12 @@
 #include <err.h>
 #include <fcntl.h>
 #include <locale.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <termios.h>
 #include <string.h>
 #include <sysexits.h>
+#include <termios.h>
 #include <unistd.h>
 
 #ifdef HAVE_NCURSESW_H
@@ -28,17 +28,7 @@
 #include <term.h>
 #endif
 
-#ifndef HAVE_STRLCPY
-#include "compat/strlcpy.h"
-#endif /* !HAVE_STRLCPY */
-
-#ifndef HAVE_STRLCAT
-#include "compat/strlcat.h"
-#endif /* !HAVE_STRLCAT */
-
-#ifndef HAVE_REALLOCARRAY
-#include "compat/reallocarray.h"
-#endif /* !HAVE_REALLOCARRAY */
+#include "compat.h"
 
 #define TTY_CTRL_A 1
 #define TTY_CTRL_B 2

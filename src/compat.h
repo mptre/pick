@@ -1,3 +1,12 @@
+#ifndef COMPAT_H
+#define COMPAT_H
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifndef HAVE_FULL_QUEUE_H
+
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -29,9 +38,6 @@
  *	@(#)queue.h	8.5 (Berkeley) 8/20/94
  * $FreeBSD$
  */
-
-#ifndef _SYS_QUEUE_H_
-#define	_SYS_QUEUE_H_
 
 #include <sys/cdefs.h>
 
@@ -356,7 +362,7 @@ struct {								\
 	if (LIST_NEXT((elm), field) != NULL &&				\
 	    LIST_NEXT((elm), field)->field.le_prev !=			\
 	     &((elm)->field.le_next))					\
-	     	panic("Bad link elm %p next->prev != elm", (elm));	\
+		panic("Bad link elm %p next->prev != elm", (elm));	\
 } while (0)
 
 #define	QMD_LIST_CHECK_PREV(elm, field) do {				\
@@ -468,7 +474,7 @@ struct {								\
 
 #define	QMD_TAILQ_CHECK_TAIL(head, field) do {				\
 	if (*(head)->tqh_last != NULL)					\
-	    	panic("Bad tailq NEXT(%p->tqh_last) != NULL", (head)); 	\
+		panic("Bad tailq NEXT(%p->tqh_last) != NULL", (head)); 	\
 } while (0)
 
 #define	QMD_TAILQ_CHECK_NEXT(elm, field) do {				\
@@ -619,4 +625,28 @@ struct {								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
 } while (0)
 
-#endif /* !_SYS_QUEUE_H_ */
+#endif /* !HAVE_FULL_QUEUE_H */
+
+#ifndef HAVE_STRLCPY
+
+#include <sys/types.h>
+
+size_t	strlcpy(char *, const char *, size_t);
+
+#endif /* !HAVE_STRLCPY */
+
+#ifndef HAVE_STRLCAT
+
+#include <sys/types.h>
+
+size_t	strlcat(char *, const char *, size_t);
+
+#endif /* !HAVE_STRLCAT */
+
+#ifndef HAVE_REALLOCARRAY
+
+void	*reallocarray(void *, size_t, size_t);
+
+#endif /* !HAVE_REALLOCARRAY */
+
+#endif /* COMPAT_H */
