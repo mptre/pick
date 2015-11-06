@@ -1,6 +1,6 @@
 AC_PREREQ([2.69])
 AC_INIT([pick], [1.2.1], [hello@thoughtbot.com])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AC_CHECK_HEADERS([fcntl.h locale.h stdlib.h string.h unistd.h])
@@ -53,5 +53,5 @@ AC_TRY_LINK([
 AC_DEFINE(HAVE_NCURSESW_H,, Define if ncursesw is available)
 ])
 
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
