@@ -125,7 +125,11 @@ main(int argc, char **argv)
 			descriptions = 1;
 			break;
 		case 'o':
-			output_description = 1;
+			/*
+			 * Only output description if descriptions are read and
+			 * displayed in the list of choices.
+			 */
+			output_description = descriptions;
 			break;
 		case 'q':
 			if ((query = strdup(optarg)) == NULL)
@@ -145,12 +149,6 @@ main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
-
-	/*
-	 * Only output description if descriptions are read and displayed in the
-	 * list of choices.
-	 */
-	output_description = output_description && descriptions;
 
 	if (query == NULL) {
 	    query_size = 64;
