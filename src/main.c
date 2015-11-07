@@ -100,10 +100,10 @@ static void handle_interrupt();
 static void usage();
 static void version();
 
-FILE *tty_out;
-FILE *tty_in;
-struct termios original_attributes;
-int using_alternate_screen;
+static FILE *tty_out;
+static FILE *tty_in;
+static struct termios original_attributes;
+static int using_alternate_screen;
 
 int
 main(int argc, char **argv)
