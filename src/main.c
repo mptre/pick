@@ -82,7 +82,7 @@ static void filter_choices(void);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_at(int, int, char *, int);
 static void init_tty(void);
-static void tty_restore();
+static void restore_tty();
 static int tty_getch();
 static void tty_putc(int);
 static void tty_show_cursor();
@@ -421,13 +421,13 @@ selected_choice(void)
 		switch(key) {
 		case TTY_ENTER:
 			if (visible_choices_count > 0) {
-				tty_restore();
+				restore_tty();
 				return choice_at(selection);
 			}
 
 			break;
 		case TTY_ALT_ENTER:
-			tty_restore();
+			restore_tty();
 			choice = new_choice(query, "", 1);
 			SLIST_INSERT_HEAD(choices, choice, choices);
 			return choice;
@@ -744,7 +744,7 @@ init_tty(void)
 }
 
 static void
-tty_restore()
+restore_tty()
 {
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
@@ -865,7 +865,7 @@ raw_tty_putc(int c)
 static void
 handle_sigint()
 {
-	tty_restore();
+	restore_tty();
 	exit(EX_SIGINT);
 }
 
