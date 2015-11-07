@@ -84,7 +84,7 @@ static void print_at(int, int, char *, int);
 static void init_tty(void);
 static void restore_tty();
 static int get_key();
-static void tty_show_cursor();
+static void show_cursor();
 static void tty_hide_cursor();
 static void tty_enter_standout_mode();
 static void tty_exit_standout_mode();
@@ -412,7 +412,7 @@ selected_choice(void)
 	put_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(selection);
 	tty_move_cursor_to(0, cursor_position);
-	tty_show_cursor();
+	show_cursor();
 
 	for (;;) {
 		fflush(tty_out);
@@ -587,7 +587,7 @@ selected_choice(void)
 		put_line(0, query, query_length, 0);
 		visible_choices_count = print_choices(selection);
 		tty_move_cursor_to(0, cursor_position);
-		tty_show_cursor();
+		show_cursor();
 	}
 }
 
@@ -800,7 +800,7 @@ get_key()
 }
 
 static void
-tty_show_cursor()
+show_cursor()
 {
 	tty_putp(cursor_normal);
 }
