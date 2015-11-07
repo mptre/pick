@@ -72,7 +72,7 @@ static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
 static struct choice	*choice_new(char *, char *, float);
 static void		 choice_free(struct choice *);
-static struct choices	*io_read_choices(int);
+static struct choices	*io_read_choices(void);
 static void		 io_print_choice(struct choice *, int);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
@@ -104,13 +104,13 @@ static FILE *tty_out;
 static FILE *tty_in;
 static struct termios original_attributes;
 static int use_alternate_screen;
+static int descriptions = 0;
 
 int
 main(int argc, char **argv)
 {
 	char *query = "";
 	int option;
-	int display_descriptions = 0;
 	int output_description = 0;
 	struct choices *choices;
 
@@ -121,7 +121,7 @@ main(int argc, char **argv)
 		case 'v':
 			version();
 		case 'd':
-			display_descriptions = 1;
+			descriptions = 1;
 			break;
 		case 'o':
 			output_description = 1;
@@ -147,9 +147,9 @@ main(int argc, char **argv)
 	 * Only output description if descriptions are read and displayed in the
 	 * list of choices.
 	 */
-	output_description = output_description && display_descriptions;
+	output_description = output_description && descriptions;
 
-	choices = io_read_choices(display_descriptions);
+	choices = io_read_choices();
 
 	io_print_choice(
 	    ui_selected_choice(choices, query),
@@ -171,7 +171,7 @@ choices_score(struct choices *choices, char *query)
 }
 
 static void
-choices_sort(struct choices *choices)
+choices_sort(void)
 {
 	choices->slh_first = sort(choices->slh_first);
 }
@@ -333,7 +333,7 @@ choice_free(struct choice *choice)
 }
 
 static struct choices *
-io_read_choices(int read_descriptions)
+io_read_choices()
 {
 	char *line, *description, *field_separators;
 	size_t line_size;
@@ -364,7 +364,7 @@ io_read_choices(int read_descriptions)
 
 		chomp(line, length);
 
-		if (read_descriptions && (description = eager_strpbrk(line, field_separators))) {
+		if (descriptions && (description = eager_strpbrk(line, field_separators))) {
 			*description++ = '\0';
 		} else {
 			description = "";
