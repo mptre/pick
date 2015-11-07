@@ -69,7 +69,7 @@ static float score(char *);
 static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
 static struct choice	*new_choice(char *, char *, float);
-static void		 choice_free(struct choice *);
+static void		 free_choice(struct choice *);
 static void 		 io_read_choices(void);
 static void		 io_print_choice(struct choice *);
 static void chomp(char *, ssize_t);
@@ -172,7 +172,7 @@ free_choices(void)
 	while (!SLIST_EMPTY(choices)) {
 		choice = SLIST_FIRST(choices);
 		SLIST_REMOVE_HEAD(choices, choices);
-		choice_free(choice);
+		free_choice(choice);
 	}
 
 	free(choices);
@@ -313,7 +313,7 @@ new_choice(char *string, char *description, float score)
 }
 
 static void
-choice_free(struct choice *choice)
+free_choice(struct choice *choice)
 {
 	free(choice->string);
 	free(choice->description);
