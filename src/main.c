@@ -88,7 +88,7 @@ static void show_cursor();
 static void hide_cursor();
 static void start_standout();
 static void end_standout();
-static void tty_move_cursor_to(int, int);
+static void move_to(int, int);
 static int tty_getc();
 static void tty_putp(const char *);
 static int tty_putc(int);
@@ -411,7 +411,7 @@ selected_choice(void)
 
 	put_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(selection);
-	tty_move_cursor_to(0, cursor_position);
+	move_to(0, cursor_position);
 	show_cursor();
 
 	for (;;) {
@@ -586,7 +586,7 @@ selected_choice(void)
 
 		put_line(0, query, query_length, 0);
 		visible_choices_count = print_choices(selection);
-		tty_move_cursor_to(0, cursor_position);
+		move_to(0, cursor_position);
 		show_cursor();
 	}
 }
@@ -602,7 +602,7 @@ put_line(int y, char *string, int length, int standout)
 		print_at(y, 0, string, columns);
 	}
 
-	tty_move_cursor_to(y, length);
+	move_to(y, length);
 
 	for (; length < columns; ++length) {
 		if (tty_putc(' ') == EOF) {
@@ -706,7 +706,7 @@ print_at(int y, int x, char *string, int max_length)
 {
 	int i;
 
-	tty_move_cursor_to(y, x);
+	move_to(y, x);
 
 	for (i = 0; string[i] != '\0' && i < max_length; i++) {
 		if (tty_putc(string[i]) == EOF) {
@@ -824,7 +824,7 @@ end_standout()
 }
 
 static void
-tty_move_cursor_to(int y, int x)
+move_to(int y, int x)
 {
 	tty_putp(tgoto(cursor_address, x, y));
 }
