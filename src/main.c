@@ -90,7 +90,6 @@ static void tty_hide_cursor();
 static void tty_enter_standout_mode();
 static void tty_exit_standout_mode();
 static void tty_move_cursor_to(int, int);
-static int tty_flush();
 static int tty_getc();
 static void tty_putp(const char *);
 static int raw_tty_putc(int);
@@ -415,7 +414,7 @@ ui_selected_choice(void)
 	tty_show_cursor();
 
 	for (;;) {
-		tty_flush();
+		fflush(tty_out);
 		key = tty_getch();
 		switch(key) {
 		case TTY_ENTER:
@@ -831,12 +830,6 @@ static void
 tty_move_cursor_to(int y, int x)
 {
 	tty_putp(tgoto(cursor_address, x, y));
-}
-
-static int
-tty_flush()
-{
-	return fflush(tty_out);
 }
 
 static int
