@@ -76,14 +76,14 @@ static struct choices	*io_read_choices(int);
 static void		 io_print_choice(struct choice *, int);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
-static struct choice	*ui_selected_choice(struct choices *, char *, int);
+static struct choice	*ui_selected_choice(struct choices *, char *);
 static void print_line(int, char *, int, int);
 static int print_choices(struct choices *, int);
 static struct choice *selected_choice(struct choices *, int);
 static void filter_choices(struct choices *, char *, int *);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_string_at(int, int, char *, int);
-static void tty_init(int);
+static void tty_init(void);
 static void tty_restore();
 static int tty_getch();
 static void tty_putc(int);
@@ -103,13 +103,13 @@ static void version();
 static FILE *tty_out;
 static FILE *tty_in;
 static struct termios original_attributes;
-static int using_alternate_screen;
+static int use_alternate_screen;
 
 int
 main(int argc, char **argv)
 {
 	char *query = "";
-	int option, use_alternate_screen;
+	int option;
 	int display_descriptions = 0;
 	int output_description = 0;
 	struct choices *choices;
@@ -152,7 +152,7 @@ main(int argc, char **argv)
 	choices = io_read_choices(display_descriptions);
 
 	io_print_choice(
-	    ui_selected_choice(choices, query, use_alternate_screen),
+	    ui_selected_choice(choices, query),
 	    output_description);
 
 	choices_free(choices);
@@ -411,8 +411,7 @@ eager_strpbrk(const char *string, const char *separators) {
 }
 
 static struct choice *
-ui_selected_choice(struct choices *choices, char *initial_query,
-    int use_alternate_screen)
+ui_selected_choice(struct choices *choices, char *initial_query)
 {
 	char *query;
 	int key, selection, visible_choices_count, word_position;
@@ -436,7 +435,7 @@ ui_selected_choice(struct choices *choices, char *initial_query,
 	strlcpy(query, initial_query, query_size);
 
 	filter_choices(choices, query, &selection);
-	tty_init(use_alternate_screen);
+	tty_init();
 
 	print_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(choices, selection);
@@ -737,11 +736,9 @@ print_string_at(int y, int x, char *string, int max_length)
 }
 
 static void
-tty_init(int use_alternate_screen)
+tty_init(void)
 {
 	struct termios new_attributes;
-
-	using_alternate_screen = use_alternate_screen;
 
 	tty_in = fopen("/dev/tty", "r");
 	if (tty_in == NULL) {
@@ -760,7 +757,7 @@ tty_init(int use_alternate_screen)
 
 	setupterm((char *)0, fileno(tty_out), (int *)0);
 
-	if (using_alternate_screen) {
+	if (use_alternate_screen) {
 		tty_putp(enter_ca_mode);
 	}
 
@@ -777,7 +774,7 @@ tty_restore()
 
 	tty_putp(clear_screen);
 
-	if (using_alternate_screen) {
+	if (use_alternate_screen) {
 		tty_putp(exit_ca_mode);
 	}
 
