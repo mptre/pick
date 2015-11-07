@@ -84,7 +84,6 @@ static void print_at(int, int, char *, int);
 static void init_tty(void);
 static void restore_tty();
 static int get_key();
-static void tty_putc(int);
 static void tty_show_cursor();
 static void tty_hide_cursor();
 static void tty_enter_standout_mode();
@@ -606,7 +605,9 @@ put_line(int y, char *string, int length, int standout)
 	tty_move_cursor_to(y, length);
 
 	for (; length < columns; ++length) {
-		tty_putc(' ');
+		if (raw_tty_putc(' ') == EOF) {
+			err(1, "raw_tty_putc");
+		}
 	}
 
 	if (standout) {
@@ -708,7 +709,9 @@ print_at(int y, int x, char *string, int max_length)
 	tty_move_cursor_to(y, x);
 
 	for (i = 0; string[i] != '\0' && i < max_length; i++) {
-		tty_putc(string[i]);
+		if (raw_tty_putc(string[i]) == EOF) {
+			err(1, "raw_tty_putc");
+		}
 	}
 }
 
@@ -794,14 +797,6 @@ get_key()
 	}
 
 	return key;
-}
-
-static void
-tty_putc(int c)
-{
-	if (raw_tty_putc(c) == EOF) {
-		err(1, "raw_tty_putc");
-	}
 }
 
 static void
