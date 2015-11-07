@@ -83,7 +83,7 @@ static void delete_between(char *, size_t, size_t, size_t);
 static void print_at(int, int, char *, int);
 static void init_tty(void);
 static void restore_tty();
-static int tty_getch();
+static int get_key();
 static void tty_putc(int);
 static void tty_show_cursor();
 static void tty_hide_cursor();
@@ -417,7 +417,7 @@ selected_choice(void)
 
 	for (;;) {
 		fflush(tty_out);
-		key = tty_getch();
+		key = get_key();
 		switch(key) {
 		case TTY_ENTER:
 			if (visible_choices_count > 0) {
@@ -759,41 +759,41 @@ restore_tty()
 }
 
 static int
-tty_getch()
+get_key()
 {
-	int ch;
+	int key;
 
-	ch = tty_getc();
+	key = tty_getc();
 
-	if (ch == ESCAPE) {
-		ch = tty_getc();
+	if (key == ESCAPE) {
+		key = tty_getc();
 
-		if (ch == '\n') {
+		if (key == '\n') {
 			return TTY_ALT_ENTER;
 		}
 
-		if (ch == '[' || ch == 'O') {
-			ch = tty_getc();
+		if (key == '[' || key == 'O') {
+			key = tty_getc();
 
-			if (ch == 'A') {
+			if (key == 'A') {
 				return TTY_UP;
 			}
 
-			if (ch == 'B') {
+			if (key == 'B') {
 				return TTY_DOWN;
 			}
 
-			if (ch == 'C') {
+			if (key == 'C') {
 				return TTY_RIGHT;
 			}
 
-			if (ch == 'D') {
+			if (key == 'D') {
 				return TTY_LEFT;
 			}
 		}
 	}
 
-	return ch;
+	return key;
 }
 
 static void
