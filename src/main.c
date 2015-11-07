@@ -664,10 +664,6 @@ choice_at(int index)
 	int i = 0;
 
 	SLIST_FOREACH(choice, choices, choices) {
-		if (choice->score == 0) {
-			break;
-		}
-
 		if (i == index) {
 			return choice;
 		}
