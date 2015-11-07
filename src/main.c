@@ -73,7 +73,7 @@ static struct choice *sort(struct choice *);
 static struct choice	*choice_new(char *, char *, float);
 static void		 choice_free(struct choice *);
 static struct choices	*io_read_choices(void);
-static void		 io_print_choice(struct choice *, int);
+static void		 io_print_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
 static struct choice	*ui_selected_choice(struct choices *, char *);
@@ -105,13 +105,13 @@ static FILE *tty_in;
 static struct termios original_attributes;
 static int use_alternate_screen;
 static int descriptions = 0;
+static int output_description = 0;
 
 int
 main(int argc, char **argv)
 {
 	char *query = "";
 	int option;
-	int output_description = 0;
 	struct choices *choices;
 
 	use_alternate_screen = getenv("VIM") == NULL;
@@ -151,9 +151,7 @@ main(int argc, char **argv)
 
 	choices = io_read_choices();
 
-	io_print_choice(
-	    ui_selected_choice(choices, query),
-	    output_description);
+	io_print_choice(ui_selected_choice(choices, query));
 
 	choices_free(choices);
 
@@ -382,7 +380,7 @@ io_read_choices()
 }
 
 static void
-io_print_choice(struct choice *choice, int output_description)
+io_print_choice(struct choice *choice)
 {
 	printf("%s\n", choice->string);
 
