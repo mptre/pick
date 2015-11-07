@@ -63,24 +63,24 @@ struct choice {
 
 SLIST_HEAD(choices, choice);
 
-static void	choices_score(struct choices *, char *);
-static void	choices_sort(struct choices *);
-static void	choices_free(struct choices *);
+static void	choices_score(char *);
+static void	choices_sort(void);
+static void	choices_free(void);
 static size_t min_match_length(char *, char *);
 static float score(char *, char *);
 static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
 static struct choice	*choice_new(char *, char *, float);
 static void		 choice_free(struct choice *);
-static struct choices	*io_read_choices(void);
+static void 		 io_read_choices(void);
 static void		 io_print_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
-static struct choice	*ui_selected_choice(struct choices *, char *);
+static struct choice	*ui_selected_choice(char *);
 static void print_line(int, char *, int, int);
-static int print_choices(struct choices *, int);
-static struct choice *selected_choice(struct choices *, int);
-static void filter_choices(struct choices *, char *, int *);
+static int print_choices(int);
+static struct choice *selected_choice(int);
+static void filter_choices(char *, int *);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_string_at(int, int, char *, int);
 static void tty_init(void);
@@ -106,13 +106,13 @@ static struct termios original_attributes;
 static int use_alternate_screen;
 static int descriptions = 0;
 static int output_description = 0;
+static struct choices *choices;
 
 int
 main(int argc, char **argv)
 {
 	char *query = "";
 	int option;
-	struct choices *choices;
 
 	use_alternate_screen = getenv("VIM") == NULL;
 
@@ -149,17 +149,17 @@ main(int argc, char **argv)
 	 */
 	output_description = output_description && descriptions;
 
-	choices = io_read_choices();
+	io_read_choices();
 
-	io_print_choice(ui_selected_choice(choices, query));
+	io_print_choice(ui_selected_choice(query));
 
-	choices_free(choices);
+	choices_free();
 
 	return EX_OK;
 }
 
 static void
-choices_score(struct choices *choices, char *query)
+choices_score(char *query)
 {
 	struct choice *choice;
 
@@ -175,7 +175,7 @@ choices_sort(void)
 }
 
 static void
-choices_free(struct choices *choices)
+choices_free(void)
 {
 	struct choice *choice;
 
@@ -330,14 +330,13 @@ choice_free(struct choice *choice)
 	free(choice);
 }
 
-static struct choices *
-io_read_choices()
+void
+io_read_choices(void)
 {
 	char *line, *description, *field_separators;
 	size_t line_size;
 	ssize_t length;
 	struct choice *choice;
-	struct choices *choices;
 
 	field_separators = getenv("IFS");
 	if (field_separators == NULL) {
@@ -375,8 +374,6 @@ io_read_choices()
 	}
 
 	free(line);
-
-	return choices;
 }
 
 static void
@@ -409,7 +406,7 @@ eager_strpbrk(const char *string, const char *separators) {
 }
 
 static struct choice *
-ui_selected_choice(struct choices *choices, char *initial_query)
+ui_selected_choice(char *initial_query)
 {
 	char *query;
 	int key, selection, visible_choices_count, word_position;
@@ -432,11 +429,11 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 
 	strlcpy(query, initial_query, query_size);
 
-	filter_choices(choices, query, &selection);
+	filter_choices(query, &selection);
 	tty_init();
 
 	print_line(0, query, query_length, 0);
-	visible_choices_count = print_choices(choices, selection);
+	visible_choices_count = print_choices(selection);
 	tty_move_cursor_to(0, cursor_position);
 	tty_show_cursor();
 
@@ -448,7 +445,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 			if (visible_choices_count > 0) {
 				tty_restore();
 				free(query);
-				return selected_choice(choices, selection);
+				return selected_choice(selection);
 			}
 
 			break;
@@ -492,7 +489,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 				    cursor_position);
 				--cursor_position;
 				--query_length;
-				filter_choices(choices, query, &selection);
+				filter_choices(query, &selection);
 			}
 
 			break;
@@ -504,7 +501,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 				    cursor_position,
 				    cursor_position + 1);
 				--query_length;
-				filter_choices(choices, query, &selection);
+				filter_choices(query, &selection);
 			}
 
 			break;
@@ -516,7 +513,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 			    cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
-			filter_choices(choices, query, &selection);
+			filter_choices(query, &selection);
 			break;
 		case TTY_CTRL_K:
 			delete_between(
@@ -525,7 +522,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 			    cursor_position + 1,
 			    query_length);
 			query_length = cursor_position;
-			filter_choices(choices, query, &selection);
+			filter_choices(query, &selection);
 			break;
 		case TTY_CTRL_W:
 			if (cursor_position > 0) {
@@ -545,7 +542,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 				    cursor_position);
 				query_length -= cursor_position - word_position;
 				cursor_position = word_position;
-				filter_choices(choices, query, &selection);
+				filter_choices(query, &selection);
 			}
 			break;
 		case TTY_CTRL_A:
@@ -589,7 +586,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 
 				query[cursor_position++] = key;
 				query[++query_length] = '\0';
-				filter_choices(choices, query, &selection);
+				filter_choices(query, &selection);
 			}
 
 			break;
@@ -607,7 +604,7 @@ ui_selected_choice(struct choices *choices, char *initial_query)
 		}
 
 		print_line(0, query, query_length, 0);
-		visible_choices_count = print_choices(choices, selection);
+		visible_choices_count = print_choices(selection);
 		tty_move_cursor_to(0, cursor_position);
 		tty_show_cursor();
 	}
@@ -636,7 +633,7 @@ print_line(int y, char *string, int length, int standout)
 }
 
 static int
-print_choices(struct choices *choices, int selection)
+print_choices(int selection)
 {
 	char *line;
 	int i;
@@ -687,7 +684,7 @@ print_choices(struct choices *choices, int selection)
 }
 
 static struct choice *
-selected_choice(struct choices *choices, int selection)
+selected_choice(int selection)
 {
 	struct choice *choice;
 	int i = 0;
@@ -708,10 +705,10 @@ selected_choice(struct choices *choices, int selection)
 }
 
 static void
-filter_choices(struct choices *choices, char *query, int *selection)
+filter_choices(char *query, int *selection)
 {
-	choices_score(choices, query);
-	choices_sort(choices);
+	choices_score(query);
+	choices_sort();
 	*selection = 0;
 }
 
