@@ -63,7 +63,6 @@ struct choice {
 
 SLIST_HEAD(choices, choice);
 
-static void	choices_score(void);
 static void	choices_sort(void);
 static void	choices_free(void);
 static size_t min_match_length(char *);
@@ -165,16 +164,6 @@ main(int argc, char **argv)
 	choices_free();
 
 	return EX_OK;
-}
-
-static void
-choices_score(void)
-{
-	struct choice *choice;
-
-	SLIST_FOREACH(choice, choices, choices) {
-		choice->score = score(choice->string);
-	}
 }
 
 static void
@@ -700,7 +689,12 @@ selected_choice(int selection)
 static void
 filter_choices(int *selection)
 {
-	choices_score();
+	struct choice *choice;
+
+	SLIST_FOREACH(choice, choices, choices) {
+		choice->score = score(choice->string);
+	}
+
 	choices_sort();
 	*selection = 0;
 }
