@@ -6,13 +6,12 @@
 #include <sys/queue.h>
 #endif
 
-#define _WITH_GETLINE
-
 #include <ctype.h>
 #include <err.h>
 #include <fcntl.h>
 #include <locale.h>
 #include <signal.h>
+#define _WITH_GETLINE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,67 +53,65 @@
 #define EX_SIGINT (EX_SIG + SIGINT)
 
 struct choice {
-	char *string;
-	char *description;
-	float score;
-	SLIST_ENTRY(choice) choices;
+	SLIST_ENTRY(choice)	 choices;
+	char			*description;
+	char			*string;
+	float			 score;
 };
 
 SLIST_HEAD(choices, choice);
 
-static void	free_choices(void);
-static size_t min_match_length(char *);
-static float score(char *);
-static struct choice *merge(struct choice *, struct choice *);
-static struct choice *sort(struct choice *);
-static struct choice	*new_choice(char *, char *, float);
+__dead static void	 usage(void);
+__dead static void	 version(void);
 static void 		 get_choices(void);
+static void		 chomp(char *, ssize_t);
+static char		*eager_strpbrk(const char *, const char *);
+static struct choice	*new_choice(char *, char *, float);
 static void		 put_choice(struct choice *);
-static void chomp(char *, ssize_t);
-static char * eager_strpbrk(const char *, const char *);
 static struct choice	*selected_choice(void);
-static void put_line(int, char *, int, int);
-static int print_choices(int);
-static struct choice *choice_at(int);
-static void filter_choices(void);
-static void delete_between(char *, size_t, size_t, size_t);
-static void print_at(int, int, char *, int);
-static void init_tty(void);
-static void restore_tty();
-static int get_key();
-static void show_cursor();
-static void hide_cursor();
-static void start_standout();
-static void end_standout();
-static void move_to(int, int);
-static int tty_getc();
-static void tty_putp(const char *);
-static int tty_putc(int);
-static void handle_sigint();
-static void usage();
-static void version();
+static void		 filter_choices(void);
+static float		 score(char *);
+static size_t		 min_match_length(char *);
+static struct choice	*sort(struct choice *);
+static struct choice	*merge(struct choice *, struct choice *);
+static void		 init_tty(void);
+static void		 tty_putp(const char *);
+static int		 tty_putc(int);
+static void		 handle_sigint(int);
+static void		 restore_tty(void);
+static void		 put_line(int, char *, int, int);
+static void		 start_standout(void);
+static void		 print_at(int, int, char *, int);
+static void		 move_to(int, int);
+static void		 end_standout(void);
+static int		 print_choices(int);
+static void		 show_cursor(void);
+static int		 get_key(void);
+static int		 tty_getc(void);
+static struct choice	*choice_at(int);
+static void		 delete_between(char *, size_t, size_t, size_t);
+static void		 hide_cursor(void);
+static void		 free_choices(void);
 
-static FILE *tty_out;
-static FILE *tty_in;
-static struct termios original_attributes;
-static int use_alternate_screen;
-static int descriptions = 0;
-static int output_description = 0;
-static struct choices *choices;
-static char *query = NULL;
-static size_t query_size;
+static FILE		*tty_in;
+static FILE		*tty_out;
+static char		*query = NULL;
+static int		 descriptions = 0;
+static int		 output_description = 0;
+static int		 use_alternate_screen;
+static size_t		 query_size;
+static struct termios	 original_attributes;
+static struct choices	*choices;
 
 int
 main(int argc, char **argv)
 {
-	int option;
+	int	option;
 
 	use_alternate_screen = getenv("VIM") == NULL;
 
-	while ((option = getopt(argc, argv, "hvdoq:xX")) != -1) {
+	while ((option = getopt(argc, argv, "dhoq:vxX")) != -1) {
 		switch (option) {
-		case 'v':
-			version();
 		case 'd':
 			descriptions = 1;
 			break;
@@ -130,6 +127,8 @@ main(int argc, char **argv)
 				err(1, "strdup");
 			query_size = strlen(query) + 1;
 			break;
+		case 'v':
+			version();
 		case 'x':
 			use_alternate_screen = 1;
 			break;
@@ -152,183 +151,51 @@ main(int argc, char **argv)
 	}
 
 	get_choices();
-
 	put_choice(selected_choice());
 
-	free(query);
 	free_choices();
+	free(query);
 
 	return EX_OK;
 }
 
-static void
-free_choices(void)
+__dead static void
+usage(void)
 {
-	struct choice *choice;
+	extern char	*__progname;
 
-	while (!SLIST_EMPTY(choices)) {
-		choice = SLIST_FIRST(choices);
-		SLIST_REMOVE_HEAD(choices, choices);
+	fprintf(stderr, "usage: %s [-hv] [-d [-o]] [-x | -X] [-q query]\n"
+	    "    -h          output this help message and exit\n"
+	    "    -v          output the version and exit\n"
+	    "    -d          read and display descriptions\n"
+	    "    -o          output description of selected on exit\n"
+	    "    -x          enable alternate screen\n"
+	    "    -X          disable alternate screen\n"
+	    "    -q query    supply an initial search query\n", __progname);
 
-		free(choice->string);
-		free(choice->description);
-		free(choice);
-	}
-
-	free(choices);
+	exit(EX_USAGE);
 }
 
-static size_t
-min_match_length(char *string)
+__dead static void
+version(void)
 {
-	size_t match_length, match_start, query_position, match_position;
-	int query_char, query_start;
-
-	query_start = tolower((unsigned char)query[0]);
-
-	for (match_length = 0, match_start = 0; string[match_start] != '\0';
-	    ++match_start) {
-		if (tolower((unsigned char)string[match_start]) ==
-		    query_start) {
-			for (query_position = 1,
-			    match_position = match_start + 1;
-			    query[query_position] != '\0'; ++query_position) {
-				query_char = tolower(
-				    (unsigned char)query[query_position]);
-
-				for (;; ++match_position) {
-					if (string[match_position] == '\0') {
-						return match_length;
-					}
-
-					if (tolower((unsigned char)string[match_position]) == query_char) {
-						++match_position;
-						break;
-					}
-				}
-			}
-			if (match_length == 0 || match_length > match_position -
-			    match_start + 1) {
-				match_length = match_position - match_start + 1;
-			}
-		}
-	}
-
-	return match_length;
-}
-
-static float
-score(char *string)
-{
-	size_t string_length, query_length, match_length;
-
-	string_length = strlen(string);
-	query_length = strlen(query);
-
-	if (query_length == 0) {
-		return 1;	
-	}
-
-	if (string_length == 0) {
-		return 0;
-	}
-
-	match_length = min_match_length(string);
-	if (match_length == 0) {
-		return 0;
-	}
-
-	return (float)query_length / (float)match_length / (float)string_length;
-}
-
-static struct choice *
-merge(struct choice *front, struct choice *back)
-{
-	struct choice head;
-	struct choice *choice;
-
-	choice = &head;
-
-	while (front != NULL && back != NULL) {
-		if (front->score > back->score ||
-		    (front->score == back->score &&
-		     strcmp(front->string, back->string) < 0)) {
-			choice->choices.sle_next = front;
-			choice = front;
-			front = front->choices.sle_next;
-		} else {
-			choice->choices.sle_next = back;
-			choice = back;
-			back = back->choices.sle_next;
-		}
-	}
-
-	if (front != NULL) {
-		choice->choices.sle_next = front;
-	} else {
-		choice->choices.sle_next = back;
-	}
-
-	return head.choices.sle_next;
-}
-
-static struct choice *
-sort(struct choice *choice)
-{
-	struct choice *front, *back;
-
-	if (choice == NULL || choice->choices.sle_next == NULL) {
-		return choice;
-	}
-
-	front = choice;
-	back = choice->choices.sle_next;
-
-	while (back != NULL && back->choices.sle_next != NULL) {
-		choice = choice->choices.sle_next;
-		back = back->choices.sle_next->choices.sle_next;
-	}
-
-	back = choice->choices.sle_next;
-	choice->choices.sle_next = NULL;
-
-	return merge(sort(front), sort(back));
-}
-
-static struct choice *
-new_choice(char *string, char *description, float score)
-{
-	struct choice *choice;
-
-	choice = malloc(sizeof(struct choice));
-	if (choice == NULL) {
-		err(1, "malloc");
-	}
-
-	choice->string = strdup(string);
-	choice->description = strdup(description);
-	choice->score = score;
-
-	return choice;
+	puts(PACKAGE_VERSION);
+	exit(EX_OK);
 }
 
 void
 get_choices(void)
 {
-	char *line, *description, *field_separators;
-	size_t line_size;
-	ssize_t length;
-	struct choice *choice;
+	char		*line, *description, *field_separators;
+	size_t		 line_size;
+	ssize_t		 length;
+	struct choice	*choice;
 
-	field_separators = getenv("IFS");
-	if (field_separators == NULL) {
+	if ((field_separators = getenv("IFS")) == NULL)
 		field_separators = " ";
-	}
 
-	choices = malloc(sizeof(struct choices));
-	if (choices == NULL) {
+	if ((choices = malloc(sizeof(struct choices))) == NULL)
 		err(1, "malloc");
-	}
 
 	SLIST_INIT(choices);
 
@@ -336,18 +203,16 @@ get_choices(void)
 		line = NULL;
 		line_size = 0;
 
-		length = getline(&line, &line_size, stdin);
-		if (length == -1) {
+		if ((length = getline(&line, &line_size, stdin)) == -1)
 			break;
-		}
 
 		chomp(line, length);
 
-		if (descriptions && (description = eager_strpbrk(line, field_separators))) {
+		if (descriptions &&
+		    (description = eager_strpbrk(line, field_separators)))
 			*description++ = '\0';
-		} else {
+		else
 			description = "";
-		}
 
 		choice = new_choice(line, description, 1);
 		SLIST_INSERT_HEAD(choices, choice, choices);
@@ -359,40 +224,54 @@ get_choices(void)
 }
 
 static void
-put_choice(struct choice *choice)
-{
-	printf("%s\n", choice->string);
-
-	if (output_description) {
-		printf("%s\n", choice->description);
-	}
-}
-
-static void
 chomp(char *string, ssize_t length)
 {
-	if (string[length - 1] == '\n') {
+	if (string[length - 1] == '\n')
 		string[length - 1] = '\0';
-	}
 }
 
 static char *
 eager_strpbrk(const char *string, const char *separators) {
-	char *ptr = NULL, *tmp_ptr;
+	char	*ptr = NULL, *tmp_ptr;
+
 	for (tmp_ptr = strpbrk(string, separators);
 	     tmp_ptr;
-	     tmp_ptr = strpbrk(tmp_ptr, separators)) {
+	     tmp_ptr = strpbrk(tmp_ptr, separators))
 		ptr = tmp_ptr++;
-	}
+
 	return ptr;
+}
+
+static struct choice *
+new_choice(char *string, char *description, float score)
+{
+	struct choice	*choice;
+
+	if ((choice = malloc(sizeof(struct choice))) == NULL)
+		err(1, "malloc");
+
+	choice->string = strdup(string);
+	choice->description = strdup(description);
+	choice->score = score;
+
+	return choice;
+}
+
+static void
+put_choice(struct choice *choice)
+{
+	puts(choice->string);
+
+	if (output_description)
+		puts(choice->description);
 }
 
 static struct choice *
 selected_choice(void)
 {
-	int key, selection, visible_choices_count, word_position;
-	size_t cursor_position, query_length;
-	struct choice *choice;
+	int		 key, selection, visible_choices_count, word_position;
+	size_t		 cursor_position, query_length;
+	struct choice	*choice;
 
 	query_length = strlen(query);
 	cursor_position = query_length;
@@ -410,6 +289,7 @@ selected_choice(void)
 	for (;;) {
 		fflush(tty_out);
 		key = get_key();
+
 		switch(key) {
 		case ENTER:
 			if (visible_choices_count > 0) {
@@ -424,27 +304,23 @@ selected_choice(void)
 			SLIST_INSERT_HEAD(choices, choice, choices);
 			return choice;
 		case CTRL_N:
-			if (selection < visible_choices_count - 1) {
+			if (selection < visible_choices_count - 1)
 				++selection;
-			}
 
 			break;
 		case CTRL_P:
-			if (selection > 0) {
+			if (selection > 0)
 				--selection;
-			}
 
 			break;
 		case CTRL_B:
-			if (cursor_position > 0) {
+			if (cursor_position > 0)
 				--cursor_position;
-			}
 
 			break;
 		case CTRL_F:
-			if (cursor_position < query_length) {
+			if (cursor_position < query_length)
 				++cursor_position;
-			}
 
 			break;
 		case BACKSPACE:
@@ -502,9 +378,8 @@ selected_choice(void)
 				    word_position > 0;
 				    --word_position) {
 					if (query[word_position] != ' ' &&
-					    query[word_position - 1] == ' ') {
+					    query[word_position - 1] == ' ')
 						break;
-					}
 				}
 
 				delete_between(
@@ -525,28 +400,20 @@ selected_choice(void)
 			cursor_position = query_length;
 			break;
 		case DOWN:
-			if (selection < visible_choices_count - 1) {
+			if (selection < visible_choices_count - 1)
 				++selection;
-			}
-
 			break;
 		case UP:
-			if (selection > 0) {
+			if (selection > 0)
 				--selection;
-			}
-
 			break;
 		case LEFT:
-			if (cursor_position > 0) {
+			if (cursor_position > 0)
 				--cursor_position;
-			}
-
 			break;
 		case RIGHT:
-			if (cursor_position < query_length) {
+			if (cursor_position < query_length)
 				++cursor_position;
-			}
-
 			break;
 		default:
 			if (key > 31 && key < 127) { /* Printable chars */
@@ -572,9 +439,8 @@ selected_choice(void)
 			query_size += query_size;
 
 			query = reallocarray(query, query_size, sizeof(*query));
-			if (query == NULL) {
+			if (query == NULL)
 				err(1, "reallocarray");
-			}
 		}
 
 		put_line(0, query, query_length, 0);
@@ -585,43 +451,247 @@ selected_choice(void)
 }
 
 static void
-put_line(int y, char *string, int length, int standout)
+filter_choices(void)
 {
-	if (standout) {
-		start_standout();
+	struct choice	*choice;
+
+	SLIST_FOREACH(choice, choices, choices) {
+		choice->score = score(choice->string);
 	}
 
-	if (length > 0) {
-		print_at(y, 0, string, columns);
+	choices->slh_first = sort(choices->slh_first);
+}
+
+static float
+score(char *string)
+{
+	size_t	string_length, query_length, match_length;
+
+	string_length = strlen(string);
+	query_length = strlen(query);
+
+	if (query_length == 0)
+		return 1;
+
+	if (string_length == 0)
+		return 0;
+
+	if ((match_length = min_match_length(string)) == 0)
+		return 0;
+
+	return (float)query_length / (float)match_length / (float)string_length;
+}
+
+static size_t
+min_match_length(char *string)
+{
+	size_t	match_length, match_start, query_position, match_position;
+	int	query_char, query_start;
+
+	query_start = tolower((unsigned char)query[0]);
+
+	for (match_length = 0, match_start = 0; string[match_start] != '\0';
+	    ++match_start) {
+		if (tolower((unsigned char)string[match_start]) ==
+		    query_start) {
+			for (query_position = 1,
+			    match_position = match_start + 1;
+			    query[query_position] != '\0'; ++query_position) {
+				query_char = tolower(
+				    (unsigned char)query[query_position]);
+
+				for (;; ++match_position) {
+					if (string[match_position] == '\0')
+						return match_length;
+
+					if (tolower((unsigned char)string[match_position]) == query_char) {
+						++match_position;
+						break;
+					}
+				}
+			}
+			if (match_length == 0 || match_length > match_position -
+			    match_start + 1)
+				match_length = match_position - match_start + 1;
+		}
 	}
+
+	return match_length;
+}
+
+static struct choice *
+sort(struct choice *choice)
+{
+	struct choice	*front, *back;
+
+	if (choice == NULL || choice->choices.sle_next == NULL)
+		return choice;
+
+	front = choice;
+	back = choice->choices.sle_next;
+
+	while (back != NULL && back->choices.sle_next != NULL) {
+		choice = choice->choices.sle_next;
+		back = back->choices.sle_next->choices.sle_next;
+	}
+
+	back = choice->choices.sle_next;
+	choice->choices.sle_next = NULL;
+
+	return merge(sort(front), sort(back));
+}
+
+static struct choice *
+merge(struct choice *front, struct choice *back)
+{
+	struct choice	head, *choice;
+
+	choice = &head;
+
+	while (front != NULL && back != NULL) {
+		if (front->score > back->score ||
+		    (front->score == back->score &&
+		     strcmp(front->string, back->string) < 0)) {
+			choice->choices.sle_next = front;
+			choice = front;
+			front = front->choices.sle_next;
+		} else {
+			choice->choices.sle_next = back;
+			choice = back;
+			back = back->choices.sle_next;
+		}
+	}
+
+	if (front != NULL)
+		choice->choices.sle_next = front;
+	else
+		choice->choices.sle_next = back;
+
+	return head.choices.sle_next;
+}
+
+static void
+init_tty(void)
+{
+	struct termios	new_attributes;
+
+	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
+		err(1, "fopen");
+	}
+
+	tcgetattr(fileno(tty_in), &original_attributes);
+	new_attributes = original_attributes;
+	new_attributes.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
+
+	if ((tty_out = fopen("/dev/tty", "w")) == NULL)
+		err(1, "fopen");
+
+	setupterm((char *)0, fileno(tty_out), (int *)0);
+
+	if (use_alternate_screen)
+		tty_putp(enter_ca_mode);
+
+	tty_putp(clear_screen);
+
+	signal(SIGINT, handle_sigint);
+}
+
+static void
+tty_putp(const char *string)
+{
+	if (tputs(string, 1, tty_putc) == ERR)
+		err(1, "tputs");
+}
+
+static int
+tty_putc(int c)
+{
+    return putc(c, tty_out);
+}
+
+static void
+handle_sigint(int sig __attribute__((unused)))
+{
+	restore_tty();
+	exit(EX_SIGINT);
+}
+
+static void
+restore_tty(void)
+{
+	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
+	fclose(tty_in);
+
+	tty_putp(clear_screen);
+
+	if (use_alternate_screen)
+		tty_putp(exit_ca_mode);
+
+	fclose(tty_out);
+}
+
+static void
+put_line(int y, char *string, int length, int standout)
+{
+	if (standout)
+		start_standout();
+
+	if (length > 0)
+		print_at(y, 0, string, columns);
 
 	move_to(y, length);
 
 	for (; length < columns; ++length) {
-		if (tty_putc(' ') == EOF) {
+		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
-		}
 	}
 
-	if (standout) {
+	if (standout)
 		end_standout();
+}
+
+static void
+start_standout(void)
+{
+	tty_putp(enter_standout_mode);
+}
+
+static void
+print_at(int y, int x, char *string, int max_length)
+{
+	int	i;
+
+	move_to(y, x);
+
+	for (i = 0; string[i] != '\0' && i < max_length; i++) {
+		if (tty_putc(string[i]) == EOF)
+			err(1, "tty_putc");
 	}
+}
+
+static void
+move_to(int y, int x)
+{
+	tty_putp(tgoto(cursor_address, x, y));
+}
+
+static void
+end_standout(void)
+{
+	tty_putp(exit_standout_mode);
 }
 
 static int
 print_choices(int selection)
 {
-	char *line;
-	int i;
-	int visible_choices_count = 0;
-	size_t length;
-	size_t line_length = 64;
-	struct choice *choice;
+	char		*line;
+	int		 i, visible_choices_count = 0;
+	size_t		 length, line_length = 64;
+	struct choice	*choice;
 
-	line = calloc(sizeof(*line), line_length);
-	if (line == NULL) {
+	if ((line = calloc(sizeof(*line), line_length)) == NULL)
 		err(1, "calloc");
-	}
 
 	SLIST_FOREACH(choice, choices, choices) {
 		length = strlen(choice->string) + strlen(choice->description) +
@@ -630,19 +700,17 @@ print_choices(int selection)
 		while (length > line_length) {
 			line_length = line_length * 2;
 
-			line = reallocarray(line, line_length, sizeof(*line));
-			if (line == NULL) {
+			if ((line = reallocarray(line, line_length,
+					    sizeof(*line))) == NULL)
 				err(1, "reallocarray");
-			}
 		}
 
 		strlcpy(line, choice->string, line_length);
 		strlcat(line, " ", line_length);
 		strlcat(line, choice->description, line_length);
 
-		if (visible_choices_count == lines - 1 || choice->score == 0) {
+		if (visible_choices_count == lines - 1 || choice->score == 0)
 			break;
-		}
 
 		put_line(visible_choices_count + 1, line, length,
 		    visible_choices_count == selection);
@@ -652,112 +720,22 @@ print_choices(int selection)
 
 	free(line);
 
-	for (i = visible_choices_count + 1; i < lines; ++i) {
+	for (i = visible_choices_count + 1; i < lines; ++i)
 		put_line(i, "", 0, 0);
-	}
 
 	return visible_choices_count;
 }
 
-static struct choice *
-choice_at(int index)
-{
-	struct choice *choice;
-	int i = 0;
-
-	SLIST_FOREACH(choice, choices, choices) {
-		if (i == index) {
-			return choice;
-		}
-
-		++i;
-	}
-
-	return NULL;
-}
-
 static void
-filter_choices(void)
+show_cursor(void)
 {
-	struct choice *choice;
-
-	SLIST_FOREACH(choice, choices, choices) {
-		choice->score = score(choice->string);
-	}
-
-	choices->slh_first = sort(choices->slh_first);
-}
-
-static void
-delete_between(char *string, size_t length, size_t start, size_t end)
-{
-	memmove(string + start, string + end, length - end + 1);
-}
-
-static void
-print_at(int y, int x, char *string, int max_length)
-{
-	int i;
-
-	move_to(y, x);
-
-	for (i = 0; string[i] != '\0' && i < max_length; i++) {
-		if (tty_putc(string[i]) == EOF) {
-			err(1, "tty_putc");
-		}
-	}
-}
-
-static void
-init_tty(void)
-{
-	struct termios new_attributes;
-
-	tty_in = fopen("/dev/tty", "r");
-	if (tty_in == NULL) {
-		err(1, "fopen");
-	}
-
-	tcgetattr(fileno(tty_in), &original_attributes);
-	new_attributes = original_attributes;
-	new_attributes.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
-
-	tty_out = fopen("/dev/tty", "w");
-	if (tty_out == NULL) {
-		err(1, "fopen");
-	}
-
-	setupterm((char *)0, fileno(tty_out), (int *)0);
-
-	if (use_alternate_screen) {
-		tty_putp(enter_ca_mode);
-	}
-
-	tty_putp(clear_screen);
-
-	signal(SIGINT, handle_sigint);
-}
-
-static void
-restore_tty()
-{
-	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
-	fclose(tty_in);
-
-	tty_putp(clear_screen);
-
-	if (use_alternate_screen) {
-		tty_putp(exit_ca_mode);
-	}
-
-	fclose(tty_out);
+	tty_putp(cursor_normal);
 }
 
 static int
-get_key()
+get_key(void)
 {
-	int key;
+	int	key;
 
 	key = tty_getc();
 
@@ -792,92 +770,57 @@ get_key()
 	return key;
 }
 
-static void
-show_cursor()
+static int
+tty_getc(void)
 {
-	tty_putp(cursor_normal);
+	int	c;
+
+	if ((c = getc(tty_in)) == ERR)
+		err(1, "getc");
+
+	return c;
+}
+
+static struct choice *
+choice_at(int index)
+{
+	struct choice	*choice;
+	int		 i = 0;
+
+	SLIST_FOREACH(choice, choices, choices) {
+		if (i == index)
+			return choice;
+		++i;
+	}
+
+	return NULL;
 }
 
 static void
-hide_cursor()
+delete_between(char *string, size_t length, size_t start, size_t end)
+{
+	memmove(string + start, string + end, length - end + 1);
+}
+
+static void
+hide_cursor(void)
 {
 	tty_putp(cursor_invisible);
 }
 
 static void
-start_standout()
+free_choices(void)
 {
-	tty_putp(enter_standout_mode);
-}
+	struct choice	*choice;
 
-static void
-end_standout()
-{
-	tty_putp(exit_standout_mode);
-}
+	while (!SLIST_EMPTY(choices)) {
+		choice = SLIST_FIRST(choices);
+		SLIST_REMOVE_HEAD(choices, choices);
 
-static void
-move_to(int y, int x)
-{
-	tty_putp(tgoto(cursor_address, x, y));
-}
-
-static int
-tty_getc()
-{
-	int c;
-
-	c = getc(tty_in);
-
-	if (c == ERR) {
-		err(1, "getc");
+		free(choice->string);
+		free(choice->description);
+		free(choice);
 	}
 
-	return c;
-}
-
-static void
-tty_putp(const char *string)
-{
-	if (tputs(string, 1, tty_putc) == ERR) {
-		err(1, "tputs");
-	}
-}
-
-static int
-tty_putc(int c)
-{
-    return putc(c, tty_out);
-}
-
-static void
-handle_sigint()
-{
-	restore_tty();
-	exit(EX_SIGINT);
-}
-
-static void
-usage()
-{
-	fprintf(stderr,
-	    "usage: pick [-h] [-v] [-q QUERY] [-d [-o]] [-x | -X]\n");
-	fprintf(stderr, "    -h          output this help message and exit\n");
-	fprintf(stderr, "    -v          output the version and exit\n");
-	fprintf(stderr, "    -q QUERY    supply an initial search query\n");
-	fprintf(stderr, "    -d          read and display descriptions\n");
-	fprintf(stderr,
-	    "    -o          output description of selected on exit\n");
-	fprintf(stderr, "    -x          enable alternate screen\n");
-	fprintf(stderr, "    -X          disable alternate screen\n");
-
-	exit(EX_USAGE);
-}
-
-static void
-version()
-{
-	printf("%s\n", PACKAGE_VERSION);
-
-	exit(EX_OK);
+	free(choices);
 }
