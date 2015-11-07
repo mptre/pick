@@ -80,7 +80,7 @@ static int print_choices(int);
 static struct choice *choice_at(int);
 static void filter_choices(void);
 static void delete_between(char *, size_t, size_t, size_t);
-static void print_string_at(int, int, char *, int);
+static void print_at(int, int, char *, int);
 static void tty_init(void);
 static void tty_restore();
 static int tty_getch();
@@ -600,7 +600,7 @@ put_line(int y, char *string, int length, int standout)
 	}
 
 	if (length > 0) {
-		print_string_at(y, 0, string, columns);
+		print_at(y, 0, string, columns);
 	}
 
 	tty_move_cursor_to(y, length);
@@ -701,7 +701,7 @@ delete_between(char *string, size_t length, size_t start, size_t end)
 }
 
 static void
-print_string_at(int y, int x, char *string, int max_length)
+print_at(int y, int x, char *string, int max_length)
 {
 	int i;
 
