@@ -63,11 +63,11 @@ struct choice {
 
 SLIST_HEAD(choices, choice);
 
-static void	choices_score(char *);
+static void	choices_score(void);
 static void	choices_sort(void);
 static void	choices_free(void);
-static size_t min_match_length(char *, char *);
-static float score(char *, char *);
+static size_t min_match_length(char *);
+static float score(char *);
 static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
 static struct choice	*choice_new(char *, char *, float);
@@ -76,11 +76,11 @@ static void 		 io_read_choices(void);
 static void		 io_print_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
-static struct choice	*ui_selected_choice(char *);
+static struct choice	*ui_selected_choice(void);
 static void print_line(int, char *, int, int);
 static int print_choices(int);
 static struct choice *selected_choice(int);
-static void filter_choices(char *, int *);
+static void filter_choices(int *);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_string_at(int, int, char *, int);
 static void tty_init(void);
@@ -107,11 +107,12 @@ static int use_alternate_screen;
 static int descriptions = 0;
 static int output_description = 0;
 static struct choices *choices;
+static char *query = NULL;
+static size_t query_size;
 
 int
 main(int argc, char **argv)
 {
-	char *query = "";
 	int option;
 
 	use_alternate_screen = getenv("VIM") == NULL;
@@ -127,7 +128,9 @@ main(int argc, char **argv)
 			output_description = 1;
 			break;
 		case 'q':
-			query = optarg;
+			if ((query = strdup(optarg)) == NULL)
+				err(1, "strdup");
+			query_size = strlen(query) + 1;
 			break;
 		case 'x':
 			use_alternate_screen = 1;
@@ -149,22 +152,30 @@ main(int argc, char **argv)
 	 */
 	output_description = output_description && descriptions;
 
+	if (query == NULL) {
+	    query_size = 64;
+
+	    if ((query = calloc(query_size, sizeof(*query))) == NULL)
+		    err(1, "calloc");
+	}
+
 	io_read_choices();
 
-	io_print_choice(ui_selected_choice(query));
+	io_print_choice(ui_selected_choice());
 
+	free(query);
 	choices_free();
 
 	return EX_OK;
 }
 
 static void
-choices_score(char *query)
+choices_score(void)
 {
 	struct choice *choice;
 
 	SLIST_FOREACH(choice, choices, choices) {
-		choice->score = score(choice->string, query);
+		choice->score = score(choice->string);
 	}
 }
 
@@ -189,7 +200,7 @@ choices_free(void)
 }
 
 static size_t
-min_match_length(char *string, char *query)
+min_match_length(char *string)
 {
 	size_t match_length, match_start, query_position, match_position;
 	int query_char, query_start;
@@ -228,7 +239,7 @@ min_match_length(char *string, char *query)
 }
 
 static float
-score(char *string, char *query)
+score(char *string)
 {
 	size_t string_length, query_length, match_length;
 
@@ -243,7 +254,7 @@ score(char *string, char *query)
 		return 0;
 	}
 
-	match_length = min_match_length(string, query);
+	match_length = min_match_length(string);
 	if (match_length == 0) {
 		return 0;
 	}
@@ -406,30 +417,16 @@ eager_strpbrk(const char *string, const char *separators) {
 }
 
 static struct choice *
-ui_selected_choice(char *initial_query)
+ui_selected_choice(void)
 {
-	char *query;
 	int key, selection, visible_choices_count, word_position;
-	size_t cursor_position, query_size, query_length, initial_query_length;
+	size_t cursor_position, query_length;
 	struct choice *choice;
 
-	initial_query_length = strlen(initial_query);
-	cursor_position = initial_query_length;
-	query_length = initial_query_length;
-	query_size = 64;
+	query_length = strlen(query);
+	cursor_position = query_length;
 
-	if (query_size < initial_query_length + 1) {
-		query_size = initial_query_length + 1;
-	}
-
-	query = calloc(query_size, sizeof(*query));
-	if (query == NULL) {
-		err(1, "calloc");
-	}
-
-	strlcpy(query, initial_query, query_size);
-
-	filter_choices(query, &selection);
+	filter_choices(&selection);
 	tty_init();
 
 	print_line(0, query, query_length, 0);
@@ -444,7 +441,6 @@ ui_selected_choice(char *initial_query)
 		case TTY_ENTER:
 			if (visible_choices_count > 0) {
 				tty_restore();
-				free(query);
 				return selected_choice(selection);
 			}
 
@@ -453,7 +449,6 @@ ui_selected_choice(char *initial_query)
 			tty_restore();
 			choice = choice_new(query, "", 1);
 			SLIST_INSERT_HEAD(choices, choice, choices);
-			free(query);
 			return choice;
 		case TTY_CTRL_N:
 			if (selection < visible_choices_count - 1) {
@@ -489,7 +484,7 @@ ui_selected_choice(char *initial_query)
 				    cursor_position);
 				--cursor_position;
 				--query_length;
-				filter_choices(query, &selection);
+				filter_choices(&selection);
 			}
 
 			break;
@@ -501,7 +496,7 @@ ui_selected_choice(char *initial_query)
 				    cursor_position,
 				    cursor_position + 1);
 				--query_length;
-				filter_choices(query, &selection);
+				filter_choices(&selection);
 			}
 
 			break;
@@ -513,7 +508,7 @@ ui_selected_choice(char *initial_query)
 			    cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
-			filter_choices(query, &selection);
+			filter_choices(&selection);
 			break;
 		case TTY_CTRL_K:
 			delete_between(
@@ -522,7 +517,7 @@ ui_selected_choice(char *initial_query)
 			    cursor_position + 1,
 			    query_length);
 			query_length = cursor_position;
-			filter_choices(query, &selection);
+			filter_choices(&selection);
 			break;
 		case TTY_CTRL_W:
 			if (cursor_position > 0) {
@@ -542,7 +537,7 @@ ui_selected_choice(char *initial_query)
 				    cursor_position);
 				query_length -= cursor_position - word_position;
 				cursor_position = word_position;
-				filter_choices(query, &selection);
+				filter_choices(&selection);
 			}
 			break;
 		case TTY_CTRL_A:
@@ -586,7 +581,7 @@ ui_selected_choice(char *initial_query)
 
 				query[cursor_position++] = key;
 				query[++query_length] = '\0';
-				filter_choices(query, &selection);
+				filter_choices(&selection);
 			}
 
 			break;
@@ -705,9 +700,9 @@ selected_choice(int selection)
 }
 
 static void
-filter_choices(char *query, int *selection)
+filter_choices(int *selection)
 {
-	choices_score(query);
+	choices_score();
 	choices_sort();
 	*selection = 0;
 }
