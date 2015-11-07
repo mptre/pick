@@ -63,7 +63,7 @@ struct choice {
 
 SLIST_HEAD(choices, choice);
 
-static void	choices_free(void);
+static void	free_choices(void);
 static size_t min_match_length(char *);
 static float score(char *);
 static struct choice *merge(struct choice *, struct choice *);
@@ -159,13 +159,13 @@ main(int argc, char **argv)
 	io_print_choice(ui_selected_choice());
 
 	free(query);
-	choices_free();
+	free_choices();
 
 	return EX_OK;
 }
 
 static void
-choices_free(void)
+free_choices(void)
 {
 	struct choice *choice;
 
