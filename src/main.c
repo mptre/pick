@@ -91,7 +91,7 @@ static void tty_exit_standout_mode();
 static void tty_move_cursor_to(int, int);
 static int tty_getc();
 static void tty_putp(const char *);
-static int raw_tty_putc(int);
+static int tty_putc(int);
 static void handle_sigint();
 static void usage();
 static void version();
@@ -605,8 +605,8 @@ put_line(int y, char *string, int length, int standout)
 	tty_move_cursor_to(y, length);
 
 	for (; length < columns; ++length) {
-		if (raw_tty_putc(' ') == EOF) {
-			err(1, "raw_tty_putc");
+		if (tty_putc(' ') == EOF) {
+			err(1, "tty_putc");
 		}
 	}
 
@@ -709,8 +709,8 @@ print_at(int y, int x, char *string, int max_length)
 	tty_move_cursor_to(y, x);
 
 	for (i = 0; string[i] != '\0' && i < max_length; i++) {
-		if (raw_tty_putc(string[i]) == EOF) {
-			err(1, "raw_tty_putc");
+		if (tty_putc(string[i]) == EOF) {
+			err(1, "tty_putc");
 		}
 	}
 }
@@ -846,13 +846,13 @@ tty_getc()
 static void
 tty_putp(const char *string)
 {
-	if (tputs(string, 1, raw_tty_putc) == ERR) {
+	if (tputs(string, 1, tty_putc) == ERR) {
 		err(1, "tputs");
 	}
 }
 
 static int
-raw_tty_putc(int c)
+tty_putc(int c)
 {
     return putc(c, tty_out);
 }
