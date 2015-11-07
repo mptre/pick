@@ -85,7 +85,7 @@ static void init_tty(void);
 static void restore_tty();
 static int get_key();
 static void show_cursor();
-static void tty_hide_cursor();
+static void hide_cursor();
 static void tty_enter_standout_mode();
 static void tty_exit_standout_mode();
 static void tty_move_cursor_to(int, int);
@@ -573,7 +573,7 @@ selected_choice(void)
 			break;
 		}
 
-		tty_hide_cursor();
+		hide_cursor();
 
 		if (query_length == query_size - 1) {
 			query_size += query_size;
@@ -806,7 +806,7 @@ show_cursor()
 }
 
 static void
-tty_hide_cursor()
+hide_cursor()
 {
 	tty_putp(cursor_invisible);
 }
