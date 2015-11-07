@@ -78,7 +78,7 @@ static struct choice	*selected_choice(void);
 static void put_line(int, char *, int, int);
 static int print_choices(int);
 static struct choice *choice_at(int);
-static void filter_choices(int *);
+static void filter_choices(void);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_string_at(int, int, char *, int);
 static void tty_init(void);
@@ -405,7 +405,9 @@ selected_choice(void)
 	query_length = strlen(query);
 	cursor_position = query_length;
 
-	filter_choices(&selection);
+	filter_choices();
+	selection = 0;
+
 	tty_init();
 
 	put_line(0, query, query_length, 0);
@@ -463,7 +465,8 @@ selected_choice(void)
 				    cursor_position);
 				--cursor_position;
 				--query_length;
-				filter_choices(&selection);
+				filter_choices();
+				selection = 0;
 			}
 
 			break;
@@ -475,7 +478,8 @@ selected_choice(void)
 				    cursor_position,
 				    cursor_position + 1);
 				--query_length;
-				filter_choices(&selection);
+				filter_choices();
+				selection = 0;
 			}
 
 			break;
@@ -487,7 +491,8 @@ selected_choice(void)
 			    cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
-			filter_choices(&selection);
+			filter_choices();
+			selection = 0;
 			break;
 		case TTY_CTRL_K:
 			delete_between(
@@ -496,7 +501,8 @@ selected_choice(void)
 			    cursor_position + 1,
 			    query_length);
 			query_length = cursor_position;
-			filter_choices(&selection);
+			filter_choices();
+			selection = 0;
 			break;
 		case TTY_CTRL_W:
 			if (cursor_position > 0) {
@@ -516,7 +522,8 @@ selected_choice(void)
 				    cursor_position);
 				query_length -= cursor_position - word_position;
 				cursor_position = word_position;
-				filter_choices(&selection);
+				filter_choices();
+				selection = 0;
 			}
 			break;
 		case TTY_CTRL_A:
@@ -560,7 +567,8 @@ selected_choice(void)
 
 				query[cursor_position++] = key;
 				query[++query_length] = '\0';
-				filter_choices(&selection);
+				filter_choices();
+				selection = 0;
 			}
 
 			break;
@@ -675,7 +683,7 @@ choice_at(int index)
 }
 
 static void
-filter_choices(int *selection)
+filter_choices(void)
 {
 	struct choice *choice;
 
@@ -684,8 +692,6 @@ filter_choices(int *selection)
 	}
 
 	choices->slh_first = sort(choices->slh_first);
-
-	*selection = 0;
 }
 
 static void
