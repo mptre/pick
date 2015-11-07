@@ -74,7 +74,7 @@ static void 		 get_choices(void);
 static void		 put_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
-static struct choice	*ui_selected_choice(void);
+static struct choice	*selected_choice(void);
 static void print_line(int, char *, int, int);
 static int print_choices(int);
 static struct choice *choice_at(int);
@@ -156,7 +156,7 @@ main(int argc, char **argv)
 
 	get_choices();
 
-	put_choice(ui_selected_choice());
+	put_choice(selected_choice());
 
 	free(query);
 	free_choices();
@@ -396,7 +396,7 @@ eager_strpbrk(const char *string, const char *separators) {
 }
 
 static struct choice *
-ui_selected_choice(void)
+selected_choice(void)
 {
 	int key, selection, visible_choices_count, word_position;
 	size_t cursor_position, query_length;
