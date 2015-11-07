@@ -93,7 +93,7 @@ static void tty_move_cursor_to(int, int);
 static int tty_getc();
 static void tty_putp(const char *);
 static int raw_tty_putc(int);
-static void handle_interrupt();
+static void handle_sigint();
 static void usage();
 static void version();
 
@@ -734,7 +734,7 @@ tty_init(void)
 
 	tty_putp(clear_screen);
 
-	signal(SIGINT, handle_interrupt);
+	signal(SIGINT, handle_sigint);
 }
 
 static void
@@ -857,7 +857,7 @@ raw_tty_putc(int c)
 }
 
 static void
-handle_interrupt()
+handle_sigint()
 {
 	tty_restore();
 	exit(EX_SIGINT);
