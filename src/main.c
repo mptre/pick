@@ -75,7 +75,7 @@ static void		 put_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
 static struct choice	*selected_choice(void);
-static void print_line(int, char *, int, int);
+static void put_line(int, char *, int, int);
 static int print_choices(int);
 static struct choice *choice_at(int);
 static void filter_choices(int *);
@@ -408,7 +408,7 @@ selected_choice(void)
 	filter_choices(&selection);
 	tty_init();
 
-	print_line(0, query, query_length, 0);
+	put_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(selection);
 	tty_move_cursor_to(0, cursor_position);
 	tty_show_cursor();
@@ -577,7 +577,7 @@ selected_choice(void)
 			}
 		}
 
-		print_line(0, query, query_length, 0);
+		put_line(0, query, query_length, 0);
 		visible_choices_count = print_choices(selection);
 		tty_move_cursor_to(0, cursor_position);
 		tty_show_cursor();
@@ -585,7 +585,7 @@ selected_choice(void)
 }
 
 static void
-print_line(int y, char *string, int length, int standout)
+put_line(int y, char *string, int length, int standout)
 {
 	if (standout) {
 		tty_enter_standout_mode();
@@ -642,7 +642,7 @@ print_choices(int selection)
 			break;
 		}
 
-		print_line(visible_choices_count + 1, line, length,
+		put_line(visible_choices_count + 1, line, length,
 		    visible_choices_count == selection);
 
 		++visible_choices_count;
@@ -651,7 +651,7 @@ print_choices(int selection)
 	free(line);
 
 	for (i = visible_choices_count + 1; i < lines; ++i) {
-		print_line(i, "", 0, 0);
+		put_line(i, "", 0, 0);
 	}
 
 	return visible_choices_count;
