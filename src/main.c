@@ -77,7 +77,7 @@ static char * eager_strpbrk(const char *, const char *);
 static struct choice	*ui_selected_choice(void);
 static void print_line(int, char *, int, int);
 static int print_choices(int);
-static struct choice *selected_choice(int);
+static struct choice *choice_at(int);
 static void filter_choices(int *);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_string_at(int, int, char *, int);
@@ -420,7 +420,7 @@ ui_selected_choice(void)
 		case TTY_ENTER:
 			if (visible_choices_count > 0) {
 				tty_restore();
-				return selected_choice(selection);
+				return choice_at(selection);
 			}
 
 			break;
@@ -658,7 +658,7 @@ print_choices(int selection)
 }
 
 static struct choice *
-selected_choice(int selection)
+choice_at(int index)
 {
 	struct choice *choice;
 	int i = 0;
@@ -668,7 +668,7 @@ selected_choice(int selection)
 			break;
 		}
 
-		if (i == selection) {
+		if (i == index) {
 			return choice;
 		}
 
