@@ -30,29 +30,28 @@
 
 #include "compat.h"
 
-#define TTY_CTRL_A 1
-#define TTY_CTRL_B 2
-#define TTY_CTRL_D 4
-#define TTY_CTRL_E 5
-#define TTY_CTRL_F 6
-#define TTY_CTRL_N 14
-#define TTY_CTRL_P 16
-#define TTY_CTRL_K 11
-#define TTY_CTRL_U 21
-#define TTY_CTRL_W 23
-#define TTY_DEL 127
-#define TTY_ENTER 10
-#define TTY_ALT_ENTER 266
-#define TTY_BACKSPACE 263
-#define TTY_UP 259
-#define TTY_DOWN 258
-#define TTY_RIGHT 261
-#define TTY_LEFT 260
+#define CTRL_A 1
+#define CTRL_B 2
+#define CTRL_D 4
+#define CTRL_E 5
+#define CTRL_F 6
+#define CTRL_N 14
+#define CTRL_P 16
+#define CTRL_K 11
+#define CTRL_U 21
+#define CTRL_W 23
+#define DEL 127
+#define ENTER 10
+#define ALT_ENTER 266
+#define BACKSPACE 263
+#define UP 259
+#define DOWN 258
+#define RIGHT 261
+#define LEFT 260
+#define ESCAPE 27
 
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
-
-#define ESCAPE 27
 
 struct choice {
 	char *string;
@@ -412,44 +411,44 @@ selected_choice(void)
 		fflush(tty_out);
 		key = get_key();
 		switch(key) {
-		case TTY_ENTER:
+		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
 				return choice_at(selection);
 			}
 
 			break;
-		case TTY_ALT_ENTER:
+		case ALT_ENTER:
 			restore_tty();
 			choice = new_choice(query, "", 1);
 			SLIST_INSERT_HEAD(choices, choice, choices);
 			return choice;
-		case TTY_CTRL_N:
+		case CTRL_N:
 			if (selection < visible_choices_count - 1) {
 				++selection;
 			}
 
 			break;
-		case TTY_CTRL_P:
+		case CTRL_P:
 			if (selection > 0) {
 				--selection;
 			}
 
 			break;
-		case TTY_CTRL_B:
+		case CTRL_B:
 			if (cursor_position > 0) {
 				--cursor_position;
 			}
 
 			break;
-		case TTY_CTRL_F:
+		case CTRL_F:
 			if (cursor_position < query_length) {
 				++cursor_position;
 			}
 
 			break;
-		case TTY_BACKSPACE:
-		case TTY_DEL:
+		case BACKSPACE:
+		case DEL:
 			if (cursor_position > 0) {
 				delete_between(
 				    query,
@@ -463,7 +462,7 @@ selected_choice(void)
 			}
 
 			break;
-		case TTY_CTRL_D:
+		case CTRL_D:
 			if (cursor_position < query_length) {
 				delete_between(
 				    query,
@@ -476,7 +475,7 @@ selected_choice(void)
 			}
 
 			break;
-		case TTY_CTRL_U:
+		case CTRL_U:
 			delete_between(
 			    query,
 			    query_length,
@@ -487,7 +486,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case TTY_CTRL_K:
+		case CTRL_K:
 			delete_between(
 			    query,
 			    query_length,
@@ -497,7 +496,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case TTY_CTRL_W:
+		case CTRL_W:
 			if (cursor_position > 0) {
 				for (word_position = cursor_position - 1;
 				    word_position > 0;
@@ -519,31 +518,31 @@ selected_choice(void)
 				selection = 0;
 			}
 			break;
-		case TTY_CTRL_A:
+		case CTRL_A:
 			cursor_position = 0;
 			break;
-		case TTY_CTRL_E:
+		case CTRL_E:
 			cursor_position = query_length;
 			break;
-		case TTY_DOWN:
+		case DOWN:
 			if (selection < visible_choices_count - 1) {
 				++selection;
 			}
 
 			break;
-		case TTY_UP:
+		case UP:
 			if (selection > 0) {
 				--selection;
 			}
 
 			break;
-		case TTY_LEFT:
+		case LEFT:
 			if (cursor_position > 0) {
 				--cursor_position;
 			}
 
 			break;
-		case TTY_RIGHT:
+		case RIGHT:
 			if (cursor_position < query_length) {
 				++cursor_position;
 			}
@@ -766,26 +765,26 @@ get_key()
 		key = tty_getc();
 
 		if (key == '\n') {
-			return TTY_ALT_ENTER;
+			return ALT_ENTER;
 		}
 
 		if (key == '[' || key == 'O') {
 			key = tty_getc();
 
 			if (key == 'A') {
-				return TTY_UP;
+				return UP;
 			}
 
 			if (key == 'B') {
-				return TTY_DOWN;
+				return DOWN;
 			}
 
 			if (key == 'C') {
-				return TTY_RIGHT;
+				return RIGHT;
 			}
 
 			if (key == 'D') {
-				return TTY_LEFT;
+				return LEFT;
 			}
 		}
 	}
