@@ -68,7 +68,7 @@ static size_t min_match_length(char *);
 static float score(char *);
 static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
-static struct choice	*choice_new(char *, char *, float);
+static struct choice	*new_choice(char *, char *, float);
 static void		 choice_free(struct choice *);
 static void 		 io_read_choices(void);
 static void		 io_print_choice(struct choice *);
@@ -296,7 +296,7 @@ sort(struct choice *choice)
 }
 
 static struct choice *
-choice_new(char *string, char *description, float score)
+new_choice(char *string, char *description, float score)
 {
 	struct choice *choice;
 
@@ -357,7 +357,7 @@ io_read_choices(void)
 			description = "";
 		}
 
-		choice = choice_new(line, description, 1);
+		choice = new_choice(line, description, 1);
 		SLIST_INSERT_HEAD(choices, choice, choices);
 
 		free(line);
@@ -426,7 +426,7 @@ ui_selected_choice(void)
 			break;
 		case TTY_ALT_ENTER:
 			tty_restore();
-			choice = choice_new(query, "", 1);
+			choice = new_choice(query, "", 1);
 			SLIST_INSERT_HEAD(choices, choice, choices);
 			return choice;
 		case TTY_CTRL_N:
