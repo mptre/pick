@@ -70,7 +70,7 @@ static struct choice *merge(struct choice *, struct choice *);
 static struct choice *sort(struct choice *);
 static struct choice	*new_choice(char *, char *, float);
 static void		 free_choice(struct choice *);
-static void 		 io_read_choices(void);
+static void 		 get_choices(void);
 static void		 io_print_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
@@ -154,7 +154,7 @@ main(int argc, char **argv)
 		    err(1, "calloc");
 	}
 
-	io_read_choices();
+	get_choices();
 
 	io_print_choice(ui_selected_choice());
 
@@ -321,7 +321,7 @@ free_choice(struct choice *choice)
 }
 
 void
-io_read_choices(void)
+get_choices(void)
 {
 	char *line, *description, *field_separators;
 	size_t line_size;
