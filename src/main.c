@@ -81,7 +81,7 @@ static struct choice *choice_at(int);
 static void filter_choices(void);
 static void delete_between(char *, size_t, size_t, size_t);
 static void print_at(int, int, char *, int);
-static void tty_init(void);
+static void init_tty(void);
 static void tty_restore();
 static int tty_getch();
 static void tty_putc(int);
@@ -408,7 +408,7 @@ selected_choice(void)
 	filter_choices();
 	selection = 0;
 
-	tty_init();
+	init_tty();
 
 	put_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(selection);
@@ -713,7 +713,7 @@ print_at(int y, int x, char *string, int max_length)
 }
 
 static void
-tty_init(void)
+init_tty(void)
 {
 	struct termios new_attributes;
 
