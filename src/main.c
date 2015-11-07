@@ -86,7 +86,7 @@ static void restore_tty();
 static int get_key();
 static void show_cursor();
 static void hide_cursor();
-static void tty_enter_standout_mode();
+static void start_standout();
 static void tty_exit_standout_mode();
 static void tty_move_cursor_to(int, int);
 static int tty_getc();
@@ -595,7 +595,7 @@ static void
 put_line(int y, char *string, int length, int standout)
 {
 	if (standout) {
-		tty_enter_standout_mode();
+		start_standout();
 	}
 
 	if (length > 0) {
@@ -812,7 +812,7 @@ hide_cursor()
 }
 
 static void
-tty_enter_standout_mode()
+start_standout()
 {
 	tty_putp(enter_standout_mode);
 }
