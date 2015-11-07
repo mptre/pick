@@ -71,7 +71,7 @@ static struct choice *sort(struct choice *);
 static struct choice	*new_choice(char *, char *, float);
 static void		 free_choice(struct choice *);
 static void 		 get_choices(void);
-static void		 io_print_choice(struct choice *);
+static void		 put_choice(struct choice *);
 static void chomp(char *, ssize_t);
 static char * eager_strpbrk(const char *, const char *);
 static struct choice	*ui_selected_choice(void);
@@ -156,7 +156,7 @@ main(int argc, char **argv)
 
 	get_choices();
 
-	io_print_choice(ui_selected_choice());
+	put_choice(ui_selected_choice());
 
 	free(query);
 	free_choices();
@@ -367,7 +367,7 @@ get_choices(void)
 }
 
 static void
-io_print_choice(struct choice *choice)
+put_choice(struct choice *choice)
 {
 	printf("%s\n", choice->string);
 
