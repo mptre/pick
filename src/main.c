@@ -8,7 +8,6 @@
 
 #include <ctype.h>
 #include <err.h>
-#include <fcntl.h>
 #include <locale.h>
 #include <signal.h>
 #define _WITH_GETLINE
