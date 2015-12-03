@@ -78,10 +78,8 @@ static void		 tty_putp(const char *);
 static int		 tty_putc(int);
 static void		 handle_sigint(int);
 static void		 restore_tty(void);
-static void		 put_line(int, char *, int, int);
+static void		 put_line(char *, int, int);
 static void		 start_standout(void);
-static void		 print_at(int, int, char *, int);
-static void		 move_to(int, int);
 static void		 end_standout(void);
 static int		 print_choices(int);
 static void		 show_cursor(void);
@@ -91,6 +89,7 @@ static struct choice	*choice_at(int);
 static void		 delete_between(char *, size_t, size_t, size_t);
 static void		 hide_cursor(void);
 static void		 free_choices(void);
+static void		 print_query(char *, size_t, int);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
@@ -280,9 +279,8 @@ selected_choice(void)
 
 	init_tty();
 
-	put_line(0, query, query_length, 0);
 	visible_choices_count = print_choices(selection);
-	move_to(0, cursor_position);
+	print_query(query, query_length, cursor_position);
 	show_cursor();
 
 	for (;;) {
@@ -442,9 +440,9 @@ selected_choice(void)
 				err(1, "reallocarray");
 		}
 
-		put_line(0, query, query_length, 0);
 		visible_choices_count = print_choices(selection);
-		move_to(0, cursor_position);
+		tty_putp(clr_eos);
+		print_query(query, query_length, cursor_position);
 		show_cursor();
 	}
 }
@@ -573,6 +571,8 @@ static void
 init_tty(void)
 {
 	struct termios	new_attributes;
+	struct choice	*choice;
+	int		choices_count = 0;
 
 	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
 		err(1, "fopen");
@@ -591,7 +591,16 @@ init_tty(void)
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode);
 
-	tty_putp(clear_screen);
+	/* Emit enough lines to fit all choices. */
+	SLIST_FOREACH(choice, choices, choices) {
+		choices_count++;
+		tty_putp(cursor_down);
+		if (choices_count == lines)
+			break;
+	}
+	while (choices_count-- > 0)
+		tty_putp(cursor_up);
+	tty_putp(save_cursor);
 
 	signal(SIGINT, handle_sigint);
 }
@@ -622,7 +631,8 @@ restore_tty(void)
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
 
-	tty_putp(clear_screen);
+	tty_putp(restore_cursor);
+	tty_putp(clr_eos);
 
 	if (use_alternate_screen)
 		tty_putp(exit_ca_mode);
@@ -631,17 +641,18 @@ restore_tty(void)
 }
 
 static void
-put_line(int y, char *string, int length, int standout)
+put_line(char *string, int length, int standout)
 {
+	int	i;
+
 	if (standout)
 		start_standout();
 
-	if (length > 0)
-		print_at(y, 0, string, columns);
-
-	move_to(y, length);
-
-	for (; length < columns; ++length) {
+	for (i = 0; string[i] != '\0' && i < columns; ++i) {
+		if (tty_putc(string[i]) == EOF)
+			err(1, "tty_putc");
+	}
+	for (; i < columns; ++i) {
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 	}
@@ -657,37 +668,34 @@ start_standout(void)
 }
 
 static void
-print_at(int y, int x, char *string, int max_length)
-{
-	int	i;
-
-	move_to(y, x);
-
-	for (i = 0; string[i] != '\0' && i < max_length; i++) {
-		if (tty_putc(string[i]) == EOF)
-			err(1, "tty_putc");
-	}
-}
-
-static void
-move_to(int y, int x)
-{
-	tty_putp(tgoto(cursor_address, x, y));
-}
-
-static void
 end_standout(void)
 {
 	tty_putp(exit_standout_mode);
+}
+
+static void
+print_query(char *query, size_t length, int position)
+{
+	int	i;
+
+	tty_putp(restore_cursor);
+	put_line(query, length, 0);
+
+	tty_putp(restore_cursor);
+	for (i = 0; i < position; ++i)
+		tty_putp(cursor_right);
 }
 
 static int
 print_choices(int selection)
 {
 	char		*line;
-	int		 i, visible_choices_count = 0;
+	int		 visible_choices_count = 0;
 	size_t		 length, line_length = 64;
 	struct choice	*choice;
+
+	/* Emit query line. */
+	tty_putc('\n');
 
 	if ((line = calloc(sizeof(*line), line_length)) == NULL)
 		err(1, "calloc");
@@ -711,16 +719,12 @@ print_choices(int selection)
 		if (visible_choices_count == lines - 1 || choice->score == 0)
 			break;
 
-		put_line(visible_choices_count + 1, line, length,
-		    visible_choices_count == selection);
+		put_line(line, length, visible_choices_count == selection);
 
 		++visible_choices_count;
 	}
 
 	free(line);
-
-	for (i = visible_choices_count + 1; i < lines; ++i)
-		put_line(i, "", 0, 0);
 
 	return visible_choices_count;
 }
