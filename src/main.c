@@ -68,7 +68,6 @@ SLIST_HEAD(choices, choice);
 __dead static void	 usage(void);
 __dead static void	 version(void);
 static void 		 get_choices(void);
-static void		 chomp(char *, ssize_t);
 static char		*eager_strpbrk(const char *, const char *);
 static struct choice	*new_choice(char *, char *, float);
 static void		 put_choice(struct choice *);
@@ -104,6 +103,11 @@ static int		 use_alternate_screen;
 static size_t		 query_size;
 static struct termios	 original_attributes;
 static struct choices	*choices;
+static struct {
+	size_t	size;
+	size_t	nmemb;
+	char	*v;
+} input;
 
 int
 main(int argc, char **argv)
@@ -188,48 +192,50 @@ version(void)
 void
 get_choices(void)
 {
-	char		*line, *description, *field_separators;
-	size_t		 line_size;
+	char		*description, *field_separators, *start, *stop;
 	ssize_t		 length;
 	struct choice	*choice;
 
 	if ((field_separators = getenv("IFS")) == NULL)
 		field_separators = " ";
 
+	input.size = BUFSIZ;
+	if ((input.v = malloc(input.size)) == NULL)
+		err(1, "malloc");
+	for (;;) {
+		if ((length = read(0, input.v + input.nmemb,
+				   input.size - input.nmemb)) <= 0)
+		    break;
+
+		input.nmemb += length;
+		if (input.nmemb + 1 < input.size)
+			continue;
+		input.size *= 2;
+		if ((input.v = realloc(input.v, input.size)) == NULL)
+			err(1, "realloc");
+	}
+	memset(input.v + input.nmemb, '\0', input.size - input.nmemb);
+
 	if ((choices = malloc(sizeof(struct choices))) == NULL)
 		err(1, "malloc");
 
 	SLIST_INIT(choices);
 
-	for (;;) {
-		line = NULL;
-		line_size = 0;
-
-		if ((length = getline(&line, &line_size, stdin)) == -1)
-			break;
-
-		chomp(line, length);
+	start = input.v;
+	while ((stop = strchr(start, '\n')) != NULL) {
+		*stop = '\0';
 
 		if (descriptions &&
-		    (description = eager_strpbrk(line, field_separators)))
+		    (description = eager_strpbrk(start, field_separators)))
 			*description++ = '\0';
 		else
 			description = "";
 
-		choice = new_choice(line, description, 1);
+		choice = new_choice(start, description, 1);
 		SLIST_INSERT_HEAD(choices, choice, choices);
 
-		free(line);
+		start = stop + 1;
 	}
-
-	free(line);
-}
-
-static void
-chomp(char *string, ssize_t length)
-{
-	if (string[length - 1] == '\n')
-		string[length - 1] = '\0';
 }
 
 static char *
@@ -252,8 +258,8 @@ new_choice(char *string, char *description, float score)
 	if ((choice = malloc(sizeof(struct choice))) == NULL)
 		err(1, "malloc");
 
-	choice->string = strdup(string);
-	choice->description = strdup(description);
+	choice->string = string;
+	choice->description = description;
 	choice->score = score;
 
 	return choice;
@@ -552,7 +558,7 @@ merge(struct choice *front, struct choice *back)
 	while (front != NULL && back != NULL) {
 		if (front->score > back->score ||
 		    (front->score == back->score &&
-		     strcmp(front->string, back->string) < 0)) {
+		     front->string < back->string)) {
 			choice->choices.sle_next = front;
 			choice = front;
 			front = front->choices.sle_next;
@@ -817,10 +823,9 @@ free_choices(void)
 		choice = SLIST_FIRST(choices);
 		SLIST_REMOVE_HEAD(choices, choices);
 
-		free(choice->string);
-		free(choice->description);
 		free(choice);
 	}
 
 	free(choices);
+	free(input.v);
 }
