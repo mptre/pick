@@ -51,6 +51,11 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
+#define tty_putp(capability) do { \
+	if (tputs(capability, 1, tty_putc) == ERR) \
+		errx(1, #capability ": unknown terminfo capability"); \
+	} while (0)
+
 struct choice {
 	SLIST_ENTRY(choice)	 choices;
 	char			*description;
@@ -74,7 +79,6 @@ static size_t		 min_match_length(char *);
 static struct choice	*sort(struct choice *);
 static struct choice	*merge(struct choice *, struct choice *);
 static void		 init_tty(void);
-static void		 tty_putp(const char *);
 static int		 tty_putc(int);
 static void		 handle_sigint(int);
 static void		 restore_tty(void);
@@ -594,13 +598,6 @@ init_tty(void)
 	tty_putp(clear_screen);
 
 	signal(SIGINT, handle_sigint);
-}
-
-static void
-tty_putp(const char *string)
-{
-	if (tputs(string, 1, tty_putc) == ERR)
-		err(1, "tputs");
 }
 
 static int
