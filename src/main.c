@@ -105,8 +105,8 @@ static struct termios	 original_attributes;
 static struct choices	*choices;
 static struct {
 	size_t	size;
-	size_t	nmemb;
-	char	*v;
+	size_t	length;
+	char	*string;
 } input;
 
 int
@@ -200,28 +200,28 @@ get_choices(void)
 		field_separators = " ";
 
 	input.size = BUFSIZ;
-	if ((input.v = malloc(input.size)) == NULL)
+	if ((input.string = malloc(input.size)) == NULL)
 		err(1, "malloc");
 	for (;;) {
-		if ((length = read(0, input.v + input.nmemb,
-				   input.size - input.nmemb)) <= 0)
+		if ((length = read(0, input.string + input.length,
+				   input.size - input.length)) <= 0)
 		    break;
 
-		input.nmemb += length;
-		if (input.nmemb + 1 < input.size)
+		input.length += length;
+		if (input.length + 1 < input.size)
 			continue;
 		input.size *= 2;
-		if ((input.v = realloc(input.v, input.size)) == NULL)
+		if ((input.string = realloc(input.string, input.size)) == NULL)
 			err(1, "realloc");
 	}
-	memset(input.v + input.nmemb, '\0', input.size - input.nmemb);
+	memset(input.string + input.length, '\0', input.size - input.length);
 
 	if ((choices = malloc(sizeof(struct choices))) == NULL)
 		err(1, "malloc");
 
 	SLIST_INIT(choices);
 
-	start = input.v;
+	start = input.string;
 	while ((stop = strchr(start, '\n')) != NULL) {
 		*stop = '\0';
 
@@ -827,5 +827,5 @@ free_choices(void)
 	}
 
 	free(choices);
-	free(input.v);
+	free(input.string);
 }
