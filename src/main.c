@@ -203,7 +203,7 @@ get_choices(void)
 	if ((input.string = malloc(input.size)) == NULL)
 		err(1, "malloc");
 	for (;;) {
-		if ((length = read(0, input.string + input.length,
+		if ((length = read(STDIN_FILENO, input.string + input.length,
 				   input.size - input.length)) <= 0)
 		    break;
 
