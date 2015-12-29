@@ -57,26 +57,20 @@
 	} while (0)
 
 struct choice {
-	SLIST_ENTRY(choice)	 choices;
-	char			*description;
-	char			*string;
-	float			 score;
+	char	*description;
+	char	*string;
+	float	 score;
 };
-
-SLIST_HEAD(choices, choice);
 
 __dead static void	 usage(void);
 __dead static void	 version(void);
 static void 		 get_choices(void);
 static char		*eager_strpbrk(const char *, const char *);
-static struct choice	*new_choice(char *, char *, float);
 static void		 put_choice(struct choice *);
 static struct choice	*selected_choice(void);
 static void		 filter_choices(void);
 static float		 score(char *);
 static size_t		 min_match_length(char *);
-static struct choice	*sort(struct choice *);
-static struct choice	*merge(struct choice *, struct choice *);
 static void		 init_tty(void);
 static int		 tty_putc(int);
 static void		 handle_sigint(int);
@@ -88,11 +82,11 @@ static int		 print_choices(int);
 static void		 show_cursor(void);
 static int		 get_key(void);
 static int		 tty_getc(void);
-static struct choice	*choice_at(int);
 static void		 delete_between(char *, size_t, size_t, size_t);
 static void		 hide_cursor(void);
 static void		 free_choices(void);
 static void		 print_query(char *, size_t, int);
+static int		 sort_choices(const void *, const void *);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
@@ -102,7 +96,11 @@ static int		 output_description = 0;
 static int		 use_alternate_screen;
 static size_t		 query_size;
 static struct termios	 original_attributes;
-static struct choices	*choices;
+static struct {
+	size_t size;
+	size_t nmemb;
+	struct choice *v;
+} choices;
 static struct {
 	size_t	size;
 	size_t	length;
@@ -194,7 +192,6 @@ get_choices(void)
 {
 	char		*description, *field_separators, *start, *stop;
 	ssize_t		 length;
-	struct choice	*choice;
 
 	if ((field_separators = getenv("IFS")) == NULL)
 		field_separators = " ";
@@ -216,10 +213,9 @@ get_choices(void)
 	}
 	memset(input.string + input.length, '\0', input.size - input.length);
 
-	if ((choices = malloc(sizeof(struct choices))) == NULL)
+	choices.size = 16;
+	if ((choices.v = malloc(choices.size*sizeof(struct choice))) == NULL)
 		err(1, "malloc");
-
-	SLIST_INIT(choices);
 
 	start = input.string;
 	while ((stop = strchr(start, '\n')) != NULL) {
@@ -231,10 +227,18 @@ get_choices(void)
 		else
 			description = "";
 
-		choice = new_choice(start, description, 1);
-		SLIST_INSERT_HEAD(choices, choice, choices);
+		choices.v[choices.nmemb].string = start;
+		choices.v[choices.nmemb].description = description;
+		choices.v[choices.nmemb].score = 1;
 
 		start = stop + 1;
+
+		/* Ensure room for a extra choice when ALT_ENTER is invoked. */
+		if (++choices.nmemb + 1 < choices.size)
+			continue;
+		choices.size *= 2;
+		if ((choices.v = realloc(choices.v, choices.size*sizeof(struct choice))) == NULL)
+			err(1, "realloc");
 	}
 }
 
@@ -248,21 +252,6 @@ eager_strpbrk(const char *string, const char *separators) {
 		ptr = tmp_ptr++;
 
 	return ptr;
-}
-
-static struct choice *
-new_choice(char *string, char *description, float score)
-{
-	struct choice	*choice;
-
-	if ((choice = malloc(sizeof(struct choice))) == NULL)
-		err(1, "malloc");
-
-	choice->string = string;
-	choice->description = description;
-	choice->score = score;
-
-	return choice;
 }
 
 static void
@@ -279,7 +268,6 @@ selected_choice(void)
 {
 	int		 key, selection, visible_choices_count, word_position;
 	size_t		 cursor_position, query_length;
-	struct choice	*choice;
 
 	query_length = strlen(query);
 	cursor_position = query_length;
@@ -301,15 +289,18 @@ selected_choice(void)
 		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
-				return choice_at(selection);
+				if (selection >= 0 && selection < (ssize_t)choices.nmemb)
+					return &choices.v[selection];
+				else
+					return NULL;
 			}
 
 			break;
 		case ALT_ENTER:
 			restore_tty();
-			choice = new_choice(query, "", 1);
-			SLIST_INSERT_HEAD(choices, choice, choices);
-			return choice;
+			choices.v[choices.nmemb].string = query;
+			choices.v[choices.nmemb].description = "";
+			return &choices.v[choices.nmemb];
 		case CTRL_N:
 			if (selection < visible_choices_count - 1)
 				++selection;
@@ -460,13 +451,25 @@ selected_choice(void)
 static void
 filter_choices(void)
 {
-	struct choice	*choice;
+	int	i;
 
-	SLIST_FOREACH(choice, choices, choices) {
-		choice->score = score(choice->string);
-	}
+	for (i = 0; i < (ssize_t)choices.nmemb; ++i)
+		choices.v[i].score = score(choices.v[i].string);
 
-	choices->slh_first = sort(choices->slh_first);
+	qsort(choices.v, choices.nmemb, sizeof(struct choice), sort_choices);
+}
+
+static int
+sort_choices(const void *p1, const void *p2)
+{
+	const struct choice	*c1, *c2;
+
+	c1 = p1, c2 = p2;
+	if (c1->score < c2->score)
+		return 1;
+	if (c1->score > c2->score)
+		return -1;
+	return c1->string - c2->string;
 }
 
 static float
@@ -526,63 +529,11 @@ min_match_length(char *string)
 	return match_length;
 }
 
-static struct choice *
-sort(struct choice *choice)
-{
-	struct choice	*front, *back;
-
-	if (choice == NULL || choice->choices.sle_next == NULL)
-		return choice;
-
-	front = choice;
-	back = choice->choices.sle_next;
-
-	while (back != NULL && back->choices.sle_next != NULL) {
-		choice = choice->choices.sle_next;
-		back = back->choices.sle_next->choices.sle_next;
-	}
-
-	back = choice->choices.sle_next;
-	choice->choices.sle_next = NULL;
-
-	return merge(sort(front), sort(back));
-}
-
-static struct choice *
-merge(struct choice *front, struct choice *back)
-{
-	struct choice	head, *choice;
-
-	choice = &head;
-
-	while (front != NULL && back != NULL) {
-		if (front->score > back->score ||
-		    (front->score == back->score &&
-		     front->string < back->string)) {
-			choice->choices.sle_next = front;
-			choice = front;
-			front = front->choices.sle_next;
-		} else {
-			choice->choices.sle_next = back;
-			choice = back;
-			back = back->choices.sle_next;
-		}
-	}
-
-	if (front != NULL)
-		choice->choices.sle_next = front;
-	else
-		choice->choices.sle_next = back;
-
-	return head.choices.sle_next;
-}
-
 static void
 init_tty(void)
 {
 	struct termios	 new_attributes;
-	struct choice	*choice;
-	int		 choices_count = 0;
+	int		 i;
 
 	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
 		err(1, "fopen");
@@ -602,13 +553,9 @@ init_tty(void)
 		tty_putp(enter_ca_mode);
 
 	/* Emit enough lines to fit all choices. */
-	SLIST_FOREACH(choice, choices, choices) {
-		choices_count++;
+	for (i = 0; i < (ssize_t)choices.nmemb && i < lines; ++i)
 		tty_putp(cursor_down);
-		if (choices_count == lines)
-			break;
-	}
-	while (choices_count-- > 0)
+	for (; i > 0; --i)
 		tty_putp(cursor_up);
 	tty_putp(save_cursor);
 
@@ -693,7 +640,7 @@ static int
 print_choices(int selection)
 {
 	char		*line;
-	int		 visible_choices_count = 0;
+	int		 i;
 	size_t		 length, line_length = 64;
 	struct choice	*choice;
 
@@ -703,7 +650,11 @@ print_choices(int selection)
 	if ((line = calloc(sizeof(*line), line_length)) == NULL)
 		err(1, "calloc");
 
-	SLIST_FOREACH(choice, choices, choices) {
+	for (i = 0;
+	     i < (ssize_t)choices.nmemb
+	     && i < lines
+	     && (choice = &choices.v[i])->score != 0;
+	     ++i) {
 		length = strlen(choice->string) + strlen(choice->description) +
 		    1;
 
@@ -719,17 +670,12 @@ print_choices(int selection)
 		strlcat(line, " ", line_length);
 		strlcat(line, choice->description, line_length);
 
-		if (visible_choices_count == lines - 1 || choice->score == 0)
-			break;
-
-		put_line(line, length, visible_choices_count == selection);
-
-		++visible_choices_count;
+		put_line(line, length, i == selection);
 	}
 
 	free(line);
 
-	return visible_choices_count;
+	return i;
 }
 
 static void
@@ -787,21 +733,6 @@ tty_getc(void)
 	return c;
 }
 
-static struct choice *
-choice_at(int index)
-{
-	struct choice	*choice;
-	int		 i = 0;
-
-	SLIST_FOREACH(choice, choices, choices) {
-		if (i == index)
-			return choice;
-		++i;
-	}
-
-	return NULL;
-}
-
 static void
 delete_between(char *string, size_t length, size_t start, size_t end)
 {
@@ -817,15 +748,6 @@ hide_cursor(void)
 static void
 free_choices(void)
 {
-	struct choice	*choice;
-
-	while (!SLIST_EMPTY(choices)) {
-		choice = SLIST_FIRST(choices);
-		SLIST_REMOVE_HEAD(choices, choices);
-
-		free(choice);
-	}
-
-	free(choices);
+	free(choices.v);
 	free(input.string);
 }
