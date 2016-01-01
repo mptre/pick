@@ -654,20 +654,14 @@ get_key(void)
 
 		if (key == '[' || key == 'O') {
 			key = tty_getc();
-
-			if (key == 'A') {
+			switch (key) {
+			case 'A':
 				return UP;
-			}
-
-			if (key == 'B') {
+			case 'B':
 				return DOWN;
-			}
-
-			if (key == 'C') {
+			case 'C':
 				return RIGHT;
-			}
-
-			if (key == 'D') {
+			case 'D':
 				return LEFT;
 			}
 		}
