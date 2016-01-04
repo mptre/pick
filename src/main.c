@@ -344,7 +344,7 @@ selected_choice(void)
 			delete_between(
 			    query,
 			    query_length,
-			    cursor_position + 1,
+			    cursor_position,
 			    query_length);
 			query_length = cursor_position;
 			filter_choices();
