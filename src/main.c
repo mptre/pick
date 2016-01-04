@@ -66,7 +66,7 @@ static int		 get_key(void);
 static int		 tty_getc(void);
 static void		 delete_between(char *, size_t, size_t, size_t);
 static void		 free_choices(void);
-static void		 print_query(char *, size_t, int);
+static void		 print_query(char *, size_t, size_t, size_t);
 static int		 choicecmp(const void *, const void *);
 
 static FILE		*tty_in;
@@ -249,15 +249,20 @@ selected_choice(void)
 {
 	int		 key, selection = 0, visible_choices_count;
 	int		 word_position;
-	size_t		 cursor_position, query_length;
+	size_t		 cursor_position, query_length, scroll;
 
 	cursor_position = query_length = strlen(query);
 
 	filter_choices();
 	init_tty();
 
+	if (cursor_position >= (size_t)columns)
+		scroll = cursor_position - columns + 1;
+	else
+		scroll = 0;
+
 	visible_choices_count = print_choices(selection);
-	print_query(query, query_length, cursor_position);
+	print_query(query, query_length, cursor_position, scroll);
 	tty_putp(cursor_normal);
 
 	for (;;) {
@@ -406,7 +411,11 @@ selected_choice(void)
 
 		visible_choices_count = print_choices(selection);
 		tty_putp(clr_eos);
-		print_query(query, query_length, cursor_position);
+		if (cursor_position >= scroll + columns)
+			scroll = cursor_position - columns + 1;
+		if (cursor_position < scroll)
+			scroll = cursor_position;
+		print_query(query, query_length, cursor_position, scroll);
 		tty_putp(cursor_normal);
 	}
 }
@@ -575,15 +584,15 @@ put_line(char *string, int length, int standout)
 }
 
 static void
-print_query(char *query, size_t length, int position)
+print_query(char *query, size_t length, size_t position, size_t scroll)
 {
-	int	i;
+	size_t	i;
 
 	tty_putp(restore_cursor);
-	put_line(query, length, 0);
+	put_line(query + scroll, length - scroll, 0);
 
 	tty_putp(restore_cursor);
-	for (i = 0; i < position; ++i)
+	for (i = 0; i < position - scroll; ++i)
 		tty_putp(cursor_right);
 }
 
