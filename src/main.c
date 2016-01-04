@@ -4,6 +4,7 @@
 
 #include <ctype.h>
 #include <err.h>
+#include <limits.h>
 #include <locale.h>
 #include <signal.h>
 #include <stdio.h>
@@ -56,6 +57,7 @@ static struct choice	*selected_choice(void);
 static void		 filter_choices(void);
 static float		 score(char *);
 static size_t		 min_match_length(char *);
+static char		*strcasechr(const char *, char);
 static void		 init_tty(void);
 static int		 tty_putc(int);
 static void		 handle_sigint(int);
@@ -458,7 +460,7 @@ score(char *string)
 	if (string_length == 0)
 		return 0;
 
-	if ((match_length = min_match_length(string)) == 0)
+	if ((match_length = min_match_length(string)) == INT_MAX)
 		return 0;
 
 	return (float)query_length / (float)match_length / (float)string_length;
@@ -467,38 +469,30 @@ score(char *string)
 static size_t
 min_match_length(char *string)
 {
-	size_t	match_length, match_start, query_position, match_position;
-	int	query_char, query_start;
+	char	*start, *end;
+	int	 i;
+	size_t	 length, min;
 
-	query_start = tolower((unsigned char)query[0]);
+	if (!(start = strcasechr(string, query[0])))
+		return INT_MAX;
+	for (i = 1, end = start + 1; *end && query[i]; end++)
+		if (strncasecmp(end, query + i, 1) == 0)
+			i++;
+	if (query[i])
+		return INT_MAX;
+	length = end - start;
+	min = min_match_length(string + 1);
 
-	for (match_length = 0, match_start = 0; string[match_start] != '\0';
-	    ++match_start) {
-		if (tolower((unsigned char)string[match_start]) ==
-		    query_start) {
-			for (query_position = 1,
-			    match_position = match_start + 1;
-			    query[query_position] != '\0'; ++query_position) {
-				query_char = tolower(
-				    (unsigned char)query[query_position]);
+	return length < min ? length : min;
+}
 
-				for (;; ++match_position) {
-					if (string[match_position] == '\0')
-						return match_length;
-
-					if (tolower((unsigned char)string[match_position]) == query_char) {
-						++match_position;
-						break;
-					}
-				}
-			}
-			if (match_length == 0 || match_length > match_position -
-			    match_start + 1)
-				match_length = match_position - match_start + 1;
-		}
-	}
-
-	return match_length;
+static char *
+strcasechr(const char *s, char c)
+{
+	for(; *s; s++)
+		if (strncasecmp(s, &c, 1) == 0)
+			return (char *)s;
+	return NULL;
 }
 
 static void
