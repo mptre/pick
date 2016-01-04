@@ -310,26 +310,6 @@ selected_choice(void)
 			choice = new_choice(query, "", 1);
 			SLIST_INSERT_HEAD(choices, choice, choices);
 			return choice;
-		case CTRL_N:
-			if (selection < visible_choices_count - 1)
-				++selection;
-
-			break;
-		case CTRL_P:
-			if (selection > 0)
-				--selection;
-
-			break;
-		case CTRL_B:
-			if (cursor_position > 0)
-				--cursor_position;
-
-			break;
-		case CTRL_F:
-			if (cursor_position < query_length)
-				++cursor_position;
-
-			break;
 		case BACKSPACE:
 		case DEL:
 			if (cursor_position > 0) {
@@ -406,18 +386,22 @@ selected_choice(void)
 		case CTRL_E:
 			cursor_position = query_length;
 			break;
+		case CTRL_N:
 		case DOWN:
 			if (selection < visible_choices_count - 1)
 				++selection;
 			break;
+		case CTRL_P:
 		case UP:
 			if (selection > 0)
 				--selection;
 			break;
+		case CTRL_B:
 		case LEFT:
 			if (cursor_position > 0)
 				--cursor_position;
 			break;
+		case CTRL_F:
 		case RIGHT:
 			if (cursor_position < query_length)
 				++cursor_position;
