@@ -66,14 +66,10 @@ static int		 tty_putc(int);
 static void		 handle_sigint(int);
 static void		 restore_tty(void);
 static void		 put_line(char *, int, int);
-static void		 start_standout(void);
-static void		 end_standout(void);
 static int		 print_choices(int);
-static void		 show_cursor(void);
 static int		 get_key(void);
 static int		 tty_getc(void);
 static void		 delete_between(char *, size_t, size_t, size_t);
-static void		 hide_cursor(void);
 static void		 free_choices(void);
 static void		 print_query(char *, size_t, int);
 static int		 choicecmp(const void *, const void *);
@@ -256,20 +252,18 @@ put_choice(struct choice *choice)
 static struct choice *
 selected_choice(void)
 {
-	int		 key, selection, visible_choices_count, word_position;
+	int		 key, selection = 0, visible_choices_count;
+	int		 word_position;
 	size_t		 cursor_position, query_length;
 
-	query_length = strlen(query);
-	cursor_position = query_length;
+	cursor_position = query_length = strlen(query);
 
 	filter_choices();
-	selection = 0;
-
 	init_tty();
 
 	visible_choices_count = print_choices(selection);
 	print_query(query, query_length, cursor_position);
-	show_cursor();
+	tty_putp(cursor_normal);
 
 	for (;;) {
 		fflush(tty_out);
@@ -405,7 +399,7 @@ selected_choice(void)
 			break;
 		}
 
-		hide_cursor();
+		tty_putp(cursor_invisible);
 
 		if (query_length == query_size - 1) {
 			query_size += query_size;
@@ -418,7 +412,7 @@ selected_choice(void)
 		visible_choices_count = print_choices(selection);
 		tty_putp(clr_eos);
 		print_query(query, query_length, cursor_position);
-		show_cursor();
+		tty_putp(cursor_normal);
 	}
 }
 
@@ -570,7 +564,7 @@ put_line(char *string, int length, int standout)
 	int	i;
 
 	if (standout)
-		start_standout();
+		tty_putp(enter_standout_mode);
 
 	for (i = 0; string[i] != '\0' && i < columns; ++i) {
 		if (tty_putc(string[i]) == EOF)
@@ -582,19 +576,7 @@ put_line(char *string, int length, int standout)
 	}
 
 	if (standout)
-		end_standout();
-}
-
-static void
-start_standout(void)
-{
-	tty_putp(enter_standout_mode);
-}
-
-static void
-end_standout(void)
-{
-	tty_putp(exit_standout_mode);
+		tty_putp(exit_standout_mode);
 }
 
 static void
@@ -652,12 +634,6 @@ print_choices(int selection)
 	return i;
 }
 
-static void
-show_cursor(void)
-{
-	tty_putp(cursor_normal);
-}
-
 static int
 get_key(void)
 {
@@ -711,12 +687,6 @@ static void
 delete_between(char *string, size_t length, size_t start, size_t end)
 {
 	memmove(string + start, string + end, length - end + 1);
-}
-
-static void
-hide_cursor(void)
-{
-	tty_putp(cursor_invisible);
 }
 
 static void
