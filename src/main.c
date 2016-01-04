@@ -652,7 +652,7 @@ print_choices(int selection)
 
 	for (i = 0;
 	     i < (ssize_t)choices.nmemb
-	     && i < lines
+	     && i < lines - 1
 	     && (choice = &choices.v[i])->score != 0;
 	     ++i) {
 		length = strlen(choice->string) + strlen(choice->description) +
