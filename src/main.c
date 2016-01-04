@@ -98,7 +98,7 @@ static size_t		 query_size;
 static struct termios	 original_attributes;
 static struct {
 	size_t size;
-	size_t nmemb;
+	size_t length;
 	struct choice *v;
 } choices;
 static struct {
@@ -227,14 +227,14 @@ get_choices(void)
 		else
 			description = "";
 
-		choices.v[choices.nmemb].string = start;
-		choices.v[choices.nmemb].description = description;
-		choices.v[choices.nmemb].score = 1;
+		choices.v[choices.length].string = start;
+		choices.v[choices.length].description = description;
+		choices.v[choices.length].score = 1;
 
 		start = stop + 1;
 
 		/* Ensure room for a extra choice when ALT_ENTER is invoked. */
-		if (++choices.nmemb + 1 < choices.size)
+		if (++choices.length + 1 < choices.size)
 			continue;
 		choices.size *= 2;
 		if ((choices.v = realloc(choices.v, choices.size*sizeof(struct choice))) == NULL)
@@ -289,7 +289,7 @@ selected_choice(void)
 		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
-				if (selection >= 0 && selection < (ssize_t)choices.nmemb)
+				if (selection >= 0 && selection < (ssize_t)choices.length)
 					return &choices.v[selection];
 				else
 					return NULL;
@@ -298,9 +298,9 @@ selected_choice(void)
 			break;
 		case ALT_ENTER:
 			restore_tty();
-			choices.v[choices.nmemb].string = query;
-			choices.v[choices.nmemb].description = "";
-			return &choices.v[choices.nmemb];
+			choices.v[choices.length].string = query;
+			choices.v[choices.length].description = "";
+			return &choices.v[choices.length];
 		case CTRL_N:
 			if (selection < visible_choices_count - 1)
 				++selection;
@@ -453,10 +453,10 @@ filter_choices(void)
 {
 	int	i;
 
-	for (i = 0; i < (ssize_t)choices.nmemb; ++i)
+	for (i = 0; i < (ssize_t)choices.length; ++i)
 		choices.v[i].score = score(choices.v[i].string);
 
-	qsort(choices.v, choices.nmemb, sizeof(struct choice), sort_choices);
+	qsort(choices.v, choices.length, sizeof(struct choice), sort_choices);
 }
 
 static int
@@ -553,7 +553,7 @@ init_tty(void)
 		tty_putp(enter_ca_mode);
 
 	/* Emit enough lines to fit all choices. */
-	for (i = 0; i < (ssize_t)choices.nmemb && i < lines; ++i)
+	for (i = 0; i < (ssize_t)choices.length && i < lines; ++i)
 		tty_putp(cursor_down);
 	for (; i > 0; --i)
 		tty_putp(cursor_up);
@@ -651,7 +651,7 @@ print_choices(int selection)
 		err(1, "calloc");
 
 	for (i = 0;
-	     i < (ssize_t)choices.nmemb
+	     i < (ssize_t)choices.length
 	     && i < lines - 1
 	     && (choice = &choices.v[i])->score != 0;
 	     ++i) {
