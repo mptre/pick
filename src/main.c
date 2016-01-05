@@ -86,7 +86,7 @@ static void		 delete_between(char *, size_t, size_t, size_t);
 static void		 hide_cursor(void);
 static void		 free_choices(void);
 static void		 print_query(char *, size_t, int);
-static int		 sort_choices(const void *, const void *);
+static int		 choicecmp(const void *, const void *);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
@@ -440,11 +440,11 @@ filter_choices(void)
 	for (i = 0; i < (ssize_t)choices.length; ++i)
 		choices.v[i].score = score(choices.v[i].string);
 
-	qsort(choices.v, choices.length, sizeof(struct choice), sort_choices);
+	qsort(choices.v, choices.length, sizeof(struct choice), choicecmp);
 }
 
 static int
-sort_choices(const void *p1, const void *p2)
+choicecmp(const void *p1, const void *p2)
 {
 	const struct choice	*c1, *c2;
 
