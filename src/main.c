@@ -2,10 +2,6 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_FULL_QUEUE_H
-#include <sys/queue.h>
-#endif
-
 #include <ctype.h>
 #include <err.h>
 #include <locale.h>
