@@ -64,3 +64,6 @@ DIST_SHA: Makefile
 	rm $(srcdir)/$(DIST_ARCHIVES)
 	wget "https://github.com/thoughtbot/$(PACKAGE)/releases/download/v$(PACKAGE_VERSION)/$(DIST_ARCHIVES)" -O $(srcdir)/$(DIST_ARCHIVES)
 	$(eval DIST_SHA := $(shell shasum $(srcdir)/$(DIST_ARCHIVES) | cut -d' ' -f1))
+
+test:
+	$(MAKE) -C tests
