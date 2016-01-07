@@ -457,7 +457,7 @@ score(char *string)
 	string_length = strlen(string);
 	query_length = strlen(query);
 
-	return (float)query_length / (float)match_length / (float)string_length;
+	return (float)query_length / match_length / string_length;
 }
 
 size_t
