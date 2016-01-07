@@ -23,3 +23,8 @@ missing
 pick-*.tar.gz
 stamp-h1
 .dirstamp
+test-driver
+test-suite.log
+tests/test
+tests/test.sh.log
+tests/test.sh.trs
