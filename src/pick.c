@@ -212,7 +212,7 @@ get_choices(void)
 
 		choices.v[choices.length].string = start;
 		choices.v[choices.length].description = description;
-		choices.v[choices.length].score = 1;
+		choices.v[choices.length].score = 0;
 
 		start = stop + 1;
 
@@ -451,17 +451,11 @@ score(char *string)
 {
 	size_t	string_length, query_length, match_length;
 
-	string_length = strlen(string);
-	query_length = strlen(query);
-
-	if (query_length == 0)
-		return 1;
-
-	if (string_length == 0)
-		return 0;
-
 	if ((match_length = min_match_length(string)) == INT_MAX)
 		return 0;
+
+	string_length = strlen(string);
+	query_length = strlen(query);
 
 	return (float)query_length / (float)match_length / (float)string_length;
 }
@@ -489,7 +483,7 @@ min_match_length(char *string)
 static char *
 strcasechr(const char *s, char c)
 {
-	for(; *s; s++)
+	for(; *s && c; s++)
 		if (strncasecmp(s, &c, 1) == 0)
 			return (char *)s;
 	return NULL;
@@ -595,7 +589,7 @@ print_choices(int selection)
 {
 	char		*line;
 	int		 i;
-	size_t		 length, line_length = 64;
+	size_t		 length, line_length = 64, query_length;
 	struct choice	*choice;
 
 	/* Emit query line. */
@@ -604,11 +598,12 @@ print_choices(int selection)
 	if ((line = calloc(sizeof(*line), line_length)) == NULL)
 		err(1, "calloc");
 
-	for (i = 0;
+	query_length = strlen(query);
+	for (choice = choices.v, i = 0;
 	     i < (ssize_t)choices.length
 	     && i < lines - 1
-	     && (choice = &choices.v[i])->score != 0;
-	     ++i) {
+	     && (query_length == 0 || choice->score > 0);
+	     choice++, i++) {
 		length = strlen(choice->string) + strlen(choice->description) +
 		    1;
 
