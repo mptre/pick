@@ -144,7 +144,7 @@ main(int argc, char **argv)
 	return EX_OK;
 }
 
-__dead static void
+__dead void
 usage(void)
 {
 	extern char	*__progname;
@@ -161,7 +161,7 @@ usage(void)
 	exit(EX_USAGE);
 }
 
-__dead static void
+__dead void
 version(void)
 {
 	puts(PACKAGE_VERSION);
@@ -223,7 +223,7 @@ get_choices(void)
 	}
 }
 
-static char *
+char *
 eager_strpbrk(const char *string, const char *separators) {
 	char	*ptr = NULL, *tmp_ptr;
 
@@ -235,7 +235,7 @@ eager_strpbrk(const char *string, const char *separators) {
 	return ptr;
 }
 
-static void
+void
 put_choice(struct choice *choice)
 {
 	puts(choice->string);
@@ -244,7 +244,7 @@ put_choice(struct choice *choice)
 		puts(choice->description);
 }
 
-static struct choice *
+struct choice *
 selected_choice(void)
 {
 	int		 key, selection = 0, visible_choices_count;
@@ -420,7 +420,7 @@ selected_choice(void)
 	}
 }
 
-static void
+void
 filter_choices(void)
 {
 	int	i;
@@ -431,7 +431,7 @@ filter_choices(void)
 	qsort(choices.v, choices.length, sizeof(struct choice), choicecmp);
 }
 
-static int
+int
 choicecmp(const void *p1, const void *p2)
 {
 	const struct choice	*c1, *c2;
@@ -444,7 +444,7 @@ choicecmp(const void *p1, const void *p2)
 	return c1->string - c2->string;
 }
 
-static float
+float
 score(char *string)
 {
 	size_t	string_length, query_length, match_length;
@@ -464,7 +464,7 @@ score(char *string)
 	return (float)query_length / (float)match_length / (float)string_length;
 }
 
-static size_t
+size_t
 min_match_length(char *string)
 {
 	size_t	match_length, match_start, query_position, match_position;
@@ -501,7 +501,7 @@ min_match_length(char *string)
 	return match_length;
 }
 
-static void
+void
 init_tty(void)
 {
 	struct termios	 new_attributes;
@@ -534,20 +534,20 @@ init_tty(void)
 	signal(SIGINT, handle_sigint);
 }
 
-static int
+int
 tty_putc(int c)
 {
     return putc(c, tty_out);
 }
 
-static void
+void
 handle_sigint(int sig __attribute__((unused)))
 {
 	restore_tty();
 	exit(EX_SIGINT);
 }
 
-static void
+void
 restore_tty(void)
 {
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
@@ -562,7 +562,7 @@ restore_tty(void)
 	fclose(tty_out);
 }
 
-static void
+void
 put_line(char *string, int length, int standout)
 {
 	int	i;
@@ -583,7 +583,7 @@ put_line(char *string, int length, int standout)
 		tty_putp(exit_standout_mode);
 }
 
-static void
+void
 print_query(char *query, size_t length, size_t position, size_t scroll)
 {
 	size_t	i;
@@ -596,7 +596,7 @@ print_query(char *query, size_t length, size_t position, size_t scroll)
 		tty_putp(cursor_right);
 }
 
-static int
+int
 print_choices(int selection)
 {
 	char		*line;
@@ -638,7 +638,7 @@ print_choices(int selection)
 	return i;
 }
 
-static int
+int
 get_key(void)
 {
 	int	key;
@@ -676,7 +676,7 @@ get_key(void)
 	return key;
 }
 
-static int
+int
 tty_getc(void)
 {
 	int	c;
@@ -687,13 +687,13 @@ tty_getc(void)
 	return c;
 }
 
-static void
+void
 delete_between(char *string, size_t length, size_t start, size_t end)
 {
 	memmove(string + start, string + end, length - end + 1);
 }
 
-static void
+void
 free_choices(void)
 {
 	free(choices.v);
