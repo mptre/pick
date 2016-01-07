@@ -28,16 +28,6 @@
 
 #include "compat.h"
 
-#define CTRL_A 1
-#define CTRL_B 2
-#define CTRL_D 4
-#define CTRL_E 5
-#define CTRL_F 6
-#define CTRL_N 14
-#define CTRL_P 16
-#define CTRL_K 11
-#define CTRL_U 21
-#define CTRL_W 23
 #define DEL 127
 #define ENTER 10
 #define ALT_ENTER 266
@@ -316,7 +306,7 @@ selected_choice(void)
 			}
 
 			break;
-		case CTRL_D:
+		case CTRL('D'):
 			if (cursor_position < query_length) {
 				delete_between(
 				    query,
@@ -329,7 +319,7 @@ selected_choice(void)
 			}
 
 			break;
-		case CTRL_U:
+		case CTRL('U'):
 			delete_between(
 			    query,
 			    query_length,
@@ -340,7 +330,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case CTRL_K:
+		case CTRL('K'):
 			delete_between(
 			    query,
 			    query_length,
@@ -350,7 +340,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case CTRL_W:
+		case CTRL('W'):
 			if (cursor_position > 0) {
 				for (word_position = cursor_position - 1;
 				    word_position > 0;
@@ -371,28 +361,28 @@ selected_choice(void)
 				selection = 0;
 			}
 			break;
-		case CTRL_A:
+		case CTRL('A'):
 			cursor_position = 0;
 			break;
-		case CTRL_E:
+		case CTRL('E'):
 			cursor_position = query_length;
 			break;
-		case CTRL_N:
+		case CTRL('N'):
 		case DOWN:
 			if (selection < visible_choices_count - 1)
 				++selection;
 			break;
-		case CTRL_P:
+		case CTRL('P'):
 		case UP:
 			if (selection > 0)
 				--selection;
 			break;
-		case CTRL_B:
+		case CTRL('B'):
 		case LEFT:
 			if (cursor_position > 0)
 				--cursor_position;
 			break;
-		case CTRL_F:
+		case CTRL('F'):
 		case RIGHT:
 			if (cursor_position < query_length)
 				++cursor_position;
