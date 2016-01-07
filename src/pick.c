@@ -48,28 +48,28 @@ struct choice {
 	float	 score;
 };
 
-__dead static void	 usage(void);
-__dead static void	 version(void);
-static void 		 get_choices(void);
-static char		*eager_strpbrk(const char *, const char *);
-static void		 put_choice(struct choice *);
-static struct choice	*selected_choice(void);
-static void		 filter_choices(void);
-static float		 score(char *);
-static size_t		 min_match_length(char *);
-static char		*strcasechr(const char *, char);
-static void		 init_tty(void);
-static int		 tty_putc(int);
-static void		 handle_sigint(int);
-static void		 restore_tty(void);
-static void		 put_line(char *, int, int);
-static int		 print_choices(int);
-static int		 get_key(void);
-static int		 tty_getc(void);
-static void		 delete_between(char *, size_t, size_t, size_t);
-static void		 free_choices(void);
-static void		 print_query(char *, size_t, size_t, size_t);
-static int		 choicecmp(const void *, const void *);
+__dead static void		 usage(void);
+__dead static void		 version(void);
+static void			 get_choices(void);
+static char			*eager_strpbrk(const char *, const char *);
+static void			 put_choice(const struct choice *);
+static const struct choice	*selected_choice(void);
+static void			 filter_choices(void);
+static float			 score(char *);
+static size_t			 min_match_length(char *);
+static char			*strcasechr(const char *, char);
+static void			 init_tty(void);
+static int			 tty_putc(int);
+static void			 handle_sigint(int);
+static void			 restore_tty(void);
+static void			 put_line(char *, int, int);
+static int			 print_choices(int);
+static int			 get_key(void);
+static int			 tty_getc(void);
+static void			 delete_between(char *, size_t, size_t, size_t);
+static void			 free_choices(void);
+static void			 print_query(char *, size_t, size_t, size_t);
+static int			 choicecmp(const void *, const void *);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
@@ -238,7 +238,7 @@ eager_strpbrk(const char *string, const char *separators) {
 }
 
 void
-put_choice(struct choice *choice)
+put_choice(const struct choice *choice)
 {
 	puts(choice->string);
 
@@ -246,7 +246,7 @@ put_choice(struct choice *choice)
 		puts(choice->description);
 }
 
-struct choice *
+const struct choice *
 selected_choice(void)
 {
 	int		 key, selection = 0, visible_choices_count;
