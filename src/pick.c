@@ -48,28 +48,28 @@ struct choice {
 	float	 score;
 };
 
-__dead static void	 usage(void);
-__dead static void	 version(void);
-static void 		 get_choices(void);
-static char		*eager_strpbrk(const char *, const char *);
-static void		 put_choice(struct choice *);
-static struct choice	*selected_choice(void);
-static void		 filter_choices(void);
-static float		 score(char *);
-static size_t		 min_match_length(char *);
-static char		*strcasechr(const char *, char);
-static void		 init_tty(void);
-static int		 tty_putc(int);
-static void		 handle_sigint(int);
-static void		 restore_tty(void);
-static void		 put_line(char *, int, int);
-static int		 print_choices(int);
-static int		 get_key(void);
-static int		 tty_getc(void);
-static void		 delete_between(char *, size_t, size_t, size_t);
-static void		 free_choices(void);
-static void		 print_query(char *, size_t, size_t, size_t);
-static int		 choicecmp(const void *, const void *);
+__dead static void	    usage(void);
+__dead static void	    version(void);
+static void		    get_choices(void);
+static char		   *eager_strpbrk(const char *, const char *);
+static void		    put_choice(const struct choice *);
+static const struct choice *selected_choice(void);
+static void		    filter_choices(void);
+static float		    score(char *);
+static size_t		    min_match_length(char *);
+static char		   *strcasechr(const char *, char);
+static void		    init_tty(void);
+static int		    tty_putc(int);
+static void		    handle_sigint(int);
+static void		    restore_tty(void);
+static void		    put_line(char *, int, int);
+static int		    print_choices(int);
+static int		    get_key(void);
+static int		    tty_getc(void);
+static void		    delete_between(char *, size_t, size_t, size_t);
+static void		    free_choices(void);
+static void		    print_query(char *, size_t, size_t, size_t);
+static int		    choicecmp(const void *, const void *);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
@@ -212,7 +212,7 @@ get_choices(void)
 
 		choices.v[choices.length].string = start;
 		choices.v[choices.length].description = description;
-		choices.v[choices.length].score = 1;
+		choices.v[choices.length].score = 0;
 
 		start = stop + 1;
 
@@ -238,7 +238,7 @@ eager_strpbrk(const char *string, const char *separators) {
 }
 
 void
-put_choice(struct choice *choice)
+put_choice(const struct choice *choice)
 {
 	puts(choice->string);
 
@@ -246,7 +246,7 @@ put_choice(struct choice *choice)
 		puts(choice->description);
 }
 
-struct choice *
+const struct choice *
 selected_choice(void)
 {
 	int		 key, selection = 0, visible_choices_count;
@@ -451,19 +451,13 @@ score(char *string)
 {
 	size_t	string_length, query_length, match_length;
 
-	string_length = strlen(string);
-	query_length = strlen(query);
-
-	if (query_length == 0)
-		return 1;
-
-	if (string_length == 0)
-		return 0;
-
 	if ((match_length = min_match_length(string)) == INT_MAX)
 		return 0;
 
-	return (float)query_length / (float)match_length / (float)string_length;
+	string_length = strlen(string);
+	query_length = strlen(query);
+
+	return (float)query_length / match_length / string_length;
 }
 
 size_t
@@ -489,7 +483,7 @@ min_match_length(char *string)
 static char *
 strcasechr(const char *s, char c)
 {
-	for(; *s; s++)
+	for(; *s && c; s++)
 		if (strncasecmp(s, &c, 1) == 0)
 			return (char *)s;
 	return NULL;
@@ -595,7 +589,7 @@ print_choices(int selection)
 {
 	char		*line;
 	int		 i;
-	size_t		 length, line_length = 64;
+	size_t		 length, line_length = 64, query_length;
 	struct choice	*choice;
 
 	/* Emit query line. */
@@ -604,11 +598,12 @@ print_choices(int selection)
 	if ((line = calloc(sizeof(*line), line_length)) == NULL)
 		err(1, "calloc");
 
-	for (i = 0;
+	query_length = strlen(query);
+	for (choice = choices.v, i = 0;
 	     i < (ssize_t)choices.length
 	     && i < lines - 1
-	     && (choice = &choices.v[i])->score != 0;
-	     ++i) {
+	     && (query_length == 0 || choice->score > 0);
+	     choice++, i++) {
 		length = strlen(choice->string) + strlen(choice->description) +
 		    1;
 
