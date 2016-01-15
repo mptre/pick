@@ -513,7 +513,7 @@ init_tty(void)
 		tty_putp(enter_ca_mode);
 
 	/* Emit enough lines to fit all choices. */
-	for (i = 0; i < (ssize_t)choices.length && i < lines; ++i)
+	for (i = 0; i < (ssize_t)choices.length && i < lines - 1; ++i)
 		tty_putp(cursor_down);
 	for (; i > 0; --i)
 		tty_putp(cursor_up);
