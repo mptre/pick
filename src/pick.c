@@ -226,7 +226,8 @@ get_choices(void)
 }
 
 char *
-eager_strpbrk(const char *string, const char *separators) {
+eager_strpbrk(const char *string, const char *separators)
+{
 	char	*ptr = NULL, *tmp_ptr;
 
 	for (tmp_ptr = strpbrk(string, separators);
