@@ -481,7 +481,7 @@ min_match_length(char *string)
 	return length < min ? length : min;
 }
 
-static char *
+char *
 strcasechr(const char *s, char c)
 {
 	for(; *s && c; s++)
