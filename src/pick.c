@@ -131,10 +131,10 @@ main(int argc, char **argv)
 	argv += optind;
 
 	if (query == NULL) {
-	    query_size = 64;
+		query_size = 64;
 
-	    if ((query = calloc(query_size, sizeof(*query))) == NULL)
-		    err(1, "calloc");
+		if ((query = calloc(query_size, sizeof(*query))) == NULL)
+			err(1, "calloc");
 	}
 
 	get_choices();
@@ -185,7 +185,7 @@ get_choices(void)
 	for (;;) {
 		if ((length = read(STDIN_FILENO, input.string + input.length,
 				   input.size - input.length)) <= 0)
-		    break;
+			break;
 
 		input.length += length;
 		if (input.length + 1 < input.size)
@@ -272,7 +272,7 @@ selected_choice(void)
 		fflush(tty_out);
 		key = get_key();
 
-		switch(key) {
+		switch (key) {
 		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
@@ -484,7 +484,7 @@ min_match_length(char *string)
 char *
 strcasechr(const char *s, char c)
 {
-	for(; *s && c; s++)
+	for (; *s && c; s++)
 		if (strncasecmp(s, &c, 1) == 0)
 			return (char *)s;
 	return NULL;
@@ -526,7 +526,7 @@ init_tty(void)
 int
 tty_putc(int c)
 {
-    return putc(c, tty_out);
+	return putc(c, tty_out);
 }
 
 void
