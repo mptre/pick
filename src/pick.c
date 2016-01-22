@@ -292,10 +292,10 @@ selected_choice(void)
 		case DEL:
 			if (cursor_position > 0) {
 				delete_between(
-				    query,
-				    query_length,
-				    cursor_position - 1,
-				    cursor_position);
+					       query,
+					       query_length,
+					       cursor_position - 1,
+					       cursor_position);
 				--cursor_position;
 				--query_length;
 				filter_choices();
@@ -306,10 +306,10 @@ selected_choice(void)
 		case CTRL('D'):
 			if (cursor_position < query_length) {
 				delete_between(
-				    query,
-				    query_length,
-				    cursor_position,
-				    cursor_position + 1);
+					       query,
+					       query_length,
+					       cursor_position,
+					       cursor_position + 1);
 				--query_length;
 				filter_choices();
 				selection = 0;
@@ -318,10 +318,10 @@ selected_choice(void)
 			break;
 		case CTRL('U'):
 			delete_between(
-			    query,
-			    query_length,
-			    0,
-			    cursor_position);
+				       query,
+				       query_length,
+				       0,
+				       cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
 			filter_choices();
@@ -329,10 +329,10 @@ selected_choice(void)
 			break;
 		case CTRL('K'):
 			delete_between(
-			    query,
-			    query_length,
-			    cursor_position,
-			    query_length);
+				       query,
+				       query_length,
+				       cursor_position,
+				       query_length);
 			query_length = cursor_position;
 			filter_choices();
 			selection = 0;
@@ -340,18 +340,18 @@ selected_choice(void)
 		case CTRL('W'):
 			if (cursor_position > 0) {
 				for (word_position = cursor_position - 1;
-				    word_position > 0;
-				    --word_position) {
+				     word_position > 0;
+				     --word_position) {
 					if (query[word_position] != ' ' &&
 					    query[word_position - 1] == ' ')
 						break;
 				}
 
 				delete_between(
-				    query,
-				    query_length,
-				    word_position,
-				    cursor_position);
+					       query,
+					       query_length,
+					       word_position,
+					       cursor_position);
 				query_length -= cursor_position - word_position;
 				cursor_position = word_position;
 				filter_choices();
@@ -388,9 +388,9 @@ selected_choice(void)
 			if (key > 31 && key < 127) { /* Printable chars */
 				if (cursor_position < query_length) {
 					memmove(
-					    query + cursor_position + 1,
-					    query + cursor_position,
-					    query_length - cursor_position);
+						query + cursor_position + 1,
+						query + cursor_position,
+						query_length - cursor_position);
 				}
 
 				query[cursor_position++] = key;
@@ -606,13 +606,13 @@ print_choices(int selection)
 	     && (query_length == 0 || choice->score > 0);
 	     choice++, i++) {
 		length = strlen(choice->string) + strlen(choice->description) +
-		    1;
+			1;
 
 		while (length > line_length) {
 			line_length = line_length * 2;
 
 			if ((line = reallocarray(line, line_length,
-					    sizeof(*line))) == NULL)
+						 sizeof(*line))) == NULL)
 				err(1, "reallocarray");
 		}
 
