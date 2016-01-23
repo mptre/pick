@@ -17,22 +17,6 @@
 #endif
 #endif /* __linux__ || __CYGWIN__ */
 
-#ifndef HAVE_STRLCPY
-
-#include <sys/types.h>
-
-size_t	strlcpy(char *, const char *, size_t);
-
-#endif /* !HAVE_STRLCPY */
-
-#ifndef HAVE_STRLCAT
-
-#include <sys/types.h>
-
-size_t	strlcat(char *, const char *, size_t);
-
-#endif /* !HAVE_STRLCAT */
-
 #ifndef HAVE_REALLOCARRAY
 
 void	*reallocarray(void *, size_t, size_t);

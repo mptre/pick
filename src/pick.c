@@ -37,6 +37,7 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define tty_putp(capability) do { \
 	if (tputs(capability, 1, tty_putc) == ERR) \
 		errx(1, #capability ": unknown terminfo capability"); \
@@ -45,6 +46,9 @@
 struct choice {
 	char	*description;
 	char	*string;
+	size_t	 length;
+	size_t	 match_start;
+	size_t	 match_end;
 	float	 score;
 };
 
@@ -55,14 +59,14 @@ static char			*eager_strpbrk(const char *, const char *);
 static void			 put_choice(const struct choice *);
 static const struct choice	*selected_choice(void);
 static void			 filter_choices(void);
-static float			 score(char *);
-static size_t			 min_match_length(char *);
+static void			 score(struct choice *);
+static int			 min_match(const char *, size_t, size_t *, size_t *);
 static char			*strcasechr(const char *, char);
 static void			 init_tty(void);
 static int			 tty_putc(int);
 static void			 handle_sigint(int);
 static void			 restore_tty(void);
-static void			 put_line(char *, int, int);
+static void			 put_line(char *, int);
 static int			 print_choices(int);
 static int			 get_key(void);
 static int			 tty_getc(void);
@@ -210,8 +214,11 @@ get_choices(void)
 		else
 			description = "";
 
+		choices.v[choices.length].length = stop - start;
 		choices.v[choices.length].string = start;
 		choices.v[choices.length].description = description;
+		choices.v[choices.length].match_start = 0;
+		choices.v[choices.length].match_end = 0;
 		choices.v[choices.length].score = 0;
 
 		start = stop + 1;
@@ -429,7 +436,7 @@ filter_choices(void)
 	int	i;
 
 	for (i = 0; i < (ssize_t)choices.length; ++i)
-		choices.v[i].score = score(choices.v[i].string);
+		score(&choices.v[i]);
 
 	qsort(choices.v, choices.length, sizeof(struct choice), choicecmp);
 }
@@ -447,38 +454,45 @@ choicecmp(const void *p1, const void *p2)
 	return c1->string - c2->string;
 }
 
-float
-score(char *string)
+void
+score(struct choice *choice)
 {
-	size_t	string_length, query_length, match_length;
+	size_t	query_length, match_length;
 
-	if ((match_length = min_match_length(string)) == INT_MAX)
-		return 0;
+	if (min_match(choice->string, 0,
+		      &choice->match_start, &choice->match_end) == 0) {
+		choice->match_start = choice->match_end = choice->score = 0;
+		return;
+	}
 
-	string_length = strlen(string);
+	match_length = choice->match_end - choice->match_start;
 	query_length = strlen(query);
-
-	return (float)query_length / match_length / string_length;
+	choice->score = (float)query_length / match_length / choice->length;
 }
 
-size_t
-min_match_length(char *string)
+int
+min_match(const char *string, size_t offset, size_t *start, size_t *end)
 {
-	char	*start, *end;
+	char	*s, *e;
 	int	 i;
-	size_t	 length, min;
 
-	if (!(start = strcasechr(string, query[0])))
-		return INT_MAX;
-	for (i = 1, end = start + 1; *end && query[i]; end++)
-		if (strncasecmp(end, query + i, 1) == 0)
+	if (!(s = strcasechr(string + offset, query[0])))
+		return 0;
+	for (i = 1, e = s + 1; *e && query[i]; e++)
+		if (strncasecmp(e, query + i, 1) == 0)
 			i++;
 	if (query[i])
-		return INT_MAX;
-	length = end - start;
-	min = min_match_length(string + 1);
+		return 0;
 
-	return length < min ? length : min;
+	*start = s - string;
+	*end = e - string;
+	/* Less than or equal is used in order to obtain the left-most match. */
+	if (min_match(string, offset + 1, start, end)
+	    && (size_t)(e - s) <= *end - *start) {
+		*start = s - string;
+		*end = e - string;
+	}
+	return 1;
 }
 
 char *
@@ -552,12 +566,9 @@ restore_tty(void)
 }
 
 void
-put_line(char *string, int length, int standout)
+put_line(char *string, int length)
 {
 	int	i;
-
-	if (standout)
-		tty_putp(enter_standout_mode);
 
 	for (i = 0; string[i] != '\0' && i < columns; ++i) {
 		if (tty_putc(string[i]) == EOF)
@@ -567,9 +578,6 @@ put_line(char *string, int length, int standout)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 	}
-
-	if (standout)
-		tty_putp(exit_standout_mode);
 }
 
 void
@@ -578,7 +586,7 @@ print_query(char *query, size_t length, size_t position, size_t scroll)
 	size_t	i;
 
 	tty_putp(restore_cursor);
-	put_line(query + scroll, length - scroll, 0);
+	put_line(query + scroll, length - scroll);
 
 	tty_putp(restore_cursor);
 	for (i = 0; i < position - scroll; ++i)
@@ -588,16 +596,12 @@ print_query(char *query, size_t length, size_t position, size_t scroll)
 int
 print_choices(int selection)
 {
-	char		*line;
-	int		 i;
-	size_t		 length, line_length = 64, query_length;
+	int		 i, j;
+	size_t		 length, query_length;
 	struct choice	*choice;
 
 	/* Emit query line. */
 	tty_putc('\n');
-
-	if ((line = calloc(sizeof(*line), line_length)) == NULL)
-		err(1, "calloc");
 
 	query_length = strlen(query);
 	for (choice = choices.v, i = 0;
@@ -605,25 +609,42 @@ print_choices(int selection)
 	     && i < lines - 1
 	     && (query_length == 0 || choice->score > 0);
 	     choice++, i++) {
-		length = strlen(choice->string) + strlen(choice->description) +
-		    1;
+		if (i == selection)
+			tty_putp(enter_standout_mode);
 
-		while (length > line_length) {
-			line_length = line_length * 2;
+		for (j = 0, length = MIN(choice->match_start, (size_t)columns);
+		     j < (ssize_t)length;
+		     j++)
+			if (tty_putc(choice->string[j]) == EOF)
+				err(1, "tty_putc");
 
-			if ((line = reallocarray(line, line_length,
-					    sizeof(*line))) == NULL)
-				err(1, "reallocarray");
-		}
+		tty_putp(enter_underline_mode);
 
-		strlcpy(line, choice->string, line_length);
-		strlcat(line, " ", line_length);
-		strlcat(line, choice->description, line_length);
+		for (length = MIN(choice->match_end, (size_t)columns);
+		     j < (ssize_t)length;
+		     j++)
+			if (tty_putc(choice->string[j]) == EOF)
+				err(1, "tty_putc");
 
-		put_line(line, length, i == selection);
+		tty_putp(exit_underline_mode);
+
+		for (length = MIN(choice->length, (size_t)columns);
+		     j < (ssize_t)length;
+		     j++)
+			/* A null character will be present before the
+			 * terminating null character if descriptions is
+			 * enabled. */
+			if (tty_putc(choice->string[j] == '\0'
+				     ? ' ' : choice->string[j]) == EOF)
+				err(1, "tty_putc");
+
+		for (; j < columns; j++)
+			if (tty_putc(' ') == EOF)
+				err(1, "tty_putc");
+
+		if (i == selection)
+			tty_putp(exit_standout_mode);
 	}
-
-	free(line);
 
 	return i;
 }
