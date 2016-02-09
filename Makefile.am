@@ -7,6 +7,10 @@ bin_PROGRAMS=src/pick
 dist_src_pick_SOURCES=src/pick.c src/compat.h src/compat.c
 dist_man_MANS=man/man1/pick.1
 
+TESTS=tests/test.sh
+check_PROGRAMS=tests/test
+tests_test_SOURCES=tests/test.c
+
 INSTALL.md: INSTALL.md.in
 	sed -e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $@.in > $@
 
@@ -64,6 +68,3 @@ DIST_SHA: Makefile
 	rm $(srcdir)/$(DIST_ARCHIVES)
 	wget "https://github.com/thoughtbot/$(PACKAGE)/releases/download/v$(PACKAGE_VERSION)/$(DIST_ARCHIVES)" -O $(srcdir)/$(DIST_ARCHIVES)
 	$(eval DIST_SHA := $(shell shasum $(srcdir)/$(DIST_ARCHIVES) | cut -d' ' -f1))
-
-test:
-	$(MAKE) -C tests

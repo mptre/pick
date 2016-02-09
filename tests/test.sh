@@ -15,18 +15,19 @@ pick() {
   input=$(field input <"$1") && input="-i ${input}"
 
   input <"$1" >"$in"
-  ./test $input -- $args <"$in"
+  $DIR/test $input -- $args <"$in"
 }
 
 main() {
-  PATH="../src:${PATH}"
+  DIR=$(dirname "$0")
+  PATH="${DIR}/../src:${PATH}"
 
   in=$(mktemp pick.XXXX)
   exp=$(mktemp pick.XXXX)
   act=$(mktemp pick.XXXX)
   trap 'rm "$in" "$exp" "$act"' EXIT
 
-  [ $# -eq 0 ] && set $(ls *.in)
+  [ $# -eq 0 ] && set $(find "$DIR" -name '*.in')
   for a
   do
     e=$(field exit <"$a" || echo 0)
