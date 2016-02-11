@@ -103,7 +103,7 @@ child(int master, int slave)
 	if ((fd = open("/dev/tty", O_RDWR|O_NOCTTY)) < 0)
 		err(1, "open");
 	/* Ignore any error. */
-	(void) ioctl(fd, TIOCNOTTY, NULL);
+	(void)ioctl(fd, TIOCNOTTY, NULL);
 	close(fd);
 
 	/* Make the current process the session leader. */
@@ -139,13 +139,15 @@ parent(int master, int slave)
 		FD_SET(master, &rfd);
 		switch (select(master + 1, &rfd, NULL, NULL, &timeout)) {
 		case -1:
+			if (errno == EINTR)
+				continue;
 			err(1, "select");
 			/* NOTREACHED */
 		case 0:
 			errx(1, "time limit exceeded");
 			/* NOTREACHED */
 		default:
-			if (!FD_SET(master, &rfd))
+			if (!FD_ISSET(master, &rfd))
 				continue;
 		}
 
