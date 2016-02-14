@@ -69,13 +69,13 @@ parseinput(const char *s)
 				return;
 			switch (*s) {
 			case 'b':
-				c = '\b';
+				c = 0x7F;
 				break;
 			case 'e':
 				c = 0x1B;
 				break;
 			case 'n':
-				c = '\n';
+				c = 0x0A;
 				break;
 			default:
 				errx(1, "\\%c: unknown escape sequence", *s);

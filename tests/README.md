@@ -29,7 +29,8 @@ as the corresponding field value. The following fields are recognized:
 
   - exit
 
-    Expected exit code of the pick process. Defaults to `0` if omitted.
+    Exit code of the pick process, set to `1` if an error is expected. Defaults
+    to `0` if omitted.
 
   - input
 
