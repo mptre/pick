@@ -1,6 +1,9 @@
+#!/bin/sh
+
 field() {
-  f=$(grep "^${1}: ") || return 1
-  echo "$f" | sed 's/^[^:]*: //'
+  awk '
+  /^'$1':/ { sub(/^[^:]+: */, ""); print; exit 0 }
+  END { exit 1 }'
 }
 
 input() {
@@ -12,10 +15,10 @@ input() {
 
 pick() {
   args=$(field arguments <"$1")
-  input=$(field input <"$1") && input="-i ${input}"
+  input=$(field input <"$1")
 
   input <"$1" >"$in"
-  $DIR/test $input -- $args <"$in"
+  $DIR/test -i "$input" -- $args <"$in"
 }
 
 main() {
@@ -35,9 +38,12 @@ main() {
 
     field output <"$a" >"$exp"
     pick "$a" >"$act" 2>"$err"
-    e=$((e ^ $?))
-
-    [ $e -ne 0 ] && { echo "${a}: wrong exit code" 1>&2; exit 1; }
+    if [ $? -ne 0 -a $e -eq 0 ]
+    then
+      echo "${a}: wrong exit code" 1>&2
+      cat "$err"
+      exit 1
+    fi
     ! diff -c "$exp" "$act" && { cat "$err"; exit 1; }
   done
   return 0
