@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include <sys/ttydefaults.h>
 #include <ctype.h>
 #include <err.h>
 #include <limits.h>
