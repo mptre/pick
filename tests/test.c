@@ -44,7 +44,8 @@ args(int ac, const char **av)
 	while (optind-- > 0)
 		ac--, av++;
 
-	if (!(argv = calloc(ac, sizeof(const char **))))
+	/* Ensure room for program and null terminator. */
+	if (!(argv = calloc(ac + 2, sizeof(const char **))))
 		err(1, "calloc");
 	argv[0] = "pick";
 	for (i = 0; i < ac; i++)
