@@ -25,10 +25,10 @@ main() {
   DIR=$(dirname "$0")
   PATH="${DIR}/../src:${PATH}"
 
-  in=$(mktemp pick.XXXX)
-  exp=$(mktemp pick.XXXX)
-  act=$(mktemp pick.XXXX)
-  err=$(mktemp pick.XXXX)
+  in=$(mktemp pick.XXXXXX)
+  exp=$(mktemp pick.XXXXXX)
+  act=$(mktemp pick.XXXXXX)
+  err=$(mktemp pick.XXXXXX)
   trap 'rm "$in" "$exp" "$act" "$err"' EXIT
 
   [ $# -eq 0 ] && set $(find "$DIR" -name '*.in')
