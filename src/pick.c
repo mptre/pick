@@ -78,9 +78,9 @@ static int			 choicecmp(const void *, const void *);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
-static char		*query = NULL;
-static int		 descriptions = 0;
-static int		 output_description = 0;
+static char		*query;
+static int		 descriptions;
+static int		 output_description;
 static int		 use_alternate_screen;
 static size_t		 query_size;
 static struct termios	 original_attributes;
