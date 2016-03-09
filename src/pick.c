@@ -14,6 +14,7 @@
 #include <sysexits.h>
 #include <termios.h>
 #include <unistd.h>
+#include <wchar.h>
 
 #ifdef HAVE_NCURSESW_H
 #include <ncursesw/curses.h>
@@ -28,7 +29,7 @@
 #define DEL 127
 #define ENTER 10
 #define ALT_ENTER 266
-#define BACKSPACE 263
+#define BACKSPACE 8
 #define UP 259
 #define DOWN 258
 #define RIGHT 261
@@ -39,7 +40,6 @@
 #define EX_SIGINT (EX_SIG + SIGINT)
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define tty_putp(capability) do { \
 	if (tputs(capability, 1, tty_putc) == ERR) \
 		errx(1, #capability ": unknown terminfo capability"); \
@@ -65,19 +65,21 @@ static const struct choice	*selected_choice(void);
 static void			 filter_choices(void);
 static void			 score(struct choice *);
 static int			 min_match(const char *, size_t, size_t *, size_t *);
-static char			*strcasechr(const char *, char);
+static char			*strcasechr(const char *, const char *);
 static void			 init_tty(void);
 static int			 tty_putc(int);
 static void			 handle_sigint(int);
 static void			 restore_tty(void);
 static void			 put_line(char *, int);
 static int			 print_choices(int);
-static int			 get_key(void);
+static size_t			 get_key(char *, size_t);
 static int			 tty_getc(void);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static void			 free_choices(void);
 static void			 print_query(char *, size_t, size_t, size_t);
 static int			 choicecmp(const void *, const void *);
+static int			 isu8cont(unsigned char);
+static int			 isu8start(unsigned char);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
@@ -105,6 +107,8 @@ main(int argc, char **argv)
 	int	option;
 
 	use_alternate_screen = getenv("VIM") == NULL;
+
+	setlocale(LC_CTYPE, "");
 
 	while ((option = getopt(argc, argv, "dhoq:SvxX")) != -1) {
 		switch (option) {
@@ -287,9 +291,10 @@ put_choice(const struct choice *choice)
 const struct choice *
 selected_choice(void)
 {
-	int		 key, selection = 0, visible_choices_count;
+	char		 key[6];
+	int		 selection = 0, visible_choices_count;
 	int		 word_position;
-	size_t		 cursor_position, query_length, scroll;
+	size_t		 cursor_position, length, query_length, scroll;
 
 	cursor_position = query_length = strlen(query);
 
@@ -307,9 +312,10 @@ selected_choice(void)
 
 	for (;;) {
 		fflush(tty_out);
-		key = get_key();
+		memset(key, 0, sizeof(key));
+		length = get_key(key, sizeof(key));
 
-		switch (key) {
+		switch (*((int *)key)) {
 		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
@@ -328,13 +334,16 @@ selected_choice(void)
 		case BACKSPACE:
 		case DEL:
 			if (cursor_position > 0) {
+				for (length = 1;
+				    isu8cont(query[cursor_position - length]);
+				    length++);
 				delete_between(
 				    query,
 				    query_length,
-				    cursor_position - 1,
+				    cursor_position - length,
 				    cursor_position);
-				--cursor_position;
-				--query_length;
+				cursor_position -= length;
+				query_length -= length;
 				filter_choices();
 				selection = 0;
 			}
@@ -342,12 +351,15 @@ selected_choice(void)
 			break;
 		case CTRL('D'):
 			if (cursor_position < query_length) {
+				for (length = 1;
+				    isu8cont(query[cursor_position + length]);
+				    length++);
 				delete_between(
 				    query,
 				    query_length,
 				    cursor_position,
-				    cursor_position + 1);
-				--query_length;
+				    cursor_position + length);
+				query_length -= length;
 				filter_choices();
 				selection = 0;
 			}
@@ -375,25 +387,26 @@ selected_choice(void)
 			selection = 0;
 			break;
 		case CTRL('W'):
-			if (cursor_position > 0) {
-				for (word_position = cursor_position - 1;
-				    word_position > 0;
-				    --word_position) {
-					if (query[word_position] != ' ' &&
-					    query[word_position - 1] == ' ')
-						break;
-				}
+			if (cursor_position == 0)
+				break;
 
-				delete_between(
-				    query,
-				    query_length,
-				    word_position,
-				    cursor_position);
-				query_length -= cursor_position - word_position;
-				cursor_position = word_position;
-				filter_choices();
-				selection = 0;
+			for (word_position = cursor_position;;) {
+				while (isu8cont(query[--word_position]));
+				if (word_position < 1)
+					break;
+				if (query[word_position] != ' '
+				    && query[word_position - 1] == ' ')
+					break;
 			}
+			delete_between(
+			    query,
+			    query_length,
+			    word_position,
+			    cursor_position);
+			query_length -= cursor_position - word_position;
+			cursor_position = word_position;
+			filter_choices();
+			selection = 0;
 			break;
 		case CTRL('A'):
 			cursor_position = 0;
@@ -413,41 +426,41 @@ selected_choice(void)
 			break;
 		case CTRL('B'):
 		case LEFT:
-			if (cursor_position > 0)
-				--cursor_position;
+			while (cursor_position > 0
+			    && isu8cont(query[--cursor_position]));
 			break;
 		case CTRL('F'):
 		case RIGHT:
-			if (cursor_position < query_length)
-				++cursor_position;
+			while (cursor_position < query_length
+			    && isu8cont(query[++cursor_position]));
 			break;
 		default:
-			if (key > 31 && key < 127) { /* Printable chars */
-				if (cursor_position < query_length) {
-					memmove(
-					    query + cursor_position + 1,
-					    query + cursor_position,
-					    query_length - cursor_position);
-				}
+			if (!isu8start(key[0]) && !isprint(key[0]))
+				continue;
 
-				query[cursor_position++] = key;
-				query[++query_length] = '\0';
-				filter_choices();
-				selection = 0;
+			if (query_size < query_length + length) {
+				query_size = 2*query_length + length;
+				if ((query = reallocarray(query, query_size,
+					    sizeof(char))) == NULL)
+					err(1, NULL);
 			}
+
+			if (cursor_position < query_length)
+				memmove(query + cursor_position + length,
+					query + cursor_position,
+					query_length - cursor_position);
+
+			memcpy(query + cursor_position, key, length);
+			cursor_position += length;
+			query_length += length;
+			query[query_length] = '\0';
+			filter_choices();
+			selection = 0;
 
 			break;
 		}
 
 		tty_putp(cursor_invisible);
-
-		if (query_length == query_size - 1) {
-			query_size += query_size;
-
-			query = reallocarray(query, query_size, sizeof(*query));
-			if (query == NULL)
-				err(1, "reallocarray");
-		}
 
 		visible_choices_count = print_choices(selection);
 		tty_putp(clr_eos);
@@ -508,16 +521,19 @@ score(struct choice *choice)
 int
 min_match(const char *string, size_t offset, size_t *start, size_t *end)
 {
-	char	*s, *e;
-	int	 i;
+	char	 *s, *e, *q;
 
-	if (!(s = strcasechr(string + offset, query[0])))
+	q = query;
+	if ((s = e = strcasechr(&string[offset], q)) == NULL)
 		return 0;
-	for (i = 1, e = s + 1; *e && query[i]; e++)
-		if (strncasecmp(e, query + i, 1) == 0)
-			i++;
-	if (query[i])
-		return 0;
+
+	for (;;) {
+		for (e++, q++; isu8cont(*q); e++, q++);
+		if (*q == '\0')
+			break;
+		if ((e = strcasechr(e, q)) == NULL)
+			return 0;
+	}
 
 	*start = s - string;
 	*end = e - string;
@@ -530,12 +546,32 @@ min_match(const char *string, size_t offset, size_t *start, size_t *end)
 	return 1;
 }
 
+/*
+ * Returns a pointer to first occurrence of the first character in s2 in s1 with
+ * respect to Unicode characters and disregarding case.
+ */
 char *
-strcasechr(const char *s, char c)
+strcasechr(const char *s1, const char *s2)
 {
-	for (; *s && c; s++)
-		if (strncasecmp(s, &c, 1) == 0)
-			return (char *)s;
+	wchar_t	 wc1, wc2;
+
+	switch (mbtowc(&wc2, s2, MB_CUR_MAX)) {
+	case -1:
+		mbtowc(NULL, NULL, MB_CUR_MAX);
+		/* FALLTHROUGH */
+	case 0:
+		return NULL;
+	}
+
+	for (; *s1; s1++) {
+		if (mbtowc(&wc1, s1, MB_CUR_MAX) == -1) {
+			mbtowc(NULL, NULL, MB_CUR_MAX);
+			continue;
+		}
+		if (wcsncasecmp(&wc1, &wc2, 1) == 0)
+			return (char *)s1;
+	}
+
 	return NULL;
 }
 
@@ -605,7 +641,7 @@ put_line(char *string, int length)
 {
 	int	i;
 
-	for (i = 0; string[i] != '\0' && i < columns; ++i) {
+	for (i = 0; i < length && i < columns; ++i) {
 		if (tty_putc(string[i]) == EOF)
 			err(1, "tty_putc");
 	}
@@ -618,28 +654,30 @@ put_line(char *string, int length)
 void
 print_query(char *query, size_t length, size_t position, size_t scroll)
 {
-	size_t	i;
+	size_t	i = 0;
 
 	tty_putp(restore_cursor);
 	put_line(query + scroll, length - scroll);
 
 	tty_putp(restore_cursor);
-	for (i = 0; i < position - scroll; ++i)
+	while (i < position - scroll) {
+		while (isu8cont(query[++i]));
 		tty_putp(cursor_right);
+	}
 }
 
 int
 print_choices(int selection)
 {
-	int		 i, j, k;
-	size_t		 length, query_length;
+	int		 col, i, j, k;
+	size_t		 query_length;
 	struct choice	*choice;
 
 	/* Emit query line. */
 	tty_putc('\n');
 
 	query_length = strlen(query);
-	for (choice = choices.v, i = 0;
+	for (choice = choices.v, col = i = 0;
 	     i < (ssize_t)choices.length
 	     && i < lines - 1
 	     && (query_length == 0 || choice->score > 0);
@@ -647,33 +685,38 @@ print_choices(int selection)
 		if (i == selection)
 			tty_putp(enter_standout_mode);
 
-		for (j = 0, length = MIN(choice->match_start, (size_t)columns);
-		     j < (ssize_t)length;
-		     j++)
+		for (col = j = 0;
+		     j < (ssize_t)choice->match_start && col < columns;
+		     col += !isu8cont(choice->string[j]), j++)
 			if (tty_putc(choice->string[j]) == EOF)
 				err(1, "tty_putc");
 
 		tty_putp(enter_underline_mode);
 
-		for (length = MIN(choice->match_end, (size_t)columns);
-		     j < (ssize_t)length;
-		     j++)
+		for (;
+		     j < (ssize_t)choice->match_end && col < columns;
+		     col += !isu8cont(choice->string[j]), j++)
 			if (tty_putc(choice->string[j]) == EOF)
 				err(1, "tty_putc");
 
 		tty_putp(exit_underline_mode);
 
-		for (length = MIN(choice->length, (size_t)columns);
-		     j < (ssize_t)length;
-		     j++)
+		for (;
+		     j < (ssize_t)choice->length && col < columns;
+		     col += !isu8cont(choice->string[j]), j++) {
 			/* A null character will be present before the
 			 * terminating null character if descriptions is
 			 * enabled. */
-			if (tty_putc(choice->string[j] == '\0'
-				     ? ' ' : choice->string[j]) == EOF)
+			if (choice->string[j] == '\0') {
+				if (tty_putc(' ') == EOF)
+					err(1, "tty_putc");
+			} else if (tty_putc(choice->string[j]) == EOF) {
 				err(1, "tty_putc");
+			}
+		}
 
-		for (k = MAX(columns - choice->printable_length, 0); k > 0; k--)
+		for (k = MAX(columns - choice->printable_length +
+			    (choice->length - col), 0); k > 0; k--)
 			if (tty_putc(' ') == EOF)
 				err(1, "tty_putc");
 
@@ -684,36 +727,67 @@ print_choices(int selection)
 	return i;
 }
 
-int
-get_key(void)
+size_t
+get_key(char *buf, size_t size)
 {
-	int	key;
+	static struct {
+		const char *s;
+		size_t length;
+		int key;
+	} keys[] = {
+		{ "\033\n",	2,	ALT_ENTER },
+		{ "\033[A",	3,	UP },
+		{ "\033OA",	3,	UP },
+		{ "\033[B",	3,	DOWN },
+		{ "\033OB",	3,	DOWN },
+		{ "\033[C",	3,	RIGHT },
+		{ "\033OC",	3,	RIGHT },
+		{ "\033[D",	3,	LEFT },
+		{ "\033OD",	3,	LEFT },
+		{ NULL,		0,	0 },
+	};
+	size_t	nread = 0;
+	int	i;
 
-	key = tty_getc();
+getc:
+	buf[nread++] = tty_getc();
+	size--;
+	for (i = 0; keys[i].s; i++) {
+		if (strncmp(buf, keys[i].s, nread))
+			continue;
 
-	if (key == ESCAPE) {
-		key = tty_getc();
-
-		if (key == '\n') {
-			return ALT_ENTER;
+		if (nread == keys[i].length) {
+			memcpy(buf, &keys[i].key, sizeof(int));
+			return nread;
 		}
 
-		if (key == '[' || key == 'O') {
-			key = tty_getc();
-			switch (key) {
-			case 'A':
-				return UP;
-			case 'B':
-				return DOWN;
-			case 'C':
-				return RIGHT;
-			case 'D':
-				return LEFT;
-			}
-		}
+		/* Partial match found, continue reading. */
+		if (size > 0)
+			goto getc;
 	}
 
-	return key;
+	if (nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O'))
+		/*
+		 * A escape sequence which is not a supported key is being read.
+		 * Ensure the whole sequence is read.
+		 */
+		while ((buf[nread - 1] < '@' || buf[nread - 1] > '~')
+		    && size-- > 0)
+			buf[nread++] = tty_getc();
+
+	if (!isu8start(buf[0]))
+		return nread;
+
+	/*
+	 * Ensure a whole Unicode character is read. The number of MSBs in the
+	 * first octet of a Unicode character is equal to the number of octets
+	 * the character consists of, followed by a zero. Therefore, as long as
+	 * the MSB is not zero there is still bytes left to read.
+	 */
+	while (((buf[0] << nread) & 0x80) == 0x80 && size-- > 0)
+		buf[nread++] = tty_getc();
+
+	return nread;
 }
 
 int
@@ -738,4 +812,16 @@ free_choices(void)
 {
 	free(choices.v);
 	free(input.string);
+}
+
+int
+isu8cont(unsigned char c)
+{
+	return (c & (0x80 | 0x40)) == 0x80;
+}
+
+int
+isu8start(unsigned char c)
+{
+	return (c & (0x80 | 0x40)) == (0x80 | 0x40);
 }
