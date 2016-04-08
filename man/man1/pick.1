@@ -6,7 +6,7 @@
 .Nd fuzzy select anything
 .Sh SYNOPSIS
 .Nm
-.Op Fl hv
+.Op Fl hvS
 .Op Fl d Op Fl o
 .Op Fl x | Fl X
 .Op Fl q Ar query
@@ -26,6 +26,10 @@ supports these options and arguments:
 output a help message and exit.
 .It Fl v
 output the version and exit.
+.It Fl S
+disable sorting.
+.Pp
+Only filter the choices instead of additionally sorting by score.
 .It Fl q Ar QUERY
 supply an initial search query.
 .It Fl d

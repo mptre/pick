@@ -85,6 +85,7 @@ static char		*query;
 static int		 descriptions;
 static int		 output_description;
 static int		 use_alternate_screen;
+static int		 sort = 1;
 static size_t		 query_size;
 static struct termios	 original_attributes;
 static struct {
@@ -105,7 +106,7 @@ main(int argc, char **argv)
 
 	use_alternate_screen = getenv("VIM") == NULL;
 
-	while ((option = getopt(argc, argv, "dhoq:vxX")) != -1) {
+	while ((option = getopt(argc, argv, "dhoq:SvxX")) != -1) {
 		switch (option) {
 		case 'd':
 			descriptions = 1;
@@ -121,6 +122,9 @@ main(int argc, char **argv)
 			if ((query = strdup(optarg)) == NULL)
 				err(1, "strdup");
 			query_size = strlen(query) + 1;
+			break;
+		case 'S':
+			sort = 0;
 			break;
 		case 'v':
 			version();
@@ -159,9 +163,10 @@ usage(void)
 {
 	extern char	*__progname;
 
-	fprintf(stderr, "usage: %s [-hv] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: %s [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
+	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
 	    "    -x          enable alternate screen\n"
@@ -487,6 +492,11 @@ score(struct choice *choice)
 	if (min_match(choice->string, 0,
 		      &choice->match_start, &choice->match_end) == 0) {
 		choice->match_start = choice->match_end = choice->score = 0;
+		return;
+	}
+
+	if (!sort) {
+		choice->score = 1;
 		return;
 	}
 
