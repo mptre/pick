@@ -72,7 +72,7 @@ static void			 handle_sigint(int);
 static void			 restore_tty(void);
 static void			 put_line(char *, int);
 static int			 print_choices(int);
-static size_t			 get_key(char *, size_t);
+static size_t			 get_buf(char *, size_t);
 static int			 tty_getc(void);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static void			 free_choices(void);
@@ -291,9 +291,9 @@ put_choice(const struct choice *choice)
 const struct choice *
 selected_choice(void)
 {
-	char		 key[6];
+	char		 buf[6];
 	int		 selection = 0, visible_choices_count;
-	int		 word_position;
+	int		 word_position, key;
 	size_t		 cursor_position, length, query_length, scroll;
 
 	cursor_position = query_length = strlen(query);
@@ -312,10 +312,11 @@ selected_choice(void)
 
 	for (;;) {
 		fflush(tty_out);
-		memset(key, 0, sizeof(key));
-		length = get_key(key, sizeof(key));
+		memset(buf, 0, sizeof(buf));
+		length = get_buf(buf, sizeof(buf));
+		memcpy(&key, buf, sizeof(int));
 
-		switch (*((int *)key)) {
+		switch (key) {
 		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
@@ -435,7 +436,7 @@ selected_choice(void)
 			    && isu8cont(query[++cursor_position]));
 			break;
 		default:
-			if (!isu8start(key[0]) && !isprint(key[0]))
+			if (!isu8start(buf[0]) && !isprint(buf[0]))
 				continue;
 
 			if (query_size < query_length + length) {
@@ -450,7 +451,7 @@ selected_choice(void)
 					query + cursor_position,
 					query_length - cursor_position);
 
-			memcpy(query + cursor_position, key, length);
+			memcpy(query + cursor_position, buf, length);
 			cursor_position += length;
 			query_length += length;
 			query[query_length] = '\0';
@@ -728,7 +729,7 @@ print_choices(int selection)
 }
 
 size_t
-get_key(char *buf, size_t size)
+get_buf(char *buf, size_t size)
 {
 	static struct {
 		const char *s;
