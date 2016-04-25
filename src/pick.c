@@ -463,7 +463,6 @@ selected_choice(void)
 		tty_putp(cursor_invisible);
 
 		visible_choices_count = print_choices(selection);
-		tty_putp(clr_eos);
 		if (cursor_position >= scroll + columns)
 			scroll = cursor_position - columns + 1;
 		if (cursor_position < scroll)
@@ -673,6 +672,7 @@ print_choices(int selection)
 	size_t		 query_length;
 	struct choice	*choice;
 
+	tty_putp(clr_eos);
 	/* Emit query line. */
 	tty_putc('\n');
 
