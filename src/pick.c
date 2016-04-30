@@ -26,16 +26,6 @@
 
 #include "compat.h"
 
-#define DEL 127
-#define ENTER 10
-#define ALT_ENTER 266
-#define BACKSPACE 8
-#define UP 259
-#define DOWN 258
-#define RIGHT 261
-#define LEFT 260
-#define ESCAPE 27
-
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
@@ -44,6 +34,24 @@
 	if (tputs(capability, 1, tty_putc) == ERR) \
 		errx(1, #capability ": unknown terminfo capability"); \
 	} while (0)
+
+enum {
+	UNKNOWN,
+	ALT_ENTER,
+	DEL,
+	ENTER,
+	ESCAPE,
+	CTRL_A,
+	CTRL_D,
+	CTRL_E,
+	CTRL_K,
+	CTRL_U,
+	CTRL_W,
+	UP,
+	RIGHT,
+	DOWN,
+	LEFT
+};
 
 struct choice {
 	char	*description;
@@ -72,7 +80,7 @@ static void			 handle_sigint(int);
 static void			 restore_tty(void);
 static void			 put_line(char *, int);
 static int			 print_choices(int);
-static size_t			 get_key(char *, size_t);
+static int			 get_key(char *, size_t, size_t *);
 static int			 tty_getc(void);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static void			 free_choices(void);
@@ -291,8 +299,8 @@ put_choice(const struct choice *choice)
 const struct choice *
 selected_choice(void)
 {
-	char		 key[6];
-	int		 selection = 0, visible_choices_count;
+	char		 buf[6];
+	int		 key, selection = 0, visible_choices_count;
 	int		 word_position;
 	size_t		 cursor_position, length, query_length, scroll;
 
@@ -312,10 +320,10 @@ selected_choice(void)
 
 	for (;;) {
 		fflush(tty_out);
-		memset(key, 0, sizeof(key));
-		length = get_key(key, sizeof(key));
+		memset(buf, 0, sizeof(buf));
+		key = get_key(buf, sizeof(buf), &length);
 
-		switch (*((int *)key)) {
+		switch (key) {
 		case ENTER:
 			if (visible_choices_count > 0) {
 				restore_tty();
@@ -331,7 +339,6 @@ selected_choice(void)
 			choices.v[choices.length].string = query;
 			choices.v[choices.length].description = "";
 			return &choices.v[choices.length];
-		case BACKSPACE:
 		case DEL:
 			if (cursor_position > 0) {
 				for (length = 1;
@@ -349,7 +356,7 @@ selected_choice(void)
 			}
 
 			break;
-		case CTRL('D'):
+		case CTRL_D:
 			if (cursor_position < query_length) {
 				for (length = 1;
 				    isu8cont(query[cursor_position + length]);
@@ -365,7 +372,7 @@ selected_choice(void)
 			}
 
 			break;
-		case CTRL('U'):
+		case CTRL_U:
 			delete_between(
 			    query,
 			    query_length,
@@ -376,7 +383,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case CTRL('K'):
+		case CTRL_K:
 			delete_between(
 			    query,
 			    query_length,
@@ -386,7 +393,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case CTRL('W'):
+		case CTRL_W:
 			if (cursor_position == 0)
 				break;
 
@@ -408,34 +415,30 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 			break;
-		case CTRL('A'):
+		case CTRL_A:
 			cursor_position = 0;
 			break;
-		case CTRL('E'):
+		case CTRL_E:
 			cursor_position = query_length;
 			break;
-		case CTRL('N'):
 		case DOWN:
 			if (selection < visible_choices_count - 1)
 				++selection;
 			break;
-		case CTRL('P'):
 		case UP:
 			if (selection > 0)
 				--selection;
 			break;
-		case CTRL('B'):
 		case LEFT:
 			while (cursor_position > 0
 			    && isu8cont(query[--cursor_position]));
 			break;
-		case CTRL('F'):
 		case RIGHT:
 			while (cursor_position < query_length
 			    && isu8cont(query[++cursor_position]));
 			break;
 		default:
-			if (!isu8start(key[0]) && !isprint(key[0]))
+			if (!isu8start(buf[0]) && !isprint(buf[0]))
 				continue;
 
 			if (query_size < query_length + length) {
@@ -450,7 +453,7 @@ selected_choice(void)
 					query + cursor_position,
 					query_length - cursor_position);
 
-			memcpy(query + cursor_position, key, length);
+			memcpy(query + cursor_position, buf, length);
 			cursor_position += length;
 			query_length += length;
 			query[query_length] = '\0';
@@ -727,56 +730,72 @@ print_choices(int selection)
 	return i;
 }
 
-size_t
-get_key(char *buf, size_t size)
+int
+get_key(char *buf, size_t size, size_t *nread)
 {
 	static struct {
-		const char *s;
+		union {
+			const char *s;
+			char c;
+		} input;
 		size_t length;
 		int key;
 	} keys[] = {
-		{ "\033\n",	2,	ALT_ENTER },
-		{ "\033[A",	3,	UP },
-		{ "\033OA",	3,	UP },
-		{ "\033[B",	3,	DOWN },
-		{ "\033OB",	3,	DOWN },
-		{ "\033[C",	3,	RIGHT },
-		{ "\033OC",	3,	RIGHT },
-		{ "\033[D",	3,	LEFT },
-		{ "\033OD",	3,	LEFT },
-		{ NULL,		0,	0 },
+		{ { (char *)8 },		1,	DEL },
+		{ { (char *)10 },		1,	ENTER },
+		{ { (char *)127 },		1,	DEL },
+		{ { (char *)CTRL('A') },	1,	CTRL_A },
+		{ { (char *)CTRL('B') },	1,	LEFT },
+		{ { (char *)CTRL('D') },	1,	CTRL_D },
+		{ { (char *)CTRL('E') },	1,	CTRL_E },
+		{ { (char *)CTRL('F') },	1,	RIGHT },
+		{ { (char *)CTRL('K') },	1,	CTRL_K },
+		{ { (char *)CTRL('N') },	1,	DOWN },
+		{ { (char *)CTRL('P') },	1,	UP },
+		{ { (char *)CTRL('U') },	1,	CTRL_U },
+		{ { (char *)CTRL('W') },	1,	CTRL_W },
+		{ { "\033\n" },			2,	ALT_ENTER },
+		{ { "\033[A" },			3,	UP },
+		{ { "\033OA" },			3,	UP },
+		{ { "\033[B" },			3,	DOWN },
+		{ { "\033OB" },			3,	DOWN },
+		{ { "\033[C" },			3,	RIGHT },
+		{ { "\033OC" },			3,	RIGHT },
+		{ { "\033[D" },			3,	LEFT },
+		{ { "\033OD" },			3,	LEFT },
+		{ { NULL },			0,	0 },
 	};
-	size_t	nread = 0;
-	int	i;
+	const char	*input;
+	int		 i;
 
+	*nread = 0;
 getc:
-	buf[nread++] = tty_getc();
+	buf[(*nread)++] = tty_getc();
 	size--;
-	for (i = 0; keys[i].s; i++) {
-		if (strncmp(buf, keys[i].s, nread))
+	for (i = 0; keys[i].input.s; i++) {
+		input = keys[i].length > 1 ? keys[i].input.s : &keys[i].input.c;
+		if (*nread > keys[i].length || strncmp(buf, input, *nread))
 			continue;
 
-		if (nread == keys[i].length) {
-			memcpy(buf, &keys[i].key, sizeof(int));
-			return nread;
-		}
+		if (*nread == keys[i].length)
+			return keys[i].key;
 
 		/* Partial match found, continue reading. */
 		if (size > 0)
 			goto getc;
 	}
 
-	if (nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O'))
+	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O'))
 		/*
 		 * A escape sequence which is not a supported key is being read.
 		 * Ensure the whole sequence is read.
 		 */
-		while ((buf[nread - 1] < '@' || buf[nread - 1] > '~')
+		while ((buf[*nread - 1] < '@' || buf[*nread - 1] > '~')
 		    && size-- > 0)
-			buf[nread++] = tty_getc();
+			buf[(*nread)++] = tty_getc();
 
 	if (!isu8start(buf[0]))
-		return nread;
+		return UNKNOWN;
 
 	/*
 	 * Ensure a whole Unicode character is read. The number of MSBs in the
@@ -784,10 +803,10 @@ getc:
 	 * the character consists of, followed by a zero. Therefore, as long as
 	 * the MSB is not zero there is still bytes left to read.
 	 */
-	while (((buf[0] << nread) & 0x80) == 0x80 && size-- > 0)
-		buf[nread++] = tty_getc();
+	while (((buf[0] << *nread) & 0x80) == 0x80 && size-- > 0)
+		buf[(*nread)++] = tty_getc();
 
-	return nread;
+	return UNKNOWN;
 }
 
 int
