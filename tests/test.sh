@@ -2,8 +2,8 @@
 
 field() {
   awk '
-  /^'$1':/ { sub(/^[^:]+: */, ""); print; exit 0 }
-  END { exit 1 }'
+  /^'$1':/ { sub(/^[^:]+: */, ""); print; found=1 }
+  END { exit !found }'
 }
 
 input() {
