@@ -70,7 +70,7 @@ parseinput(const char *s)
 				return;
 			switch (*s) {
 			case 'b':
-				c = 0x08;
+				c = 0x7F;
 				break;
 			case 'e':
 				c = 0x1B;
