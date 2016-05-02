@@ -35,12 +35,13 @@
 		errx(1, #capability ": unknown terminfo capability"); \
 	} while (0)
 
+#define ESCAPE 27
+
 enum {
 	UNKNOWN,
 	ALT_ENTER,
 	DEL,
 	ENTER,
-	ESCAPE,
 	CTRL_A,
 	CTRL_D,
 	CTRL_E,
