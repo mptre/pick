@@ -40,10 +40,10 @@
 enum {
 	UNKNOWN,
 	ALT_ENTER,
+	BACKSPACE,
 	DEL,
 	ENTER,
 	CTRL_A,
-	CTRL_D,
 	CTRL_E,
 	CTRL_K,
 	CTRL_U,
@@ -340,7 +340,7 @@ selected_choice(void)
 			choices.v[choices.length].string = query;
 			choices.v[choices.length].description = "";
 			return &choices.v[choices.length];
-		case DEL:
+		case BACKSPACE:
 			if (cursor_position > 0) {
 				for (length = 1;
 				    isu8cont(query[cursor_position - length]);
@@ -357,7 +357,7 @@ selected_choice(void)
 			}
 
 			break;
-		case CTRL_D:
+		case DEL:
 			if (cursor_position < query_length) {
 				for (length = 1;
 				    isu8cont(query[cursor_position + length]);
@@ -742,12 +742,11 @@ get_key(char *buf, size_t size, size_t *nread)
 		size_t length;
 		int key;
 	} keys[] = {
-		{ { (char *)8 },		1,	DEL },
 		{ { (char *)10 },		1,	ENTER },
-		{ { (char *)127 },		1,	DEL },
+		{ { (char *)127 },		1,	BACKSPACE },
 		{ { (char *)CTRL('A') },	1,	CTRL_A },
 		{ { (char *)CTRL('B') },	1,	LEFT },
-		{ { (char *)CTRL('D') },	1,	CTRL_D },
+		{ { (char *)CTRL('D') },	1,	DEL },
 		{ { (char *)CTRL('E') },	1,	CTRL_E },
 		{ { (char *)CTRL('F') },	1,	RIGHT },
 		{ { (char *)CTRL('K') },	1,	CTRL_K },
@@ -764,6 +763,8 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ { "\033OC" },			3,	RIGHT },
 		{ { "\033[D" },			3,	LEFT },
 		{ { "\033OD" },			3,	LEFT },
+		{ { "\033[3~" },		4,	DEL },
+		{ { "\033O3~" },		4,	DEL },
 		{ { NULL },			0,	0 },
 	};
 	const char	*input;
