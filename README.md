@@ -12,11 +12,10 @@ using an interface with fuzzy search functionality.
 A package for Pick is available in [the AUR].
 
 ```sh
-wget https://aur.archlinux.org/packages/pi/pick/pick.tar.gz
+curl -O https://aur.archlinux.org/cgit/aur.git/snapshot/pick.tar.gz
 tar -xzf pick.tar.gz
 cd pick
-makepkg -s
-pacman -U pick-VERSION-x86_64.pkg.tar.xz
+makepkg -sri
 ```
 
 ### Debian and Ubuntu
