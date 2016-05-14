@@ -128,8 +128,6 @@ parent(int master, int slave)
 	struct timeval timeout;
 	fd_set rfd;
 
-	close(slave);
-
 	if (write(master, input.v, input.nmemb) < 0)
 		err(1, "write");
 
@@ -157,6 +155,12 @@ parent(int master, int slave)
 		if (read(master, buf, sizeof(buf)) < 0)
 			err(1, "read");
 	}
+
+	/* If the last slave file descriptor closes while a 'read' call is in
+	 * progress, the read may fail with EIO. To avoid that happening in
+	 * the above loop, this copy of the slave file descriptor is left open
+	 * until now. */
+	close(slave);
 }
 
 void
