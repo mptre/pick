@@ -15,6 +15,7 @@ static int gotsig;
 
 static struct {
 	size_t nmemb;
+	size_t written;
 	char v[128];
 } input;
 
@@ -125,11 +126,9 @@ void
 parent(int master, int slave)
 {
 	char buf[BUFSIZ];
-	struct timeval timeout;
 	fd_set rfd;
-
-	if (write(master, input.v, input.nmemb) < 0)
-		err(1, "write");
+	struct timeval timeout;
+	ssize_t n;
 
 	memset(&timeout, 0, sizeof(timeout));
 	timeout.tv_sec = 1;
@@ -154,6 +153,17 @@ parent(int master, int slave)
 		 * it flushes. */
 		if (read(master, buf, sizeof(buf)) < 0)
 			err(1, "read");
+
+		/* When the pick process has flushed its output we can ensure
+		 * the call to tcsetattr has been completed and canonical mode
+		 * is disabled. At this point input can be written without any
+		 * line editing taking place. */
+		if (input.written < input.nmemb) {
+			if ((n = write(master, input.v + input.written,
+					    input.nmemb - input.written)) == -1)
+				err(1, "write");
+			input.written += n;
+		}
 	}
 
 	/* If the last slave file descriptor closes while a 'read' call is in
