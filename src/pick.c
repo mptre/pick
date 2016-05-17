@@ -150,9 +150,10 @@ main(int argc, char **argv)
 			usage();
 		}
 	}
-
 	argc -= optind;
 	argv += optind;
+	if (argc > 0)
+		usage();
 
 	if (query == NULL) {
 		query_size = 64;
