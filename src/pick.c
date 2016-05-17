@@ -112,7 +112,8 @@ static struct {
 int
 main(int argc, char **argv)
 {
-	int	option;
+	const struct choice	*choice;
+	int			 option;
 
 	use_alternate_screen = getenv("VIM") == NULL;
 
@@ -162,7 +163,11 @@ main(int argc, char **argv)
 	}
 
 	get_choices();
-	put_choice(selected_choice());
+	init_tty();
+	choice = selected_choice();
+	restore_tty();
+	if (choice != NULL)
+		put_choice(choice);
 
 	free(choices.v);
 	free(input.string);
@@ -308,7 +313,6 @@ selected_choice(void)
 	cursor_position = query_length = strlen(query);
 
 	filter_choices();
-	init_tty();
 
 	if (cursor_position >= (size_t)columns)
 		scroll = cursor_position - columns + 1;
@@ -327,7 +331,6 @@ selected_choice(void)
 		switch (key) {
 		case ENTER:
 			if (visible_choices_count > 0) {
-				restore_tty();
 				if (selection >= 0 && selection < (ssize_t)choices.length)
 					return &choices.v[selection];
 				else
@@ -336,7 +339,6 @@ selected_choice(void)
 
 			break;
 		case ALT_ENTER:
-			restore_tty();
 			choices.v[choices.length].string = query;
 			choices.v[choices.length].description = "";
 			return &choices.v[choices.length];
