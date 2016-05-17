@@ -84,7 +84,6 @@ static int			 print_choices(int);
 static int			 get_key(char *, size_t, size_t *);
 static int			 tty_getc(void);
 static void			 delete_between(char *, size_t, size_t, size_t);
-static void			 free_choices(void);
 static void			 print_query(char *, size_t, size_t, size_t);
 static int			 choicecmp(const void *, const void *);
 static int			 isu8cont(unsigned char);
@@ -165,7 +164,8 @@ main(int argc, char **argv)
 	get_choices();
 	put_choice(selected_choice());
 
-	free_choices();
+	free(choices.v);
+	free(input.string);
 	free(query);
 
 	return EX_OK;
@@ -826,13 +826,6 @@ void
 delete_between(char *string, size_t length, size_t start, size_t end)
 {
 	memmove(string + start, string + end, length - end + 1);
-}
-
-void
-free_choices(void)
-{
-	free(choices.v);
-	free(input.string);
 }
 
 int
