@@ -276,8 +276,8 @@ eager_strpbrk(const char *string, const char *separators)
 size_t
 count_printable(char *str, size_t length)
 {
-	int	in_esc_seq = 0, printable = 0;
 	size_t	i;
+	int	in_esc_seq = 0, printable = 0;
 
 	for (i = 0; i < length; i++) {
 		if (in_esc_seq) {
@@ -304,10 +304,10 @@ put_choice(const struct choice *choice)
 const struct choice *
 selected_choice(void)
 {
-	char		 buf[6];
-	int		 key, selection = 0, visible_choices_count;
-	int		 word_position;
-	size_t		 cursor_position, length, query_length, scroll;
+	size_t		cursor_position, length, query_length, scroll;
+	char		buf[6];
+	int		key, selection = 0, visible_choices_count;
+	int		word_position;
 
 	cursor_position = query_length = strlen(query);
 
@@ -523,7 +523,7 @@ score(struct choice *choice)
 int
 min_match(const char *string, size_t offset, size_t *start, size_t *end)
 {
-	char	 *s, *e, *q;
+	char	*s, *e, *q;
 
 	q = query;
 	if ((s = e = strcasechr(&string[offset], q)) == NULL)
@@ -580,8 +580,8 @@ strcasechr(const char *s1, const char *s2)
 void
 init_tty(void)
 {
-	struct termios	 new_attributes;
-	int		 i;
+	struct termios	new_attributes;
+	int		i;
 
 	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
 		err(1, "fopen");
@@ -671,9 +671,9 @@ print_query(char *string, size_t length, size_t position, size_t scroll)
 int
 print_choices(int selection)
 {
-	int		 col, i, j, k;
-	size_t		 query_length;
 	struct choice	*choice;
+	size_t		 query_length;
+	int		 col, i, j, k;
 
 	tty_putp(clr_eos);
 	/* Emit query line. */
