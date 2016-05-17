@@ -5,7 +5,6 @@
 #include <sys/ttydefaults.h>
 #include <ctype.h>
 #include <err.h>
-#include <limits.h>
 #include <locale.h>
 #include <signal.h>
 #include <stdio.h>
