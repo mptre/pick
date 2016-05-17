@@ -655,16 +655,16 @@ put_line(char *string, int length)
 }
 
 void
-print_query(char *query, size_t length, size_t position, size_t scroll)
+print_query(char *string, size_t length, size_t position, size_t scroll)
 {
 	size_t	i = 0;
 
 	tty_putp(restore_cursor);
-	put_line(query + scroll, length - scroll);
+	put_line(string + scroll, length - scroll);
 
 	tty_putp(restore_cursor);
 	while (i < position - scroll) {
-		while (isu8cont(query[++i]));
+		while (isu8cont(string[++i]));
 		tty_putp(cursor_right);
 	}
 }
@@ -767,7 +767,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ { "\033O3~" },		4,	DEL },
 		{ { NULL },			0,	0 },
 	};
-	const char	*input;
+	const char	*key;
 	int		 i;
 
 	*nread = 0;
@@ -775,8 +775,8 @@ getc:
 	buf[(*nread)++] = tty_getc();
 	size--;
 	for (i = 0; keys[i].input.s; i++) {
-		input = keys[i].length > 1 ? keys[i].input.s : &keys[i].input.c;
-		if (*nread > keys[i].length || strncmp(buf, input, *nread))
+		key = keys[i].length > 1 ? keys[i].input.s : &keys[i].input.c;
+		if (*nread > keys[i].length || strncmp(buf, key, *nread))
 			continue;
 
 		if (*nread == keys[i].length)
