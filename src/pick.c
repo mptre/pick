@@ -461,8 +461,6 @@ selected_choice(void)
 			query[query_length] = '\0';
 			filter_choices();
 			selection = 0;
-
-			break;
 		}
 
 		tty_putp(cursor_invisible);
