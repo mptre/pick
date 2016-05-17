@@ -179,9 +179,7 @@ main(int argc, char **argv)
 __dead void
 usage(void)
 {
-	extern char	*__progname;
-
-	fprintf(stderr, "usage: %s [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -S          disable sorting\n"
@@ -189,7 +187,7 @@ usage(void)
 	    "    -o          output description of selected on exit\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
-	    "    -q query    supply an initial search query\n", __progname);
+	    "    -q query    supply an initial search query\n");
 
 	exit(EX_USAGE);
 }
