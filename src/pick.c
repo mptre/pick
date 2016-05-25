@@ -584,9 +584,8 @@ init_tty(void)
 	struct termios	new_attributes;
 	int		i;
 
-	if ((tty_in = fopen("/dev/tty", "r")) == NULL) {
+	if ((tty_in = fopen("/dev/tty", "r")) == NULL)
 		err(1, "fopen");
-	}
 
 	tcgetattr(fileno(tty_in), &original_attributes);
 	new_attributes = original_attributes;
