@@ -157,7 +157,6 @@ main(int argc, char **argv)
 
 	if (query == NULL) {
 		query_size = 64;
-
 		if ((query = calloc(query_size, sizeof(char))) == NULL)
 			err(1, NULL);
 	}
