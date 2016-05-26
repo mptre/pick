@@ -330,7 +330,8 @@ selected_choice(void)
 		switch (key) {
 		case ENTER:
 			if (visible_choices_count > 0) {
-				if (selection >= 0 && selection < (ssize_t)choices.length)
+				if (selection >= 0
+				    && selection < (ssize_t)choices.length)
 					return &choices.v[selection];
 				else
 					return NULL;
