@@ -119,8 +119,6 @@ main(int argc, char **argv)
 		err(1, "pledge");
 #endif
 
-	use_alternate_screen = getenv("VIM") == NULL;
-
 	setlocale(LC_CTYPE, "");
 
 	while ((option = getopt(argc, argv, "dhoq:SvxX")) != -1) {
