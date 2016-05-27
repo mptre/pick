@@ -8,7 +8,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([memmove reallocarray setlocale strdup])
+AC_CHECK_FUNCS([memmove pledge reallocarray setlocale strdup])
 AC_SEARCH_LIBS([initscr], [ncursesw ncurses], [], [
   AC_MSG_ERROR([unable to find initscr() function. Try to install ncurses])
 ])
