@@ -114,6 +114,11 @@ main(int argc, char **argv)
 	const struct choice	*choice;
 	int			 option;
 
+#ifdef HAVE_PLEDGE
+	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
+		err(1, "pledge");
+#endif
+
 	use_alternate_screen = getenv("VIM") == NULL;
 
 	setlocale(LC_CTYPE, "");
@@ -163,6 +168,12 @@ main(int argc, char **argv)
 
 	get_choices();
 	init_tty();
+
+#ifdef HAVE_PLEDGE
+	if (pledge("stdio tty", NULL) == -1)
+		err(1, "pledge");
+#endif
+
 	choice = selected_choice();
 	restore_tty();
 	if (choice != NULL)
