@@ -93,7 +93,7 @@ static FILE		*tty_out;
 static char		*query;
 static int		 descriptions;
 static int		 output_description;
-static int		 use_alternate_screen;
+static int		 use_alternate_screen = 1;
 static int		 sort = 1;
 static size_t		 query_size;
 static struct termios	 original_attributes;
@@ -118,8 +118,6 @@ main(int argc, char **argv)
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 #endif
-
-	use_alternate_screen = getenv("VIM") == NULL;
 
 	setlocale(LC_CTYPE, "");
 
