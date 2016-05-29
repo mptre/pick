@@ -116,6 +116,12 @@ child(int master, int slave)
 	if (ioctl(slave, TIOCSCTTY, NULL) < 0)
 		err(1, "ioctl");
 
+	/* Enable malloc.conf(5) options on OpenBSD which will abort the pick
+	 * process when reading/writing out-of-bounds or accessing already freed
+	 * memory. */
+	if (setenv("MALLOC_OPTIONS", "S", 0) < 0)
+		err(1, "setenv");
+
 	execvp(argv[0], (char *const *)argv);
 	e = errno;
 	err(1, "%s", argv[0]);
