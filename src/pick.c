@@ -93,7 +93,7 @@ static FILE		*tty_out;
 static char		*query;
 static int		 descriptions;
 static int		 output_description;
-static int		 use_alternate_screen;
+static int		 use_alternate_screen = 1;
 static int		 sort = 1;
 static size_t		 query_size;
 static struct termios	 original_attributes;
