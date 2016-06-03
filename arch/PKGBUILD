@@ -1,15 +1,15 @@
 # Maintainer: Calle Erlandsson <calle@thoughtbot.com>
 pkgname=pick
-pkgver=1.3.0
+pkgver=1.4.0
 pkgrel=1
 pkgdesc='Fuzzy text selection utility'
 arch=('x86_64')
 url='https://github.com/thoughtbot/pick/'
 license=('MIT')
-source=('https://github.com/thoughtbot/pick/releases/download/v1.3.0/pick-1.3.0.tar.gz'
-        'https://github.com/thoughtbot/pick/releases/download/v1.3.0/pick-1.3.0.tar.gz.asc')
+source=('https://github.com/thoughtbot/pick/releases/download/v1.4.0/pick-1.4.0.tar.gz'
+        'https://github.com/thoughtbot/pick/releases/download/v1.4.0/pick-1.4.0.tar.gz.asc')
 validpgpkeys=('47B22252BF6914DF964BB50C24735DD835689C84')
-sha1sums=('87f7d24ad859bc059f5c5a9bb41f4697e4979bd8'
+sha1sums=('fa22804702135fc37bdd12d340299b42c657c93a'
           'SKIP')
 
 build() {
