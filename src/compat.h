@@ -10,10 +10,12 @@
 #endif /* __FreeBSD__ */
 
 #if defined(__linux__) || defined(__CYGWIN__)
+#ifndef __dead
 #ifdef __GNUC__
 #define __dead		__attribute__((__noreturn__))
 #else
 #define __dead
+#endif
 #endif
 #endif /* __linux__ || __CYGWIN__ */
 
