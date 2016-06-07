@@ -87,6 +87,19 @@ See the `pick(1)` man page for detailed usage instructions and more examples.
 
 ## Copyright
 
-Copyright (c) 2015 Calle Erlandsson & thoughtbot, Inc.
+Copyright (c) 2016 Calle Erlandsson & thoughtbot.
 
-Lead by Calle Erlandsson & thoughtbot, Inc.
+Lead by Calle Erlandsson & thoughtbot's
+[Stockholm software design and development team][team].
+
+[team]: https://thoughtbot.com/stockholm?utm_source=github
+
+## About thoughtbot
+
+![thoughtbot](https://thoughtbot.com/logo.png)
+
+See [our other open source projects][community] or
+[hire us][hire] to design, develop, and grow your product.
+
+[community]: https://thoughtbot.com/tools?utm_source=github
+[hire]: https://thoughtbot.com/hire-us?utm_source=github
