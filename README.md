@@ -39,6 +39,19 @@ brew install pick
 sudo port install pick
 ```
 
+### FreeBSD via Ports
+
+```sh
+cd /usr/ports/sysutils/pick
+make install clean
+```
+
+### FreeBSD via pkgng
+
+```sh
+pkg install pick
+```
+
 ### From source
 
 1. Download the latest release from [the releases page], optionally check the
