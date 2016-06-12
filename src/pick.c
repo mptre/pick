@@ -80,7 +80,6 @@ static int			 print_choices(int);
 static int			 get_key(char *, size_t, size_t *);
 static int			 tty_getc(void);
 static void			 delete_between(char *, size_t, size_t, size_t);
-static void			 print_query(char *, size_t, size_t, size_t);
 static int			 choicecmp(const void *, const void *);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
@@ -289,7 +288,7 @@ put_choice(const struct choice *choice)
 const struct choice *
 selected_choice(void)
 {
-	size_t		cursor_position, length, query_length, scroll;
+	size_t		cursor_position, i, length, query_length, scroll = 0;
 	char		buf[6];
 	int		key, selection = 0, visible_choices_count;
 	int		word_position;
@@ -298,17 +297,36 @@ selected_choice(void)
 
 	filter_choices();
 
-	if (cursor_position >= (size_t)columns)
-		scroll = cursor_position - columns + 1;
-	else
-		scroll = 0;
-
-	visible_choices_count = print_choices(selection);
-	print_query(query, query_length, cursor_position, scroll);
-	tty_putp(cursor_normal);
-
 	for (;;) {
+		tty_putp(cursor_invisible);
+		tty_putp(restore_cursor);
+		if (cursor_position >= scroll + columns)
+			scroll = cursor_position - columns + 1;
+		if (cursor_position < scroll)
+			scroll = cursor_position;
+		put_line(&query[scroll], query_length - scroll);
+		visible_choices_count = print_choices(selection);
+		if ((size_t)visible_choices_count < choices.length
+		    && visible_choices_count < lines - 1) {
+			/*
+			 * The clr_eos capability clears the screen from the
+			 * current column to the end. If the last visible choice
+			 * is selected, the standout in the last and current
+			 * column will be also be cleared. Therefore, move down
+			 * one line before clearing the screen.
+			 */
+			if (tty_putc('\n') == EOF)
+				err(1, "tty_putc");
+			tty_putp(clr_eos);
+		}
+		tty_putp(restore_cursor);
+		for (i = 0; i < cursor_position;) {
+			while (isu8cont(query[++i]));
+			tty_putp(cursor_right);
+		}
+		tty_putp(cursor_normal);
 		fflush(tty_out);
+
 		memset(buf, 0, sizeof(buf));
 		key = get_key(buf, sizeof(buf), &length);
 
@@ -448,16 +466,6 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 		}
-
-		tty_putp(cursor_invisible);
-
-		visible_choices_count = print_choices(selection);
-		if (cursor_position >= scroll + columns)
-			scroll = cursor_position - columns + 1;
-		if (cursor_position < scroll)
-			scroll = cursor_position;
-		print_query(query, query_length, cursor_position, scroll);
-		tty_putp(cursor_normal);
 	}
 }
 
@@ -627,31 +635,17 @@ restore_tty(void)
 void
 put_line(char *string, int length)
 {
-	int	i;
+	int	col, i;
 
-	for (i = 0; i < length && i < columns; ++i) {
+	for (col = i = 0; i < length && col < columns; i++) {
 		if (tty_putc(string[i]) == EOF)
 			err(1, "tty_putc");
+		if (!isu8cont(string[i]))
+			col++;
 	}
-	for (; i < columns; ++i) {
+	for (; col < columns; ++col)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
-	}
-}
-
-void
-print_query(char *string, size_t length, size_t position, size_t scroll)
-{
-	size_t	i = 0;
-
-	tty_putp(restore_cursor);
-	put_line(string + scroll, length - scroll);
-
-	tty_putp(restore_cursor);
-	while (i < position - scroll) {
-		while (isu8cont(string[++i]));
-		tty_putp(cursor_right);
-	}
 }
 
 int
@@ -660,10 +654,6 @@ print_choices(int selection)
 	struct choice	*choice;
 	size_t		 j, query_length;
 	int		 c, col, i, in_esc_seq, non_printable = 0;
-
-	tty_putp(clr_eos);
-	/* Emit query line. */
-	tty_putc('\n');
 
 	query_length = strlen(query);
 	for (choice = choices.v, col = i = 0;
