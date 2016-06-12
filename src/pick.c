@@ -57,9 +57,8 @@ struct choice {
 	char	*description;
 	char	*string;
 	size_t	 length;
-	size_t	 printable_length;
-	size_t	 match_start;
-	size_t	 match_end;
+	ssize_t	 match_start;	/* inclusive match start offset */
+	ssize_t	 match_end;	/* exclusive match end offset */
 	float	 score;
 };
 
@@ -72,7 +71,7 @@ static void			 put_choice(const struct choice *);
 static const struct choice	*selected_choice(void);
 static void			 filter_choices(void);
 static void			 score(struct choice *);
-static int			 min_match(const char *, size_t, size_t *, size_t *);
+static int			 min_match(const char *, size_t, ssize_t *, ssize_t *);
 static char			*strcasechr(const char *, const char *);
 static void			 init_tty(void);
 static int			 tty_putc(int);
@@ -253,8 +252,8 @@ get_choices(void)
 		choices.v[choices.length].description = description;
 		choices.v[choices.length].printable_length =
 		    count_printable(start, stop - start);
-		choices.v[choices.length].match_start = 0;
-		choices.v[choices.length].match_end = 0;
+		choices.v[choices.length].match_start = -1;
+		choices.v[choices.length].match_end = -1;
 		choices.v[choices.length].score = 0;
 
 		start = stop + 1;
@@ -516,7 +515,8 @@ score(struct choice *choice)
 
 	if (min_match(choice->string, 0,
 		      &choice->match_start, &choice->match_end) == 0) {
-		choice->match_start = choice->match_end = choice->score = 0;
+		choice->match_start = choice->match_end = -1;
+		choice->score = 0;
 		return;
 	}
 
@@ -531,7 +531,7 @@ score(struct choice *choice)
 }
 
 int
-min_match(const char *string, size_t offset, size_t *start, size_t *end)
+min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 {
 	char	*s, *e, *q;
 
@@ -551,7 +551,7 @@ min_match(const char *string, size_t offset, size_t *start, size_t *end)
 	*end = e - string;
 	/* Less than or equal is used in order to obtain the left-most match. */
 	if (min_match(string, offset + 1, start, end)
-	    && (size_t)(e - s) <= *end - *start) {
+	    && (ssize_t)(e - s) <= *end - *start) {
 		*start = s - string;
 		*end = e - string;
 	}
