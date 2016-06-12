@@ -28,7 +28,6 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define tty_putp(capability) do { \
 	if (tputs(capability, 1, tty_putc) == ERR) \
 		errx(1, #capability ": unknown terminfo capability"); \
@@ -66,7 +65,6 @@ __dead static void		 usage(void);
 __dead static void		 version(void);
 static void			 get_choices(void);
 static char			*eager_strpbrk(const char *, const char *);
-static size_t			 count_printable(char *, size_t length);
 static void			 put_choice(const struct choice *);
 static const struct choice	*selected_choice(void);
 static void			 filter_choices(void);
@@ -250,8 +248,6 @@ get_choices(void)
 		choices.v[choices.length].length = stop - start;
 		choices.v[choices.length].string = start;
 		choices.v[choices.length].description = description;
-		choices.v[choices.length].printable_length =
-		    count_printable(start, stop - start);
 		choices.v[choices.length].match_start = -1;
 		choices.v[choices.length].match_end = -1;
 		choices.v[choices.length].score = 0;
@@ -279,25 +275,6 @@ eager_strpbrk(const char *string, const char *separators)
 		ptr = tmp_ptr++;
 
 	return ptr;
-}
-
-size_t
-count_printable(char *str, size_t length)
-{
-	size_t	i;
-	int	in_esc_seq = 0, printable = 0;
-
-	for (i = 0; i < length; i++) {
-		if (in_esc_seq) {
-			in_esc_seq = (str[i - 1] == ESCAPE && str[i] == '[') ||
-			    str[i] < '@' || str[i] > '~';
-		} else {
-			in_esc_seq = str[i] == ESCAPE;
-			if (!in_esc_seq)
-				printable++;
-		}
-	}
-	return printable;
 }
 
 void
@@ -681,8 +658,8 @@ int
 print_choices(int selection)
 {
 	struct choice	*choice;
-	size_t		 query_length;
-	int		 col, i, j, k;
+	size_t		 j, query_length;
+	int		 c, col, i, in_esc_seq, non_printable = 0;
 
 	tty_putp(clr_eos);
 	/* Emit query line. */
@@ -697,38 +674,50 @@ print_choices(int selection)
 		if (i == selection)
 			tty_putp(enter_standout_mode);
 
-		for (col = j = 0;
-		     j < (ssize_t)choice->match_start && col < columns;
-		     col += !isu8cont(choice->string[j]), j++)
-			if (tty_putc(choice->string[j]) == EOF)
-				err(1, "tty_putc");
+		for (col = j = in_esc_seq = non_printable = 0;
+		    j < choice->length && col < columns;
+		    j++) {
+			if (j == (size_t)choice->match_start)
+				tty_putp(enter_underline_mode);
 
-		tty_putp(enter_underline_mode);
-
-		for (;
-		     j < (ssize_t)choice->match_end && col < columns;
-		     col += !isu8cont(choice->string[j]), j++)
-			if (tty_putc(choice->string[j]) == EOF)
-				err(1, "tty_putc");
-
-		tty_putp(exit_underline_mode);
-
-		for (;
-		     j < (ssize_t)choice->length && col < columns;
-		     col += !isu8cont(choice->string[j]), j++) {
-			/* A null character will be present before the
-			 * terminating null character if descriptions is
-			 * enabled. */
-			if (choice->string[j] == '\0') {
-				if (tty_putc(' ') == EOF)
-					err(1, "tty_putc");
-			} else if (tty_putc(choice->string[j]) == EOF) {
-				err(1, "tty_putc");
+			/*
+			 * Count the number of outputted ANSI escape sequences
+			 * in order to adjust the column count since they do not
+			 * occupy any screen real-estate.
+			 */
+			if (in_esc_seq) {
+				non_printable++;
+				if (choice->string[j] >= '@'
+				    && choice->string[j] <= '~')
+					in_esc_seq = 0;
+			} else if (j > 0 && choice->string[j - 1] == ESCAPE
+				    && choice->string[j] == '[') {
+				in_esc_seq = 1;
+				non_printable = 2;
 			}
-		}
 
-		for (k = MAX(columns - choice->printable_length +
-			    (choice->length - col), 0); k > 0; k--)
+			c = choice->string[j];
+			switch (c) {
+			case '\0':
+				/*
+				 * A null character will be present prior the
+				 * terminating null character if descriptions is
+				 * enabled.
+				 */
+				c = ' ';
+				col++;
+				break;
+			default:
+				if (!isu8cont(c))
+					col++;
+			}
+			if (tty_putc(c) == EOF)
+				err(1, "tty_putc");
+
+			if (j + 1 == (size_t)choice->match_end)
+				tty_putp(exit_underline_mode);
+		}
+		for (col -= non_printable; col < columns; col++)
 			if (tty_putc(' ') == EOF)
 				err(1, "tty_putc");
 
