@@ -75,7 +75,7 @@ static void			 init_tty(void);
 static int			 tty_putc(int);
 static void			 handle_sigint(int);
 static void			 restore_tty(void);
-static void			 put_line(char *, int);
+static void			 print_line(const char *, size_t, int, ssize_t, ssize_t);
 static int			 print_choices(int);
 static int			 get_key(char *, size_t, size_t *);
 static int			 tty_getc(void);
@@ -304,7 +304,7 @@ selected_choice(void)
 			scroll = cursor_position - columns + 1;
 		if (cursor_position < scroll)
 			scroll = cursor_position;
-		put_line(&query[scroll], query_length - scroll);
+		print_line(&query[scroll], query_length - scroll, 0, -1, -1);
 		visible_choices_count = print_choices(selection);
 		if ((size_t)visible_choices_count < choices.length
 		    && visible_choices_count < lines - 1) {
@@ -633,87 +633,81 @@ restore_tty(void)
 }
 
 void
-put_line(char *string, int length)
+print_line(const char *string, size_t length, int standout,
+    ssize_t underline_start, ssize_t underline_end)
 {
-	int	col, i;
+	size_t	i;
+	int	c, col;
+	int	in_esc_seq = 0;
+	int	non_printable = 0;
+
+	if (standout)
+		tty_putp(enter_standout_mode);
 
 	for (col = i = 0; i < length && col < columns; i++) {
-		if (tty_putc(string[i]) == EOF)
-			err(1, "tty_putc");
-		if (!isu8cont(string[i]))
+		if (i == (size_t)underline_start)
+			tty_putp(enter_underline_mode);
+
+		/*
+		 * Count the number of outputted ANSI escape sequences
+		 * in order to adjust the column count since they do not
+		 * occupy any screen real-estate.
+		 */
+		if (in_esc_seq) {
+			non_printable++;
+			if (string[i] >= '@' && string[i] <= '~')
+				in_esc_seq = 0;
+		} else if (i > 0 && string[i - 1] == ESCAPE
+		    && string[i] == '[') {
+			in_esc_seq = 1;
+			non_printable = 2;
+		}
+
+		c = string[i];
+		switch (c) {
+		case '\0':
+			/*
+			 * A null character will be present prior the
+			 * terminating null character if descriptions is
+			 * enabled.
+			 */
+			c = ' ';
 			col++;
+			break;
+		default:
+			if (!isu8cont(c))
+				col++;
+		}
+		if (tty_putc(c) == EOF)
+			err(1, "tty_putc");
+
+		if (i + 1 == (size_t)underline_end)
+			tty_putp(exit_underline_mode);
 	}
-	for (; col < columns; ++col)
+	for (col -= non_printable; col < columns; col++)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
+
+	if (standout)
+		tty_putp(exit_standout_mode);
+
 }
 
 int
 print_choices(int selection)
 {
 	struct choice	*choice;
-	size_t		 j, query_length;
-	int		 c, col, i, in_esc_seq, non_printable = 0;
+	size_t		 query_length;
+	int		 i;
 
 	query_length = strlen(query);
-	for (choice = choices.v, col = i = 0;
+	for (choice = choices.v, i = 0;
 	     i < (ssize_t)choices.length
 	     && i < lines - 1
 	     && (query_length == 0 || choice->score > 0);
-	     choice++, i++) {
-		if (i == selection)
-			tty_putp(enter_standout_mode);
-
-		for (col = j = in_esc_seq = non_printable = 0;
-		    j < choice->length && col < columns;
-		    j++) {
-			if (j == (size_t)choice->match_start)
-				tty_putp(enter_underline_mode);
-
-			/*
-			 * Count the number of outputted ANSI escape sequences
-			 * in order to adjust the column count since they do not
-			 * occupy any screen real-estate.
-			 */
-			if (in_esc_seq) {
-				non_printable++;
-				if (choice->string[j] >= '@'
-				    && choice->string[j] <= '~')
-					in_esc_seq = 0;
-			} else if (j > 0 && choice->string[j - 1] == ESCAPE
-				    && choice->string[j] == '[') {
-				in_esc_seq = 1;
-				non_printable = 2;
-			}
-
-			c = choice->string[j];
-			switch (c) {
-			case '\0':
-				/*
-				 * A null character will be present prior the
-				 * terminating null character if descriptions is
-				 * enabled.
-				 */
-				c = ' ';
-				col++;
-				break;
-			default:
-				if (!isu8cont(c))
-					col++;
-			}
-			if (tty_putc(c) == EOF)
-				err(1, "tty_putc");
-
-			if (j + 1 == (size_t)choice->match_end)
-				tty_putp(exit_underline_mode);
-		}
-		for (col -= non_printable; col < columns; col++)
-			if (tty_putc(' ') == EOF)
-				err(1, "tty_putc");
-
-		if (i == selection)
-			tty_putp(exit_standout_mode);
-	}
+	     choice++, i++)
+		print_line(choice->string, choice->length, i == selection,
+		    choice->match_start, choice->match_end);
 
 	return i;
 }
