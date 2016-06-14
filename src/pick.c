@@ -266,7 +266,8 @@ get_choices(void)
 char *
 eager_strpbrk(const char *string, const char *separators)
 {
-	char	*ptr = NULL, *tmp_ptr;
+	char	*tmp_ptr;
+	char	*ptr = NULL;
 
 	for (tmp_ptr = strpbrk(string, separators);
 	     tmp_ptr;
@@ -288,10 +289,11 @@ put_choice(const struct choice *choice)
 const struct choice *
 selected_choice(void)
 {
-	size_t		cursor_position, i, length, query_length, scroll = 0;
-	char		buf[6];
-	int		key, selection = 0, visible_choices_count;
-	int		word_position;
+	size_t	cursor_position, i, length, query_length;
+	size_t	scroll = 0;
+	char	buf[6];
+	int	key, visible_choices_count, word_position;
+	int	selection = 0;
 
 	cursor_position = query_length = strlen(query);
 
