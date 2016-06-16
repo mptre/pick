@@ -29,7 +29,6 @@ apt-get install pick
 ### Mac OS X via Homebrew
 
 ```sh
-brew tap thoughtbot/formulae
 brew install pick
 ```
 
