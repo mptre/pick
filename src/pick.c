@@ -65,7 +65,6 @@ __dead static void		 usage(void);
 __dead static void		 version(void);
 static void			 get_choices(void);
 static char			*eager_strpbrk(const char *, const char *);
-static void			 put_choice(const struct choice *);
 static const struct choice	*selected_choice(void);
 static void			 filter_choices(void);
 static void			 score(struct choice *);
@@ -88,7 +87,6 @@ static FILE		*tty_in;
 static FILE		*tty_out;
 static char		*query;
 static int		 descriptions;
-static int		 output_description;
 static int		 use_alternate_screen = 1;
 static int		 sort = 1;
 static size_t		 query_size;
@@ -109,6 +107,7 @@ main(int argc, char **argv)
 {
 	const struct choice	*choice;
 	int			 option;
+	int			 output_description = 0;
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
@@ -170,8 +169,11 @@ main(int argc, char **argv)
 
 	choice = selected_choice();
 	restore_tty();
-	if (choice != NULL)
-		put_choice(choice);
+	if (choice != NULL) {
+		printf("%s\n", choice->string);
+		if (output_description)
+			printf("%s\n", choice->description);
+	}
 
 	free(choices.v);
 	free(input.string);
@@ -275,15 +277,6 @@ eager_strpbrk(const char *string, const char *separators)
 		ptr = tmp_ptr++;
 
 	return ptr;
-}
-
-void
-put_choice(const struct choice *choice)
-{
-	puts(choice->string);
-
-	if (output_description)
-		puts(choice->description);
 }
 
 const struct choice *
