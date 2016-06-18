@@ -2,6 +2,7 @@
 
 field() {
   awk '
+  /^output:/ { sub(/\\n/, "\n"); }
   /^'$1':/ { sub(/^[^:]+: */, ""); print; found=1 }
   END { exit !found }'
 }
