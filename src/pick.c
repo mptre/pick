@@ -86,24 +86,23 @@ static int			 tty_putc(int);
 __dead static void		 usage(void);
 __dead static void		 version(void);
 
-static FILE		*tty_in;
-static FILE		*tty_out;
-static char		*query;
-static int		 descriptions;
-static int		 use_alternate_screen = 1;
-static int		 sort = 1;
-static size_t		 query_size;
 static struct termios	 original_attributes;
 static struct {
 	size_t size;
 	size_t length;
 	struct choice *v;
-} choices;
+}			 choices;
 static struct {
 	size_t	size;
 	size_t	length;
 	char	*string;
-} input;
+}			 input;
+static FILE		*tty_in, *tty_out;
+static char		*query;
+static size_t		 query_size;
+static int		 descriptions;
+static int		 sort = 1;
+static int		 use_alternate_screen = 1;
 
 int
 main(int argc, char **argv)
