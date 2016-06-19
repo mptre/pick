@@ -62,27 +62,29 @@ struct choice {
 	float	 score;
 };
 
-__dead static void		 usage(void);
-__dead static void		 version(void);
-static void			 get_choices(void);
-static char			*eager_strpbrk(const char *, const char *);
-static const struct choice	*selected_choice(void);
-static void			 filter_choices(void);
-static void			 score(struct choice *);
-static int			 min_match(const char *, size_t, ssize_t *, ssize_t *);
-static char			*strcasechr(const char *, const char *);
-static void			 init_tty(void);
-static int			 tty_putc(int);
-static void			 handle_sigint(int);
-static void			 restore_tty(void);
-static void			 print_line(const char *, size_t, int, ssize_t, ssize_t);
-static int			 print_choices(int);
-static int			 get_key(char *, size_t, size_t *);
-static int			 tty_getc(void);
-static void			 delete_between(char *, size_t, size_t, size_t);
 static int			 choicecmp(const void *, const void *);
+static void			 delete_between(char *, size_t, size_t, size_t);
+static char			*eager_strpbrk(const char *, const char *);
+static void			 filter_choices(void);
+static void			 get_choices(void);
+static int			 get_key(char *, size_t, size_t *);
+static void			 handle_sigint(int);
+static void			 init_tty(void);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
+static int			 min_match(const char *, size_t, ssize_t *,
+				    ssize_t *);
+static int			 print_choices(int);
+static void			 print_line(const char *, size_t, int, ssize_t,
+				    ssize_t);
+static void			 restore_tty(void);
+static void			 score(struct choice *);
+static const struct choice	*selected_choice(void);
+static char			*strcasechr(const char *, const char *);
+static int			 tty_getc(void);
+static int			 tty_putc(int);
+__dead static void		 usage(void);
+__dead static void		 version(void);
 
 static FILE		*tty_in;
 static FILE		*tty_out;
