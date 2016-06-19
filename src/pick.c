@@ -687,7 +687,6 @@ print_line(const char *string, size_t length, int standout,
 
 	if (standout)
 		tty_putp(exit_standout_mode);
-
 }
 
 int
