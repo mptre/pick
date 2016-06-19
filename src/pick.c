@@ -586,6 +586,8 @@ init_tty(void)
 	tcgetattr(fileno(tty_in), &original_attributes);
 	new_attributes = original_attributes;
 	new_attributes.c_lflag &= ~(ICANON | ECHO);
+	/* Don't expand tabs to spaces. */
+	new_attributes.c_oflag &= ~(OXTABS);
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if ((tty_out = fopen("/dev/tty", "w")) == NULL)
@@ -639,7 +641,7 @@ print_line(const char *string, size_t length, int standout,
     ssize_t underline_start, ssize_t underline_end)
 {
 	size_t	i;
-	int	c, col;
+	int	c, col, tabwidth;
 	int	in_esc_seq = 0;
 	int	non_printable = 0;
 
@@ -666,22 +668,25 @@ print_line(const char *string, size_t length, int standout,
 		}
 
 		c = string[i];
-		switch (c) {
-		case '\0':
+		if (c == '\t') {
+			/* Ceil column count to multiple of 8. */
+			col += tabwidth = 8 - (col & 7);
+			while (tabwidth-- > 0)
+				if (tty_putc(' ') == ERR)
+					err(1, "tty_putc");
+		} else {
 			/*
 			 * A null character will be present prior the
 			 * terminating null character if descriptions is
 			 * enabled.
 			 */
-			c = ' ';
-			col++;
-			break;
-		default:
+			if (c == '\0')
+				c = ' ';
 			if (!isu8cont(c))
 				col++;
+			if (tty_putc(c) == EOF)
+				err(1, "tty_putc");
 		}
-		if (tty_putc(c) == EOF)
-			err(1, "tty_putc");
 
 		if (i + 1 == (size_t)underline_end)
 			tty_putp(exit_underline_mode);
