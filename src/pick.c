@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <err.h>
 #include <locale.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -471,13 +472,35 @@ selected_choice(void)
 	}
 }
 
+/*
+ * Filter choices using the current query while there is no new user input
+ * available.
+ */
 void
 filter_choices(void)
 {
-	int	i;
+	struct pollfd	pfd;
+	size_t		i;
+	int		ready;
 
-	for (i = 0; i < (ssize_t)choices.length; ++i)
+	for (i = 0; i < choices.length; i++) {
 		score(&choices.v[i]);
+
+		/*
+		 * Regularly check if there is any new user input available. If
+		 * true, abort filtering since the currently used query is
+		 * outdated. This improves the performance when the cardinality
+		 * of the choices is large.
+		 */
+		if (i % 50 == 0) {
+			pfd.fd = fileno(tty_in);
+			pfd.events = POLLIN;
+			if ((ready = poll(&pfd, 1, 0)) == -1)
+				err(1, "poll");
+			else if (ready == 1 && pfd.revents & (POLLIN | POLLHUP))
+				break;
+		}
+	}
 
 	qsort(choices.v, choices.length, sizeof(struct choice), choicecmp);
 }
