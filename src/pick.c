@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#include <sys/ttydefaults.h>
-
 #include <ctype.h>
 #include <err.h>
 #include <locale.h>
@@ -717,48 +715,43 @@ int
 get_key(char *buf, size_t size, size_t *nread)
 {
 	static struct {
-		union {
-			const char *s;
-			char c;
-		} input;
+		const char *s;
 		size_t length;
 		int key;
 	} keys[] = {
-		{ { (char *)10 },		1,	ENTER },
-		{ { (char *)127 },		1,	BACKSPACE },
-		{ { (char *)CTRL('A') },	1,	CTRL_A },
-		{ { (char *)CTRL('B') },	1,	LEFT },
-		{ { (char *)CTRL('D') },	1,	DEL },
-		{ { (char *)CTRL('E') },	1,	CTRL_E },
-		{ { (char *)CTRL('F') },	1,	RIGHT },
-		{ { (char *)CTRL('K') },	1,	CTRL_K },
-		{ { (char *)CTRL('N') },	1,	DOWN },
-		{ { (char *)CTRL('P') },	1,	UP },
-		{ { (char *)CTRL('U') },	1,	CTRL_U },
-		{ { (char *)CTRL('W') },	1,	CTRL_W },
-		{ { "\033\n" },			2,	ALT_ENTER },
-		{ { "\033[A" },			3,	UP },
-		{ { "\033OA" },			3,	UP },
-		{ { "\033[B" },			3,	DOWN },
-		{ { "\033OB" },			3,	DOWN },
-		{ { "\033[C" },			3,	RIGHT },
-		{ { "\033OC" },			3,	RIGHT },
-		{ { "\033[D" },			3,	LEFT },
-		{ { "\033OD" },			3,	LEFT },
-		{ { "\033[3~" },		4,	DEL },
-		{ { "\033O3~" },		4,	DEL },
-		{ { NULL },			0,	0 },
+		{ "\n",		1,	ENTER },
+		{ "\177",	1,	BACKSPACE },
+		{ "\001",	1,	CTRL_A },
+		{ "\002",	1,	LEFT },
+		{ "\004",	1,	DEL },
+		{ "\005",	1,	CTRL_E },
+		{ "\006",	1,	RIGHT },
+		{ "\013",	1,	CTRL_K },
+		{ "\016",	1,	DOWN },
+		{ "\020",	1,	UP },
+		{ "\025",	1,	CTRL_U },
+		{ "\027",	1,	CTRL_W },
+		{ "\033\n",	2,	ALT_ENTER },
+		{ "\033[A",	3,	UP },
+		{ "\033OA",	3,	UP },
+		{ "\033[B",	3,	DOWN },
+		{ "\033OB",	3,	DOWN },
+		{ "\033[C",	3,	RIGHT },
+		{ "\033OC",	3,	RIGHT },
+		{ "\033[D",	3,	LEFT },
+		{ "\033OD",	3,	LEFT },
+		{ "\033[3~",	4,	DEL },
+		{ "\033O3~",	4,	DEL },
+		{ NULL,		0,	0 },
 	};
-	const char	*key;
 	int		 i;
 
 	*nread = 0;
 getc:
 	buf[(*nread)++] = tty_getc();
 	size--;
-	for (i = 0; keys[i].input.s; i++) {
-		key = keys[i].length > 1 ? keys[i].input.s : &keys[i].input.c;
-		if (*nread > keys[i].length || strncmp(buf, key, *nread))
+	for (i = 0; keys[i].s != NULL; i++) {
+		if (*nread > keys[i].length || strncmp(buf, keys[i].s, *nread))
 			continue;
 
 		if (*nread == keys[i].length)
