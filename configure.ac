@@ -3,7 +3,7 @@ AC_INIT([pick], [1.4.0], [hello@thoughtbot.com])
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
-AC_CHECK_HEADERS([fcntl.h locale.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([locale.h stdlib.h string.h unistd.h])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
