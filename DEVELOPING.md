@@ -51,3 +51,11 @@ Release
 
 6. [Announce the release on
    GitHub](https://github.com/thoughtbot/pick/releases/new).
+
+7. Contact package maintainers:
+
+* Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
+* Calle Erlandsson <calle@thoughtbot.com> (Arch Linux)
+* Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
+* Fredrik Fornwall <fredrik@fornwall.net> (Homebrew)
+* Neel Chauhan <neel@neelc.org> (FreeBSD)
