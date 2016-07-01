@@ -74,7 +74,7 @@ static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static int			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
-static int			 print_choices(int);
+static int			 print_choices(int, int);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static void			 restore_tty(void);
@@ -287,8 +287,9 @@ selected_choice(void)
 	size_t	cursor_position, i, length, query_length;
 	size_t	scroll = 0;
 	char	buf[6];
-	int	key, visible_choices_count, word_position;
+	int	choices_count, key, word_position;
 	int	selection = 0;
+	int	yscroll = 0;
 
 	cursor_position = query_length = strlen(query);
 
@@ -302,9 +303,9 @@ selected_choice(void)
 		if (cursor_position < scroll)
 			scroll = cursor_position;
 		print_line(&query[scroll], query_length - scroll, 0, -1, -1);
-		visible_choices_count = print_choices(selection);
-		if ((size_t)visible_choices_count < choices.length
-		    && visible_choices_count < lines - 1) {
+		choices_count = print_choices(yscroll, selection);
+		if ((size_t)choices_count < choices.length
+		    && choices_count < lines - 1) {
 			/*
 			 * The clr_eos capability clears the screen from the
 			 * current column to the end. If the last visible choice
@@ -329,7 +330,7 @@ selected_choice(void)
 
 		switch (key) {
 		case ENTER:
-			if (visible_choices_count > 0) {
+			if (choices_count > 0) {
 				if (selection >= 0
 				    && selection < (ssize_t)choices.length)
 					return &choices.v[selection];
@@ -425,13 +426,19 @@ selected_choice(void)
 			cursor_position = query_length;
 			break;
 		case DOWN:
-			if (selection < visible_choices_count - 1)
-				++selection;
-			break;
+			if (selection < choices_count - 1) {
+				selection++;
+				if (selection - yscroll == lines - 1)
+					yscroll++;
+			}
+			continue; /* by-pass yscroll reset */
 		case UP:
-			if (selection > 0)
-				--selection;
-			break;
+			if (selection > 0) {
+				selection--;
+				if (selection - yscroll < 0)
+					yscroll--;
+			}
+			continue; /* by-pass yscroll reset */
 		case LEFT:
 			while (cursor_position > 0
 			    && isu8cont(query[--cursor_position]));
@@ -463,6 +470,7 @@ selected_choice(void)
 			filter_choices();
 			selection = 0;
 		}
+		yscroll = 0;
 	}
 }
 
@@ -694,21 +702,28 @@ print_line(const char *string, size_t length, int standout,
 		tty_putp(exit_standout_mode);
 }
 
+/*
+ * Output as many choices as possible starting from offset and return the number
+ * of choices with a positive score. If the query is empty, all choices are
+ * considered having a positive score.
+ */
 int
-print_choices(int selection)
+print_choices(int offset, int selection)
 {
 	struct choice	*choice;
 	size_t		 query_length;
 	int		 i;
 
 	query_length = strlen(query);
-	for (choice = choices.v, i = 0;
-	     i < (ssize_t)choices.length
-	     && i < lines - 1
+	for (i = offset, choice = &choices.v[i];
+	     (size_t)i < choices.length
 	     && (query_length == 0 || choice->score > 0);
-	     choice++, i++)
-		print_line(choice->string, choice->length, i == selection,
-		    choice->match_start, choice->match_end);
+	     choice++, i++) {
+		if (i - offset < lines - 1)
+			print_line(choice->string, choice->length,
+			    i == selection, choice->match_start,
+			    choice->match_end);
+	}
 
 	return i;
 }
