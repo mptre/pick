@@ -97,6 +97,7 @@ sighandler(int sig)
 void
 child(int master, int slave)
 {
+	struct winsize ws;
 	int fd, e;
 
 	close(master);
@@ -114,6 +115,12 @@ child(int master, int slave)
 
 	/* Connect the slave as the controlling tty. */
 	if (ioctl(slave, TIOCSCTTY, NULL) < 0)
+		err(1, "ioctl");
+
+	/* Set window size to known dimensions, necessary in order to deduce
+	 * when scrolling should occur. */
+	ws.ws_col = 80, ws.ws_row = 24;
+	if (ioctl(slave, TIOCSWINSZ, &ws) < 0)
 		err(1, "ioctl");
 
 	/* Enable malloc.conf(5) options on OpenBSD which will abort the pick
