@@ -285,7 +285,7 @@ const struct choice *
 selected_choice(void)
 {
 	size_t	cursor_position, i, length, query_length;
-	size_t	scroll = 0;
+	size_t	xscroll = 0;
 	char	buf[6];
 	int	choices_count, key, word_position;
 	int	selection = 0;
@@ -298,11 +298,11 @@ selected_choice(void)
 	for (;;) {
 		tty_putp(cursor_invisible);
 		tty_putp(restore_cursor);
-		if (cursor_position >= scroll + columns)
-			scroll = cursor_position - columns + 1;
-		if (cursor_position < scroll)
-			scroll = cursor_position;
-		print_line(&query[scroll], query_length - scroll, 0, -1, -1);
+		if (cursor_position >= xscroll + columns)
+			xscroll = cursor_position - columns + 1;
+		if (cursor_position < xscroll)
+			xscroll = cursor_position;
+		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
 		choices_count = print_choices(yscroll, selection);
 		if ((size_t)choices_count < choices.length
 		    && choices_count < lines - 1) {
