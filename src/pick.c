@@ -481,7 +481,7 @@ filter_choices(void)
 {
 	struct pollfd	pfd;
 	size_t		i;
-	int		ready;
+	int		nready;
 
 	for (i = 0; i < choices.length; i++) {
 		score(&choices.v[i]);
@@ -495,9 +495,9 @@ filter_choices(void)
 		if (i % 50 == 0) {
 			pfd.fd = fileno(tty_in);
 			pfd.events = POLLIN;
-			if ((ready = poll(&pfd, 1, 0)) == -1)
+			if ((nready = poll(&pfd, 1, 0)) == -1)
 				err(1, "poll");
-			else if (ready == 1 && pfd.revents & (POLLIN | POLLHUP))
+			if (nready == 1 && pfd.revents & (POLLIN | POLLHUP))
 				break;
 		}
 	}
