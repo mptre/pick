@@ -356,7 +356,7 @@ selected_choice(void)
 				cursor_position -= length;
 				query_length -= length;
 				filter_choices();
-				selection = 0;
+				selection = yscroll = 0;
 			}
 
 			break;
@@ -372,7 +372,7 @@ selected_choice(void)
 				    cursor_position + length);
 				query_length -= length;
 				filter_choices();
-				selection = 0;
+				selection = yscroll = 0;
 			}
 
 			break;
@@ -385,7 +385,7 @@ selected_choice(void)
 			query_length -= cursor_position;
 			cursor_position = 0;
 			filter_choices();
-			selection = 0;
+			selection = yscroll = 0;
 			break;
 		case CTRL_K:
 			delete_between(
@@ -395,7 +395,7 @@ selected_choice(void)
 			    query_length);
 			query_length = cursor_position;
 			filter_choices();
-			selection = 0;
+			selection = yscroll = 0;
 			break;
 		case CTRL_W:
 			if (cursor_position == 0)
@@ -417,7 +417,7 @@ selected_choice(void)
 			query_length -= cursor_position - word_position;
 			cursor_position = word_position;
 			filter_choices();
-			selection = 0;
+			selection = yscroll = 0;
 			break;
 		case CTRL_A:
 			cursor_position = 0;
@@ -431,14 +431,14 @@ selected_choice(void)
 				if (selection - yscroll == lines - 1)
 					yscroll++;
 			}
-			continue; /* by-pass yscroll reset */
+			break;
 		case UP:
 			if (selection > 0) {
 				selection--;
 				if (selection - yscroll < 0)
 					yscroll--;
 			}
-			continue; /* by-pass yscroll reset */
+			break;
 		case LEFT:
 			while (cursor_position > 0
 			    && isu8cont(query[--cursor_position]));
@@ -468,9 +468,8 @@ selected_choice(void)
 			query_length += length;
 			query[query_length] = '\0';
 			filter_choices();
-			selection = 0;
+			selection = yscroll = 0;
 		}
-		yscroll = 0;
 	}
 }
 
