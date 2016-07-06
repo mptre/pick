@@ -1,5 +1,3 @@
-#!/bin/sh
-
 field() {
   awk '
   /^output:/ { sub(/\\n/, "\n"); }
@@ -22,7 +20,14 @@ pick() {
   $DIR/test -i "$input" -- $args <"$in"
 }
 
+usage() {
+  echo "usage: sh tests/test.sh file ..." 1>&2
+  exit 1
+}
+
 main() {
+  [ $# -eq 0 ] && usage
+
   DIR=$(dirname "$0")
   PATH="${DIR}/../src:${PATH}"
 
@@ -32,7 +37,6 @@ main() {
   err=$(mktemp -t pick.XXXXXX)
   trap 'rm "$in" "$exp" "$act" "$err"' EXIT
 
-  [ $# -eq 0 ] && set $(find "$DIR" -name '*.t')
   for a
   do
     e=$(field exit <"$a" || echo 0)
