@@ -32,7 +32,7 @@ main() {
   err=$(mktemp -t pick.XXXXXX)
   trap 'rm "$in" "$exp" "$act" "$err"' EXIT
 
-  [ $# -eq 0 ] && set $(find "$DIR" -name '*.in')
+  [ $# -eq 0 ] && set $(find "$DIR" -name '*.t')
   for a
   do
     e=$(field exit <"$a" || echo 0)
