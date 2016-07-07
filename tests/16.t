@@ -1,5 +1,5 @@
 description: case insensitive
-input: a\n
+input: a \\n
 output: A
 
 A

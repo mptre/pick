@@ -1,5 +1,5 @@
 description: UTF-8 false positive
-input: áá\n
+input: áá \\n
 output: háh háh
 
 íš á

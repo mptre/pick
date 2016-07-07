@@ -58,31 +58,17 @@ parseinput(const char *s)
 {
 	int c;
 
-	for (; *s; s++) {
-		c = *s;
-		switch (c) {
-		case '^':
-			if (!*++s)
-				return;
-			c = 0x40^*s;
-			break;
-		case 0x5C: /* \ */
-			if (!*++s)
-				return;
-			switch (*s) {
-			case 'b':
-				c = 0x7F;
-				break;
-			case 'e':
-				c = 0x1B;
-				break;
+	for (; (c = *s) != '\0'; s++) {
+		if (c == '\\') {
+			switch (*++s) {
 			case 'n':
-				c = 0x0A;
+				c = '\n';
 				break;
 			default:
-				errx(1, "\\%c: unknown escape sequence", *s);
+				c = *s;
 			}
-			break;
+		} else if (c == ' ') {
+			continue;
 		}
 		input.v[input.nmemb++] = c;
 	}

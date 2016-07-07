@@ -1,5 +1,5 @@
 description: select the first choice
-input: \n
+input: \\n
 output: 1
 
 1

@@ -1,5 +1,5 @@
 description: with sorting enabled
-input: A\n
+input: A \\n
 output: A
 
 BBB

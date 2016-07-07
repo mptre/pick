@@ -1,5 +1,5 @@
 description: changing the query resets vertical scroll
-input: ^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N0\n
+input: \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 0 \\n
 output: 01
 
 01

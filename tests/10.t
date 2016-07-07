@@ -1,5 +1,5 @@
 description: UTF-8 backspace
-input: ö\b\n
+input: ö \177 \\n
 output: å
 
 å

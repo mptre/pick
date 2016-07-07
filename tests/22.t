@@ -1,5 +1,5 @@
 description: vertical scroll down
-input: ^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N^N\n
+input: \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \\n
 output: 25
 
 01

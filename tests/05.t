@@ -1,5 +1,5 @@
 description: down arrow
-input: \e[B\n
+input: \033[B \\n
 output: 2
 
 1

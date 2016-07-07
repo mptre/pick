@@ -1,5 +1,5 @@
 description: backspace
-input: ab\bc\n
+input: ab \177 c \\n
 output: ac
 
 ab

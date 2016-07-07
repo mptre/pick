@@ -1,6 +1,6 @@
 description: with sorting disabled
 arguments: -S
-input: A\n
+input: A \\n
 output: ABC
 
 BBB

@@ -1,5 +1,5 @@
 description: alt enter
-input: aa\e\n
+input: aa \033\\n
 output: aa
 
 aaaa
