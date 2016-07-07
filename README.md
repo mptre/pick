@@ -99,7 +99,7 @@ See the `pick(1)` man page for detailed usage instructions and more examples.
 
 ## Copyright
 
-Copyright (c) 2016 Calle Erlandsson & thoughtbot.
+Copyright (c) 2016 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 
 Lead by Calle Erlandsson & thoughtbot's
 [Stockholm software design and development team][team].
