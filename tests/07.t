@@ -1,9 +1,10 @@
 description: with sorting disabled
-arguments: -S
-input: A \\n
-output: ABC
-
+args: -S
+keys: A \\n
+stdin:
 BBB
 ABC
 AB
 A
+stdout:
+ABC

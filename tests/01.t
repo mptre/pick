@@ -1,8 +1,9 @@
 description: select the first choice
-input: \\n
-output: 1
-
+keys: \\n
+stdin:
 1
 2
 3
 4
+stdout:
+1

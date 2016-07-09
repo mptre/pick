@@ -1,7 +1,8 @@
 description: UTF-8 backspace
-input: ö \177 \\n
-output: å
-
+keys: ö \177 \\n
+stdin:
 å
 ä
 ö
+stdout:
+å

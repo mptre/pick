@@ -1,5 +1,6 @@
 description: alt enter
-input: aa \033\\n
-output: aa
-
+keys: aa \033\\n
+stdin:
 aaaa
+stdout:
+aa

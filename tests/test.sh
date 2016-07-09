@@ -1,23 +1,7 @@
-field() {
-  awk '
-  /^output:/ { sub(/\\n/, "\n"); }
-  /^'$1':/ { sub(/^[^:]+: */, ""); print; found=1 }
-  END { exit !found }'
-}
-
-input() {
-  awk '
-  /^$/ { input = 1; next }
-  input { print $0 }
-  '
-}
-
-pick() {
-  args=$(field arguments <"$1")
-  input=$(field input <"$1")
-
-  input <"$1" >"$in"
-  $DIR/pick-test -i "$(printf "$input")" -- $args <"$in"
+mktmp() {
+  f=$(mktemp -t pick.XXXXXX)
+  trap "rm "$f"" EXIT
+  echo "$f"
 }
 
 usage() {
@@ -25,33 +9,38 @@ usage() {
   exit 1
 }
 
-main() {
-  [ $# -eq 0 ] && usage
+[ $# -eq 0 ] && usage
 
-  DIR=$(dirname "$0")
-  PATH="${DIR}/../src:${PATH}"
+fail=
 
-  in=$(mktemp -t pick.XXXXXX)
-  exp=$(mktemp -t pick.XXXXXX)
-  act=$(mktemp -t pick.XXXXXX)
-  err=$(mktemp -t pick.XXXXXX)
-  trap 'rm "$in" "$exp" "$act" "$err"' EXIT
+stdout=$(mktmp)
+stdin=$(mktmp)
+out=$(mktmp)
 
-  for a
-  do
-    e=$(field exit <"$a" || echo 0)
+for testcase; do
+  exit=0
 
-    field output <"$a" >"$exp"
-    pick "$a" >"$act" 2>"$err"
-    if [ $? -ne 0 -a $e -eq 0 ]
-    then
-      echo "${a}: wrong exit code" 1>&2
-      cat "$err"
-      exit 1
+  while IFS=: read -r key val; do
+    if [ -n "$val" ]; then
+      eval "$key='$val'"
+    else
+      case "$key" in
+      stdin)  tmpfile=$stdin; >$tmpfile ;;
+      stdout) tmpfile=$stdout; >$tmpfile ;;
+      *)      echo "$key" >>$tmpfile ;;
+      esac
     fi
-    ! diff -c "$exp" "$act" && { cat "$err"; exit 1; }
-  done
-  return 0
-}
+  done <$testcase
 
-main $@
+  env PATH="./src:${PATH}" tests/pick-test \
+    -i "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
+  if [ "$exit" -ne "$e" ]; then
+    echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2
+    fail=1
+  fi
+  if [ -s "$stdout" ] && ! diff -c "$stdout" "$out"; then
+    fail=1
+  fi
+done
+
+exit $fail

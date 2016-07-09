@@ -1,3 +1,3 @@
-description: bogus arguments
-arguments: a
-exit: 1
+description: extra argument
+args: a
+exit: 64

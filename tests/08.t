@@ -1,8 +1,9 @@
 description: with sorting enabled
-input: A \\n
-output: A
-
+keys: A \\n
+stdin:
 BBB
 ABC
 AB
+A
+stdout:
 A

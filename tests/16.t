@@ -1,5 +1,6 @@
 description: case insensitive
-input: a \\n
-output: A
-
+keys: a \\n
+stdin:
+A
+stdout:
 A

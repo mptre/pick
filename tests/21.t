@@ -1,7 +1,9 @@
 description: output description
-arguments: -do
-input: a \\n
-output: a\nb
-
+args: -do
+keys: a \\n
+stdin:
 a b
 aaab
+stdout:
+a
+b

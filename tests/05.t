@@ -1,8 +1,9 @@
 description: down arrow
-input: \033[B \\n
-output: 2
-
+keys: \033[B \\n
+stdin:
 1
 2
 3
 4
+stdout:
+2

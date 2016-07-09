@@ -1,3 +1,3 @@
 description: unknown option
-arguments: -0
-exit: 1
+args: -0
+exit: 64

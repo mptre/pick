@@ -1,6 +1,7 @@
 description: backspace
-input: ab \177 c \\n
-output: ac
-
+keys: ab \177 c \\n
+stdin:
 ab
+ac
+stdout:
 ac

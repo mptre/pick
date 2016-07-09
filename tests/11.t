@@ -1,6 +1,7 @@
 description: UTF-8 false positive
-input: áá \\n
-output: háh háh
-
+keys: áá \\n
+stdin:
 íš á
+háh háh
+stdout:
 háh háh

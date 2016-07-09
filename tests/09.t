@@ -1,7 +1,8 @@
 description: UTF-8
-input: ö \\n
-output: ö
-
+keys: ö \\n
+stdin:
 å
 ä
+ö
+stdout:
 ö

@@ -1,6 +1,7 @@
 description: UTF-8 delete word
-input: aa bå \027 bb \\n
-output: aa bb
-
+keys: aa bå \027 bb \\n
+stdin:
 aa bb
 aa bå
+stdout:
+aa bb
