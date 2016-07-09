@@ -17,7 +17,7 @@ pick() {
   input=$(field input <"$1")
 
   input <"$1" >"$in"
-  $DIR/test -i "$(printf "$input")" -- $args <"$in"
+  $DIR/pick-test -i "$(printf "$input")" -- $args <"$in"
 }
 
 usage() {
