@@ -164,17 +164,17 @@ parent(int master, int slave, const char *keys)
 	close(slave);
 }
 
-__dead static void
+static void
 usage(void)
 {
-	fprintf(stderr, "usage: pick-test -k keys [-- argument ...]\n");
+	fprintf(stderr, "usage: pick-test [-k keys] [-- argument ...]\n");
 	exit(1);
 }
 
 int
 main(int argc, char *argv[])
 {
-	char	*keys = NULL;
+	char	*keys = "";
 	pid_t	 pid;
 	int	 c, i, master, slave, status;
 
@@ -186,8 +186,6 @@ main(int argc, char *argv[])
 		default:
 			usage();
 		}
-	if (keys == NULL)
-		usage();
 	argc -= optind;
 	argv += optind;
 
