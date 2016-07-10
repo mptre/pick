@@ -33,7 +33,7 @@ for testcase; do
   done <$testcase
 
   env PATH="./src:${PATH}" tests/pick-test \
-    -i "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
+    -k "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
   if [ "$exit" -ne "$e" ]; then
     echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2
     fail=1

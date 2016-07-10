@@ -167,7 +167,7 @@ parent(int master, int slave, const char *keys)
 __dead static void
 usage(void)
 {
-	fprintf(stderr, "usage: pick-test -i input [-- argument ...]\n");
+	fprintf(stderr, "usage: pick-test -k keys [-- argument ...]\n");
 	exit(1);
 }
 
@@ -178,9 +178,9 @@ main(int argc, char *argv[])
 	pid_t	 pid;
 	int	 c, i, master, slave, status;
 
-	while ((c = getopt(argc, argv, "i:")) != -1)
+	while ((c = getopt(argc, argv, "k:")) != -1)
 		switch (c) {
-		case 'i':
+		case 'k':
 			keys = parsekeys(optarg);
 			break;
 		default:
