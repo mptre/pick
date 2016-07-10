@@ -1,9 +1,3 @@
-mktmp() {
-  f=$(mktemp -t pick.XXXXXX)
-  trap "rm "$f"" EXIT
-  echo "$f"
-}
-
 usage() {
   echo "usage: sh tests/test.sh file ..." 1>&2
   exit 1
@@ -13,9 +7,10 @@ usage() {
 
 fail=
 
-stdout=$(mktmp)
-stdin=$(mktmp)
-out=$(mktmp)
+stdout=$(mktemp -t pick.XXXXXX)
+stdin=$(mktemp -t pick.XXXXXX)
+out=$(mktemp -t pick.XXXXXX)
+trap "rm "$stdout" "$stdin" "$out"" EXIT
 
 for testcase; do
   exit=0
