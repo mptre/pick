@@ -49,7 +49,9 @@ enum {
 	UP,
 	RIGHT,
 	DOWN,
-	LEFT
+	LEFT,
+	PAGE_DOWN,
+	PAGE_UP
 };
 
 struct choice {
@@ -446,6 +448,14 @@ selected_choice(void)
 			while (cursor_position < query_length
 			    && isu8cont(query[++cursor_position]));
 			break;
+		case PAGE_DOWN:
+			if (yscroll + lines - 1 < choices_count)
+				selection = yscroll += lines - 1;
+			break;
+		case PAGE_UP:
+			if (yscroll - (lines - 1) >= 0)
+				selection = yscroll -= lines - 1;
+			break;
 		default:
 			if (!isu8start(buf[0]) && !isprint(buf[0]))
 				continue;
@@ -777,6 +787,8 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ "\033OD",	3,	LEFT },
 		{ "\033[3~",	4,	DEL },
 		{ "\033O3~",	4,	DEL },
+		{ "\033[6~",	4,	PAGE_DOWN },
+		{ "\033[5~",	4,	PAGE_UP },
 		{ NULL,		0,	0 },
 	};
 	int		 i;
