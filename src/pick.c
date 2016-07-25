@@ -456,8 +456,10 @@ selected_choice(void)
 				selection = yscroll += lines - 1;
 			break;
 		case PAGE_UP:
-			if (yscroll - (lines - 1) >= 0)
+			if (yscroll >= lines - 1)
 				selection = yscroll -= lines - 1;
+			else if (yscroll > 0)
+				selection = yscroll = 0;
 			break;
 		default:
 			if (!isu8start(buf[0]) && !isprint(buf[0]))
