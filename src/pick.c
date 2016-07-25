@@ -305,9 +305,12 @@ selected_choice(void)
 			xscroll = cursor_position;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
 		choices_count = print_choices(yscroll, selection);
-		if ((size_t)choices_count < choices.length
-		    && choices_count < lines - 1) {
+		if (choices_count - yscroll < lines - 1) {
 			/*
+			 * Printing the choices did not consume all available
+			 * lines and there could still be choices left from the
+			 * last print in the lines not yet consumed.
+			 *
 			 * The clr_eos capability clears the screen from the
 			 * current column to the end. If the last visible choice
 			 * is selected, the standout in the last and current
