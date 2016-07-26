@@ -49,7 +49,9 @@ enum {
 	UP,
 	RIGHT,
 	DOWN,
-	LEFT
+	LEFT,
+	PAGE_DOWN,
+	PAGE_UP
 };
 
 struct choice {
@@ -303,9 +305,12 @@ selected_choice(void)
 			xscroll = cursor_position;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
 		choices_count = print_choices(yscroll, selection);
-		if ((size_t)choices_count < choices.length
-		    && choices_count < lines - 1) {
+		if (choices_count - yscroll < lines - 1) {
 			/*
+			 * Printing the choices did not consume all available
+			 * lines and there could still be choices left from the
+			 * last print in the lines not yet consumed.
+			 *
 			 * The clr_eos capability clears the screen from the
 			 * current column to the end. If the last visible choice
 			 * is selected, the standout in the last and current
@@ -445,6 +450,18 @@ selected_choice(void)
 		case RIGHT:
 			while (cursor_position < query_length
 			    && isu8cont(query[++cursor_position]));
+			break;
+		case PAGE_DOWN:
+			if (selection + lines - 1 < choices_count)
+				yscroll = selection += lines - 1;
+			else
+				selection = choices_count - 1;
+			break;
+		case PAGE_UP:
+			if (selection - (lines - 1) > 0)
+				yscroll = selection -= lines - 1;
+			else
+				yscroll = selection = 0;
 			break;
 		default:
 			if (!isu8start(buf[0]) && !isprint(buf[0]))
@@ -777,6 +794,8 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ "\033OD",	3,	LEFT },
 		{ "\033[3~",	4,	DEL },
 		{ "\033O3~",	4,	DEL },
+		{ "\033[6~",	4,	PAGE_DOWN },
+		{ "\033[5~",	4,	PAGE_UP },
 		{ NULL,		0,	0 },
 	};
 	int		 i;
