@@ -452,14 +452,16 @@ selected_choice(void)
 			    && isu8cont(query[++cursor_position]));
 			break;
 		case PAGE_DOWN:
-			if (yscroll + lines - 1 < choices_count)
-				selection = yscroll += lines - 1;
+			if (selection + lines - 1 < choices_count)
+				yscroll = selection += lines - 1;
+			else
+				selection = choices_count - 1;
 			break;
 		case PAGE_UP:
-			if (yscroll >= lines - 1)
-				selection = yscroll -= lines - 1;
-			else if (yscroll > 0)
-				selection = yscroll = 0;
+			if (selection - (lines - 1) > 0)
+				yscroll = selection -= lines - 1;
+			else
+				yscroll = selection = 0;
 			break;
 		default:
 			if (!isu8start(buf[0]) && !isprint(buf[0]))

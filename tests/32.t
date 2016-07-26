@@ -1,5 +1,5 @@
-description: page down, all choices fit on one page
-keys: \033[6~ \\n
+description: page up, all choices fit on one page
+keys: \033[6~ \033[5~ \\n
 stdin:
 01
 02
@@ -25,4 +25,4 @@ stdin:
 22
 23
 stdout:
-23
+01

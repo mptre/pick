@@ -1,5 +1,5 @@
-description: page up, less than one page scrolled
-keys: \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \016 \033[5~ \\n
+description: page up, selected choice below the first page
+keys: \033[6~ \016 \033[5~ \\n
 stdin:
 01
 02
@@ -26,5 +26,26 @@ stdin:
 23
 24
 25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
 stdout:
-01
+02

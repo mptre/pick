@@ -12,7 +12,7 @@ TESTS=tests/01.t tests/02.t tests/03.t tests/04.t tests/05.t tests/06.t \
       tests/13.t tests/14.t tests/15.t tests/16.t tests/17.t tests/18.t \
       tests/19.t tests/20.t tests/21.t tests/22.t tests/23.t tests/24.t \
       tests/25.t tests/26.t tests/27.t tests/28.t tests/29.t tests/30.t \
-      tests/31.t
+      tests/31.t tests/32.t
 TEST_EXTENSIONS=.t
 T_LOG_COMPILER=sh tests/test.sh
 check_PROGRAMS=tests/pick-test
