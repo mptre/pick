@@ -335,13 +335,8 @@ selected_choice(void)
 
 		switch (key) {
 		case ENTER:
-			if (choices_count > 0) {
-				if (selection >= 0
-				    && selection < (ssize_t)choices.length)
-					return &choices.v[selection];
-				else
-					return NULL;
-			}
+			if (choices_count > 0)
+				return &choices.v[selection];
 
 			break;
 		case ALT_ENTER:
