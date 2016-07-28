@@ -330,7 +330,6 @@ selected_choice(void)
 		tty_putp(cursor_normal);
 		fflush(tty_out);
 
-		memset(buf, 0, sizeof(buf));
 		key = get_key(buf, sizeof(buf), &length);
 
 		switch (key) {
