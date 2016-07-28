@@ -104,7 +104,7 @@ int
 main(int argc, char **argv)
 {
 	const struct choice	*choice;
-	int			 option;
+	int			 c;
 	int			 output_description = 0;
 
 #ifdef HAVE_PLEDGE
@@ -114,8 +114,8 @@ main(int argc, char **argv)
 
 	setlocale(LC_CTYPE, "");
 
-	while ((option = getopt(argc, argv, "dhoq:SvxX")) != -1) {
-		switch (option) {
+	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1) {
+		switch (c) {
 		case 'd':
 			descriptions = 1;
 			break;
