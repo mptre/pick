@@ -805,7 +805,8 @@ getc:
 	buf[(*nread)++] = tty_getc();
 	size--;
 	for (i = 0; keys[i].s != NULL; i++) {
-		if (*nread > keys[i].length || strncmp(buf, keys[i].s, *nread))
+		if (*nread > keys[i].length
+		    || strncmp(buf, keys[i].s, *nread) != 0)
 			continue;
 
 		if (*nread == keys[i].length)
