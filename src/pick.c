@@ -95,7 +95,7 @@ static struct {
 static FILE		*tty_in, *tty_out;
 static char		*query;
 static size_t		 query_size;
-static int		 descriptions;
+static int		 descriptions, choices_lines;
 static int		 sort = 1;
 static int		 use_alternate_screen = 1;
 
@@ -295,7 +295,7 @@ selected_choice(void)
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
 		choices_count = print_choices(yscroll, selection);
 		if ((size_t)choices_count - yscroll < choices.length
-		    && choices_count - yscroll < lines - 1) {
+		    && choices_count - yscroll < choices_lines) {
 			/*
 			 * Printing the choices did not consume all available
 			 * lines and there could still be choices left from the
@@ -416,7 +416,7 @@ selected_choice(void)
 		case DOWN:
 			if (selection < choices_count - 1) {
 				selection++;
-				if (selection - yscroll == lines - 1)
+				if (selection - yscroll == choices_lines)
 					yscroll++;
 			}
 			break;
@@ -436,14 +436,14 @@ selected_choice(void)
 			    && isu8cont(query[++cursor_position]));
 			break;
 		case PAGE_DOWN:
-			if (selection + lines - 1 < choices_count)
-				yscroll = selection += lines - 1;
+			if (selection + choices_lines < choices_count)
+				yscroll = selection += choices_lines;
 			else
 				selection = choices_count - 1;
 			break;
 		case PAGE_UP:
-			if (selection - (lines - 1) > 0)
-				yscroll = selection -= lines - 1;
+			if (selection - choices_lines > 0)
+				yscroll = selection -= choices_lines;
 			else
 				yscroll = selection = 0;
 			break;
@@ -617,11 +617,13 @@ tty_init(void)
 
 	setupterm((char *)0, fileno(tty_out), (int *)0);
 
+	choices_lines = lines - 1; /* available lines, minus query line */
+
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode);
 
 	/* Emit enough lines to fit all choices. */
-	for (i = 0; i < (ssize_t)choices.length && i < lines - 1; ++i)
+	for (i = 0; i < (ssize_t)choices.length && i < choices_lines; ++i)
 		tty_putp(cursor_down);
 	for (; i > 0; --i)
 		tty_putp(cursor_up);
