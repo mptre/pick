@@ -70,7 +70,6 @@ static void			 filter_choices(void);
 static void			 get_choices(void);
 static int			 get_key(char *, size_t, size_t *);
 static void			 handle_sigint(int);
-static void			 init_tty(void);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static int			 min_match(const char *, size_t, ssize_t *,
@@ -78,12 +77,13 @@ static int			 min_match(const char *, size_t, ssize_t *,
 static int			 print_choices(int, int);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
-static void			 restore_tty(void);
 static void			 score(struct choice *);
 static const struct choice	*selected_choice(void);
 static char			*strcasechr(const char *, const char *);
 static int			 tty_getc(void);
+static void			 tty_init(void);
 static int			 tty_putc(int);
+static void			 tty_restore(void);
 __dead static void		 usage(void);
 __dead static void		 version(void);
 
@@ -163,7 +163,7 @@ main(int argc, char **argv)
 	}
 
 	get_choices();
-	init_tty();
+	tty_init();
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
@@ -171,7 +171,7 @@ main(int argc, char **argv)
 #endif
 
 	choice = selected_choice();
-	restore_tty();
+	tty_restore();
 	if (choice != NULL) {
 		printf("%s\n", choice->string);
 		if (output_description)
@@ -616,7 +616,7 @@ strcasechr(const char *s1, const char *s2)
 }
 
 void
-init_tty(void)
+tty_init(void)
 {
 	struct termios	new_attributes;
 	int		i;
@@ -656,12 +656,12 @@ tty_putc(int c)
 void
 handle_sigint(int sig __attribute__((unused)))
 {
-	restore_tty();
+	tty_restore();
 	exit(EX_SIGINT);
 }
 
 void
-restore_tty(void)
+tty_restore(void)
 {
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
