@@ -93,11 +93,6 @@ static struct {
 	size_t length;
 	struct choice *v;
 }			 choices;
-static struct {
-	size_t	size;
-	size_t	length;
-	char	*string;
-}			 input;
 static FILE		*tty_in, *tty_out;
 static char		*query;
 static size_t		 query_size;
@@ -179,7 +174,6 @@ main(int argc, char **argv)
 	}
 
 	free(choices.v);
-	free(input.string);
 	free(query);
 
 	return EX_OK;
@@ -211,35 +205,37 @@ version(void)
 void
 get_choices(void)
 {
-	char		*description, *field_separators, *start, *stop;
-	ssize_t		 length;
+	char		*buf, *description, *field_separators, *start, *stop;
+	ssize_t		 n;
+	size_t		 length = 0;
+	size_t		 size = BUFSIZ;
 
 	if ((field_separators = getenv("IFS")) == NULL)
 		field_separators = " ";
 
-	input.size = BUFSIZ;
-	if ((input.string = malloc(input.size)) == NULL)
+	if ((buf = malloc(size)) == NULL)
 		err(1, NULL);
 	for (;;) {
-		if ((length = read(STDIN_FILENO, input.string + input.length,
-				   input.size - input.length)) <= 0)
+		if ((n = read(STDIN_FILENO, buf + length, size - length)) == -1)
+			err(1, "read");
+		else if (n == 0)
 			break;
 
-		input.length += length;
-		if (input.length + 1 < input.size)
+		length += n;
+		if (length + 1 < size)
 			continue;
-		input.size *= 2;
-		if ((input.string = realloc(input.string, input.size)) == NULL)
+		if ((buf = reallocarray(buf, 2, size)) == NULL)
 			err(1, NULL);
+		size *= 2;
 	}
-	memset(input.string + input.length, '\0', input.size - input.length);
+	memset(buf + length, '\0', size - length);
 
 	choices.size = 16;
 	if ((choices.v = reallocarray(NULL, choices.size,
 			    sizeof(struct choice))) == NULL)
 		err(1, NULL);
 
-	start = input.string;
+	start = buf;
 	while ((stop = strchr(start, '\n')) != NULL) {
 		*stop = '\0';
 
