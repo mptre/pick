@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS=foreign
 EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md
 
-AM_CFLAGS=-Wall -Wextra -pedantic-errors -Wno-unused-parameter -Werror
+AM_CFLAGS=-pedantic -Wall -Werror -Wextra
 
 bin_PROGRAMS=src/pick
 dist_src_pick_SOURCES=src/pick.c src/compat.h src/compat.c
