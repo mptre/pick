@@ -85,7 +85,6 @@ static void			 tty_init(void);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
 __dead static void		 usage(void);
-__dead static void		 version(void);
 
 static struct termios	 original_attributes;
 static struct {
@@ -135,7 +134,8 @@ main(int argc, char **argv)
 			sort = 0;
 			break;
 		case 'v':
-			version();
+			puts(PACKAGE_VERSION);
+			exit(EX_OK);
 		case 'x':
 			use_alternate_screen = 1;
 			break;
@@ -193,13 +193,6 @@ usage(void)
 	    "    -q query    supply an initial search query\n");
 
 	exit(EX_USAGE);
-}
-
-__dead void
-version(void)
-{
-	puts(PACKAGE_VERSION);
-	exit(EX_OK);
 }
 
 void
