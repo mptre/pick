@@ -676,19 +676,18 @@ restore_tty(void)
 }
 
 void
-print_line(const char *string, size_t length, int standout,
-    ssize_t underline_start, ssize_t underline_end)
+print_line(const char *string, size_t length, int so, ssize_t ulso, ssize_t uleo)
 {
 	size_t	i;
 	int	c, col, tabwidth;
 	int	in_esc_seq = 0;
 	int	non_printable = 0;
 
-	if (standout)
+	if (so)
 		tty_putp(enter_standout_mode);
 
 	for (col = i = 0; i < length && col < columns; i++) {
-		if (i == (size_t)underline_start)
+		if (i == (size_t)ulso)
 			tty_putp(enter_underline_mode);
 
 		/*
@@ -727,14 +726,14 @@ print_line(const char *string, size_t length, int standout,
 				err(1, "tty_putc");
 		}
 
-		if (i + 1 == (size_t)underline_end)
+		if (i + 1 == (size_t)uleo)
 			tty_putp(exit_underline_mode);
 	}
 	for (col -= non_printable; col < columns; col++)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 
-	if (standout)
+	if (so)
 		tty_putp(exit_standout_mode);
 }
 
