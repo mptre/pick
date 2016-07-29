@@ -31,6 +31,7 @@ for testcase; do
     -k "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
   if [ "$exit" -ne "$e" ]; then
     echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2
+    cat "$out" 1>&2
     fail=1
   fi
   if [ -s "$stdout" ] && ! diff -c "$stdout" "$out"; then
