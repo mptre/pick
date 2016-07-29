@@ -113,7 +113,7 @@ main(int argc, char **argv)
 
 	setlocale(LC_CTYPE, "");
 
-	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1) {
+	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -145,7 +145,6 @@ main(int argc, char **argv)
 		default:
 			usage();
 		}
-	}
 	argc -= optind;
 	argv += optind;
 	if (argc > 0)
