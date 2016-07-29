@@ -492,7 +492,7 @@ filter_choices(void)
 		 * outdated. This improves the performance when the cardinality
 		 * of the choices is large.
 		 */
-		if (i % 50 == 0) {
+		if (i > 0 && i % 50 == 0) {
 			pfd.fd = fileno(tty_in);
 			pfd.events = POLLIN;
 			if ((nready = poll(&pfd, 1, 0)) == -1)
