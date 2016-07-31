@@ -319,12 +319,10 @@ selected_choice(void)
 		fflush(tty_out);
 
 		key = get_key(buf, sizeof(buf), &length);
-
 		switch (key) {
 		case ENTER:
 			if (choices_count > 0)
 				return &choices.v[selection];
-
 			break;
 		case ALT_ENTER:
 			choices.v[choices.length].string = query;
@@ -345,7 +343,6 @@ selected_choice(void)
 				filter_choices();
 				selection = yscroll = 0;
 			}
-
 			break;
 		case DEL:
 			if (cursor_position < query_length) {
@@ -361,7 +358,6 @@ selected_choice(void)
 				filter_choices();
 				selection = yscroll = 0;
 			}
-
 			break;
 		case CTRL_U:
 			delete_between(
