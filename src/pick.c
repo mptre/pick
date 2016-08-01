@@ -94,7 +94,7 @@ static struct {
 }			 choices;
 static FILE		*tty_in, *tty_out;
 static char		*query;
-static size_t		 query_size;
+static size_t		 query_length, query_size;
 static int		 descriptions, choices_lines;
 static int		 sort = 1;
 static int		 use_alternate_screen = 1;
@@ -128,7 +128,8 @@ main(int argc, char **argv)
 		case 'q':
 			if ((query = strdup(optarg)) == NULL)
 				err(1, "strdup");
-			query_size = strlen(query) + 1;
+			query_length = strlen(query);
+			query_size = query_length + 1;
 			break;
 		case 'S':
 			sort = 0;
@@ -273,14 +274,14 @@ eager_strpbrk(const char *string, const char *separators)
 const struct choice *
 selected_choice(void)
 {
-	size_t	cursor_position, i, length, query_length;
+	size_t	cursor_position, i, length;
 	size_t	xscroll = 0;
 	char	buf[6];
 	int	choices_count, key, word_position;
 	int	selection = 0;
 	int	yscroll = 0;
 
-	cursor_position = query_length = strlen(query);
+	cursor_position = strlen(query);
 
 	filter_choices();
 
@@ -517,7 +518,7 @@ choicecmp(const void *p1, const void *p2)
 void
 score(struct choice *choice)
 {
-	size_t	query_length, match_length;
+	size_t	match_length;
 
 	if (min_match(choice->string, 0,
 		      &choice->match_start, &choice->match_end) == 0) {
@@ -532,7 +533,6 @@ score(struct choice *choice)
 	}
 
 	match_length = choice->match_end - choice->match_start;
-	query_length = strlen(query);
 	choice->score = (float)query_length / match_length / choice->length;
 }
 
@@ -726,10 +726,8 @@ int
 print_choices(int offset, int selection)
 {
 	struct choice	*choice;
-	size_t		 query_length;
 	int		 i;
 
-	query_length = strlen(query);
 	for (i = offset, choice = &choices.v[i];
 	     (size_t)i < choices.length
 	     && (query_length == 0 || choice->score > 0);
