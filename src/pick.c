@@ -540,6 +540,7 @@ int
 min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 {
 	char	*s, *e, *q;
+	size_t	 length;
 
 	q = query;
 	if ((s = e = strcasechr(&string[offset], q)) == NULL)
@@ -553,11 +554,11 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 			return 0;
 	}
 
+	length = e - s;
 	*start = s - string;
 	*end = e - string;
-	/* Less than or equal is used in order to obtain the left-most match. */
-	if (min_match(string, offset + 1, start, end)
-	    && (ssize_t)(e - s) <= *end - *start) {
+	if (length > query_length && min_match(string, offset + 1, start, end)
+	    && length < (size_t)(*end - *start)) {
 		*start = s - string;
 		*end = e - string;
 	}
