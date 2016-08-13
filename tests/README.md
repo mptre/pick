@@ -60,8 +60,8 @@ Exit code of the pick process, defaults to `0` if omitted.
 
 Sequence of characters sent as keyboard input to the pick process. The value
 will be sent through `printf(1)` prior sending it to the pick process. Spaces
-will be stripped, if not escaped using `\`. A newline character must expressed
-as `\\n`.
+will be stripped, if not escaped. A backslash character is expressed as `\\`,
+thus newline equals `\\n` and space `\\ `.
 
 - stdin
 
