@@ -77,7 +77,7 @@ static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static void			 score(struct choice *);
 static const struct choice	*selected_choice(void);
-static char			*strcasechr(const char *, const char *);
+static const char		*strcasechr(const char *, const char *);
 static int			 tty_getc(void);
 static void			 tty_init(void);
 static int			 tty_putc(int);
@@ -537,8 +537,8 @@ score(struct choice *choice)
 int
 min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 {
-	char	*s, *e, *q;
-	size_t	 length;
+	const char	*s, *e, *q;
+	size_t		 length;
 
 	q = query;
 	if ((s = e = strcasechr(&string[offset], q)) == NULL)
@@ -567,7 +567,7 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
  * Returns a pointer to first occurrence of the first character in s2 in s1 with
  * respect to Unicode characters and disregarding case.
  */
-char *
+const char *
 strcasechr(const char *s1, const char *s2)
 {
 	wchar_t	 wc1, wc2;
@@ -586,7 +586,7 @@ strcasechr(const char *s1, const char *s2)
 			continue;
 		}
 		if (wcsncasecmp(&wc1, &wc2, 1) == 0)
-			return (char *)s1;
+			return s1;
 	}
 
 	return NULL;
