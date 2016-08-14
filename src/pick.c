@@ -744,10 +744,10 @@ int
 get_key(char *buf, size_t size, size_t *nread)
 {
 	static struct {
-		const char *s;
-		size_t length;
-		int key;
-	} keys[] = {
+		const char	*s;
+		size_t		 length;
+		int		 key;
+	}	keys[] = {
 		{ "\n",		1,	ENTER },
 		{ "\177",	1,	BACKSPACE },
 		{ "\001",	1,	CTRL_A },
@@ -775,7 +775,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ "\033[5~",	4,	PAGE_UP },
 		{ NULL,		0,	0 },
 	};
-	int		 i;
+	int	i;
 
 	*nread = 0;
 getc:
