@@ -33,8 +33,6 @@
 		errx(1, #capability ": unknown terminfo capability"); \
 	} while (0)
 
-#define ESCAPE 27
-
 enum {
 	UNKNOWN,
 	ALT_ENTER,
@@ -680,7 +678,7 @@ print_line(const char *string, size_t length, int so, ssize_t ulso, ssize_t uleo
 			non_printable++;
 			if (string[i] >= '@' && string[i] <= '~')
 				in_esc_seq = 0;
-		} else if (i > 0 && string[i - 1] == ESCAPE
+		} else if (i > 0 && string[i - 1] == '\033'
 		    && string[i] == '[') {
 			in_esc_seq = 1;
 			non_printable = 2;
