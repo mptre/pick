@@ -537,7 +537,7 @@ score(struct choice *choice)
 int
 min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 {
-	const char	*s, *e, *q;
+	const char	*e, *q, *s;
 	size_t		 length;
 
 	q = query;
