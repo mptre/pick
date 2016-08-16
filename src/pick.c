@@ -28,9 +28,9 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
-#define tty_putp(capability) do { \
-	if (tputs(capability, 1, tty_putc) == ERR) \
-		errx(1, #capability ": unknown terminfo capability"); \
+#define tty_putp(capability) do {					\
+	if (tputs(capability, 1, tty_putc) == ERR)			\
+		errx(1, #capability ": unknown terminfo capability");	\
 	} while (0)
 
 enum {
