@@ -1,4 +1,5 @@
 #include <sys/ioctl.h>
+#include <sys/limits.h>
 #include <sys/select.h>
 #include <sys/wait.h>
 
@@ -40,11 +41,8 @@ parsekeys(const char *s)
 		buf[len++] = c;
 
 		if (size <= len) {
-			/*
-			 * This multiplication could potentially overflow. But
-			 * since we control the input, it's highly unlikely
-			 * (famous last words).
-			 */
+			if (size > ULONG_MAX/2)
+				errc(1, ENOMEM, NULL);
 			if ((buf = realloc(buf, 2*size)) == NULL)
 				err(1, NULL);
 			size *= 2;
