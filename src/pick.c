@@ -775,7 +775,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ "\033[5~",	4,	PAGE_UP },
 		{ NULL,		0,	0 },
 	};
-	int	i;
+	int	c, i;
 
 	*nread = 0;
 getc:
@@ -794,14 +794,19 @@ getc:
 			goto getc;
 	}
 
-	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O'))
+	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
 		/*
 		 * A escape sequence which is not a supported key is being read.
-		 * Ensure the whole sequence is read.
+		 * Discard the rest of the sequence.
 		 */
-		while ((buf[*nread - 1] < '@' || buf[*nread - 1] > '~')
-		    && size-- > 0)
-			buf[(*nread)++] = tty_getc();
+		for (;;) {
+			c = tty_getc();
+			if (c >= '@' && c <= '~')
+				break;
+		}
+
+		return UNKNOWN;
+	}
 
 	if (!isu8start(buf[0]))
 		return UNKNOWN;
