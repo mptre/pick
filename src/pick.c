@@ -272,7 +272,7 @@ eager_strpbrk(const char *string, const char *separators)
 const struct choice *
 selected_choice(void)
 {
-	size_t	cursor_position, i, length;
+	size_t	cursor_position, i, j, length;
 	size_t	xscroll = 0;
 	char	buf[6];
 	int	choices_count, key, word_position;
@@ -285,7 +285,7 @@ selected_choice(void)
 
 	for (;;) {
 		tty_putp(cursor_invisible);
-		tty_putp(restore_cursor);
+		tty_putp(carriage_return);	/* move cursor to first column */
 		if (cursor_position >= xscroll + columns)
 			xscroll = cursor_position - columns + 1;
 		if (cursor_position < xscroll)
@@ -308,12 +308,21 @@ selected_choice(void)
 			if (tty_putc('\n') == EOF)
 				err(1, "tty_putc");
 			tty_putp(clr_eos);
+			tty_putp(tparm(parm_up_cursor, choices_count + 1));
+		} else {
+			tty_putp(tparm(parm_up_cursor,
+				    choices_count < choices_lines
+				    ? choices_count : choices_lines));
 		}
-		tty_putp(restore_cursor);
-		for (i = 0; i < cursor_position;) {
+		tty_putp(carriage_return);	/* move cursor to first column */
+		for (i = j = 0; i < cursor_position; j++)
 			while (isu8cont(query[++i]));
-			tty_putp(cursor_right);
-		}
+		if (j > 0)
+			/*
+			 * parm_right_cursor interprets 0 as 1, therefore only
+			 * move the cursor if the position is non zero.
+			 */
+			tty_putp(tparm(parm_right_cursor, j));
 		tty_putp(cursor_normal);
 		fflush(tty_out);
 
@@ -596,7 +605,6 @@ void
 tty_init(void)
 {
 	struct termios	new_attributes;
-	int		i;
 
 	if ((tty_in = fopen("/dev/tty", "r")) == NULL)
 		err(1, "fopen");
@@ -615,13 +623,6 @@ tty_init(void)
 
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode);
-
-	/* Emit enough lines to fit all choices. */
-	for (i = 0; i < (ssize_t)choices.length && i < choices_lines; ++i)
-		tty_putp(cursor_down);
-	for (; i > 0; --i)
-		tty_putp(cursor_up);
-	tty_putp(save_cursor);
 
 	signal(SIGINT, handle_sigint);
 }
@@ -645,7 +646,7 @@ tty_restore(void)
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
 
-	tty_putp(restore_cursor);
+	tty_putp(carriage_return);	/* move cursor to first column */
 	tty_putp(clr_eos);
 
 	if (use_alternate_screen)
