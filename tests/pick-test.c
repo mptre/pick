@@ -1,11 +1,11 @@
 #include <sys/ioctl.h>
-#include <sys/limits.h>
 #include <sys/select.h>
 #include <sys/wait.h>
 
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
