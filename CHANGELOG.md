@@ -1,3 +1,37 @@
+# v1.5.0 - 2016-09-19
+
+## New features
+
+- Add FreeBSD installation instructions #130 (Neel Chauhan)
+
+- Improve test coverage #137, #150, #151 (Anton Lindqvist)
+
+- Improve search performance #142 (Anton Lindqvist)
+
+- Add support for vertical scrolling #144 (Anton Lindqvist)
+
+- Improve test suite #148, #150, #151, #159 (Anton Lindqvist, Calle Erlandsson)
+
+- Add support for page keys #149 (Anton Lindqvist)
+
+- Improve escape sequence handling #155 (Anton Lindqvist)
+
+- Improve cursor handling #156 (Anton Lindqvist)
+
+- Add a changelog #158 (Anton Lindqvist)
+
+## Bug fixes
+
+- Fix building on Android #128 (Fredrik Fornwall)
+
+- Fix output of tabs #141 (Anton Lindqvist)
+
+- Fix issues on big endian machines #143 (borstel)
+
+- Fix potential integer overflow #154 (Anton Lindqvist)
+
+- Refactoring and cleanup #133, #137, #150, #151, #152 (Anton Lindqvist)
+
 # v1.4.0 - 2016-06-03
 
 ## New features
