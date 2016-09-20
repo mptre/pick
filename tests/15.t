@@ -1,5 +1,5 @@
 description: UTF-8 four byte wide characters
-keys: 💩 \\n
+keys: 💩 \\n # ENTER
 stdin:
 😀
 💩

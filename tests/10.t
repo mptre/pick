@@ -1,5 +1,5 @@
 description: UTF-8 backspace
-keys: ö \177 \\n
+keys: ö \177 \\n # BACKSPACE ENTER
 stdin:
 å
 ä

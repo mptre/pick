@@ -1,6 +1,6 @@
 description: with sorting disabled
 args: -S
-keys: A \\n
+keys: A \\n # ENTER
 stdin:
 BBB
 ABC

@@ -1,5 +1,5 @@
 description: tabs in input
-keys: \\n
+keys: \\n # ENTER
 stdin:
 	a
 stdout:

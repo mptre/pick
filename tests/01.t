@@ -1,5 +1,5 @@
 description: select the first choice
-keys: \\n
+keys: \\n # ENTER
 stdin:
 1
 2

@@ -1,5 +1,5 @@
 description: page down, first choice not selected
-keys: \016 \033[6~ \\n
+keys: \016 \033[6~ \\n # DOWN PAGE_DOWN ENTER
 stdin:
 01
 02

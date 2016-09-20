@@ -1,6 +1,6 @@
 description: filter using the query option
 args: -q a
-keys: \\n
+keys: \\n # ENTER
 stdin:
 b
 a

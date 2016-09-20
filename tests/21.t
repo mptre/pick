@@ -1,6 +1,6 @@
 description: output description
 args: -do
-keys: a \\n
+keys: a \\n # ENTER
 stdin:
 a b
 aaab

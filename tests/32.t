@@ -1,5 +1,5 @@
 description: page up, all choices fit on one page
-keys: \033[6~ \033[5~ \\n
+keys: \033[6~ \033[5~ \\n # PAGE_DOWN PAGE_UP ENTER
 stdin:
 01
 02

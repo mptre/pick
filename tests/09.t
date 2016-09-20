@@ -1,5 +1,5 @@
 description: UTF-8
-keys: ö \\n
+keys: ö \\n # ENTER
 stdin:
 å
 ä

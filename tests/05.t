@@ -1,5 +1,5 @@
 description: down arrow
-keys: \033[B \\n
+keys: \033[B \\n # DOWN ENTER
 stdin:
 1
 2

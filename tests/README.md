@@ -30,7 +30,10 @@ Format of test files
 
 A test file consist of fields where field names are terminated with `:` and the
 rest of line is recognized as the corresponding field value. Some fields allow
-multi-line values. A trival example:
+multi-line values. Everything after `#` and up to the next newline is treated as
+a comment.
+
+A trivial example:
 
 ```
 description: select the first choice

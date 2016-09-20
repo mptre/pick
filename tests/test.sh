@@ -17,7 +17,7 @@ for testcase; do
 
   while IFS=: read -r key val; do
     if [ -n "$val" ]; then
-      eval "$key='$val'"
+      eval "${key}='${val%%#*}'"
     else
       case "$key" in
       stdin)  tmpfile=$stdin; >$tmpfile ;;
