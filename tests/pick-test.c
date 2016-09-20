@@ -12,8 +12,77 @@
 #include <string.h>
 #include <unistd.h>
 
+static void	 child(int, int);
+static void	 parent(int, int, const char *);
+static char	*parsekeys(const char *);
+static void	 sighandler(int);
+static void	 usage(void);
+
 static char	**pickargv;
 static int	  gotsig;
+
+int
+main(int argc, char *argv[])
+{
+	char	*keys = "";
+	pid_t	 pid;
+	int	 c, i, master, slave, status;
+
+	while ((c = getopt(argc, argv, "k:")) != -1)
+		switch (c) {
+		case 'k':
+			keys = parsekeys(optarg);
+			break;
+		default:
+			usage();
+		}
+	argc -= optind;
+	argv += optind;
+
+	/* Ensure room for program and null terminator. */
+	if ((pickargv = calloc(argc + 2, sizeof(const char **))) == NULL)
+		err(1, NULL);
+	pickargv[0] = "pick";
+	for (i = 0; i < argc; i++)
+		pickargv[i + 1] = argv[i];
+
+	if (signal(SIGCHLD, sighandler) == SIG_ERR)
+		err(1, "signal");
+	if ((master = posix_openpt(O_RDWR)) == -1)
+		err(1, "posix_openpt");
+	if (grantpt(master) == -1)
+		err(1, "grantpt");
+	if (unlockpt(master) == -1)
+		err(1, "unlockpt");
+	if ((slave = open(ptsname(master), O_RDWR)) == -1)
+		err(1, "%s", ptsname(master));
+
+	switch ((pid = fork())) {
+	case -1:
+		err(1, "fork");
+		/* NOTREACHED */
+	case 0:
+		child(master, slave);
+		/* NOTREACHED */
+	default:
+		parent(master, slave, keys);
+		/* Wait and exit with code of the child process. */
+		waitpid(pid, &status, 0);
+		if (WIFSIGNALED(status))
+			exit(128 + WTERMSIG(status));
+		if (WIFEXITED(status))
+			exit(WEXITSTATUS(status));
+	}
+
+	return 0;
+}
+
+static void
+usage(void)
+{
+	fprintf(stderr, "usage: pick-test [-k keys] [-- argument ...]\n");
+	exit(1);
+}
 
 static char *
 parsekeys(const char *s)
@@ -68,9 +137,10 @@ child(int master, int slave)
 	close(master);
 
 	/* Disconnect the controlling tty. */
-	if ((fd = open("/dev/tty", O_RDWR|O_NOCTTY)) == -1)
+	if ((fd = open("/dev/tty", O_RDWR | O_NOCTTY)) == -1)
 		err(1, "/dev/tty");
-	(void)ioctl(fd, TIOCNOTTY, NULL); /* ignore any error */
+	/* Ignore any error. */
+	(void)ioctl(fd, TIOCNOTTY, NULL);
 	close(fd);
 
 	/* Make the current process the session leader. */
@@ -79,7 +149,7 @@ child(int master, int slave)
 
 	/* Connect the slave as the controlling tty. */
 	if (ioctl(slave, TIOCSCTTY, NULL) == -1)
-		err(1, "ioctl");
+		err(1, "TIOCSCTTY");
 
 	/*
 	 * Set window size to known dimensions, necessary in order to deduce
@@ -87,7 +157,7 @@ child(int master, int slave)
 	 */
 	ws.ws_col = 80, ws.ws_row = 24;
 	if (ioctl(slave, TIOCSWINSZ, &ws) == -1)
-		err(1, "ioctl");
+		err(1, "TIOCSWINSZ");
 
 	/*
 	 * Enable malloc.conf(5) options on OpenBSD which will abort the pick
@@ -160,64 +230,4 @@ parent(int master, int slave, const char *keys)
 	 * now.
 	 */
 	close(slave);
-}
-
-static void
-usage(void)
-{
-	fprintf(stderr, "usage: pick-test [-k keys] [-- argument ...]\n");
-	exit(1);
-}
-
-int
-main(int argc, char *argv[])
-{
-	char	*keys = "";
-	pid_t	 pid;
-	int	 c, i, master, slave, status;
-
-	while ((c = getopt(argc, argv, "k:")) != -1)
-		switch (c) {
-		case 'k':
-			keys = parsekeys(optarg);
-			break;
-		default:
-			usage();
-		}
-	argc -= optind;
-	argv += optind;
-
-	/* Ensure room for program and null terminator. */
-	if ((pickargv = calloc(argc + 2, sizeof(const char **))) == NULL)
-		err(1, NULL);
-	pickargv[0] = "pick";
-	for (i = 0; i < argc; i++)
-		pickargv[i + 1] = argv[i];
-
-	if (signal(SIGCHLD, sighandler) == SIG_ERR)
-		err(1, "signal");
-	if ((master = posix_openpt(O_RDWR)) == -1)
-		err(1, "posix_openpt");
-	if (grantpt(master) == -1)
-		err(1, "grantpt");
-	if (unlockpt(master) == -1)
-		err(1, "unlockpt");
-	if ((slave = open(ptsname(master), O_RDWR)) == -1)
-		err(1, "%s", ptsname(master));
-
-	if ((pid = fork()) == -1) {
-		err(1, "fork");
-	} else if (pid == 0) {
-		child(master, slave);
-	} else {
-		parent(master, slave, keys);
-		/* Wait and exit with code of the child process. */
-		waitpid(pid, &status, 0);
-		if (WIFSIGNALED(status))
-			exit(128 + WTERMSIG(status));
-		if (WIFEXITED(status))
-			exit(WEXITSTATUS(status));
-	}
-
-	return 0;
 }
