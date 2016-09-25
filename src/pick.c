@@ -732,7 +732,7 @@ print_choices(int offset, int selection)
 	     (size_t)i < choices.length
 	     && (query_length == 0 || choice->score > 0);
 	     choice++, i++) {
-		if (i - offset < lines - 1)
+		if (i - offset < choices_lines)
 			print_line(choice->string, choice->length,
 			    i == selection, choice->match_start,
 			    choice->match_end);
