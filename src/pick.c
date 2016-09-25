@@ -279,7 +279,7 @@ selected_choice(void)
 	int	selection = 0;
 	int	yscroll = 0;
 
-	cursor_position = strlen(query);
+	cursor_position = query_length;
 
 	filter_choices();
 
