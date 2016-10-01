@@ -111,7 +111,7 @@ parsekeys(const char *s)
 
 		if (size <= len) {
 			if (size > ULONG_MAX/2)
-				errc(1, ENOMEM, NULL);
+				errx(1, "buffer size overflow");
 			if ((buf = realloc(buf, 2*size)) == NULL)
 				err(1, NULL);
 			size *= 2;
