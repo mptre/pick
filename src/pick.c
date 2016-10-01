@@ -316,7 +316,8 @@ selected_choice(void)
 		}
 		tty_putp(carriage_return);	/* move cursor to first column */
 		for (i = j = 0; i < cursor_position; j++)
-			while (isu8cont(query[++i]));
+			while (isu8cont(query[++i]))
+				continue;
 		if (j > 0)
 			/*
 			 * parm_right_cursor interprets 0 as 1, therefore only
@@ -340,7 +341,8 @@ selected_choice(void)
 			if (cursor_position > 0) {
 				for (length = 1;
 				    isu8cont(query[cursor_position - length]);
-				    length++);
+				    length++)
+					continue;
 				delete_between(
 				    query,
 				    query_length,
@@ -356,7 +358,8 @@ selected_choice(void)
 			if (cursor_position < query_length) {
 				for (length = 1;
 				    isu8cont(query[cursor_position + length]);
-				    length++);
+				    length++)
+					continue;
 				delete_between(
 				    query,
 				    query_length,
@@ -393,7 +396,8 @@ selected_choice(void)
 				break;
 
 			for (word_position = cursor_position;;) {
-				while (isu8cont(query[--word_position]));
+				while (isu8cont(query[--word_position]))
+					continue;
 				if (word_position < 1)
 					break;
 				if (query[word_position] != ' '
@@ -432,11 +436,13 @@ selected_choice(void)
 			break;
 		case LEFT:
 			while (cursor_position > 0
-			    && isu8cont(query[--cursor_position]));
+			    && isu8cont(query[--cursor_position]))
+				continue;
 			break;
 		case RIGHT:
 			while (cursor_position < query_length
-			    && isu8cont(query[++cursor_position]));
+			    && isu8cont(query[++cursor_position]))
+				continue;
 			break;
 		case PAGE_DOWN:
 			if (selection + choices_lines < choices_count)
@@ -554,7 +560,8 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 		return 0;
 
 	for (;;) {
-		for (e++, q++; isu8cont(*q); e++, q++);
+		for (e++, q++; isu8cont(*q); e++, q++)
+			continue;
 		if (*q == '\0')
 			break;
 		if ((e = strcasechr(e, q)) == NULL)
