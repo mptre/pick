@@ -5,6 +5,12 @@
 - Improve readability of tests by adding comment support and cleanup test code
   #161 (Anton Lindqvist)
 
+## Bug fixes
+
+- Refactoring and cleanup #162 (Anton Lindqvist)
+
+- Fix issues on ancient terminals #163 (Anton Lindqvist)
+
 # v1.5.0 - 2016-09-19
 
 ## New features
