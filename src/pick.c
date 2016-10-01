@@ -28,8 +28,8 @@
 #define EX_SIG 128
 #define EX_SIGINT (EX_SIG + SIGINT)
 
-#define tty_putp(capability) do {					\
-	if (tputs(capability, 1, tty_putc) == ERR)			\
+#define tty_putp(capability, fatal) do {				\
+	if (tputs(capability, 1, tty_putc) == ERR && fatal)		\
 		errx(1, #capability ": unknown terminfo capability");	\
 	} while (0)
 
@@ -284,8 +284,8 @@ selected_choice(void)
 	filter_choices();
 
 	for (;;) {
-		tty_putp(cursor_invisible);
-		tty_putp(carriage_return);	/* move cursor to first column */
+		tty_putp(cursor_invisible, 0);
+		tty_putp(carriage_return, 1);	/* move cursor to first column */
 		if (cursor_position >= xscroll + columns)
 			xscroll = cursor_position - columns + 1;
 		if (cursor_position < xscroll)
@@ -307,14 +307,14 @@ selected_choice(void)
 			 */
 			if (tty_putc('\n') == EOF)
 				err(1, "tty_putc");
-			tty_putp(clr_eos);
-			tty_putp(tparm(parm_up_cursor, choices_count + 1));
+			tty_putp(clr_eos, 1);
+			tty_putp(tparm(parm_up_cursor, choices_count + 1), 1);
 		} else {
 			tty_putp(tparm(parm_up_cursor,
 				    choices_count < choices_lines
-				    ? choices_count : choices_lines));
+				    ? choices_count : choices_lines), 1);
 		}
-		tty_putp(carriage_return);	/* move cursor to first column */
+		tty_putp(carriage_return, 1);	/* move cursor to first column */
 		for (i = j = 0; i < cursor_position; j++)
 			while (isu8cont(query[++i]))
 				continue;
@@ -323,8 +323,8 @@ selected_choice(void)
 			 * parm_right_cursor interprets 0 as 1, therefore only
 			 * move the cursor if the position is non zero.
 			 */
-			tty_putp(tparm(parm_right_cursor, j));
-		tty_putp(cursor_normal);
+			tty_putp(tparm(parm_right_cursor, j), 1);
+		tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
 		key = get_key(buf, sizeof(buf), &length);
@@ -629,7 +629,7 @@ tty_init(void)
 	choices_lines = lines - 1; /* available lines, minus query line */
 
 	if (use_alternate_screen)
-		tty_putp(enter_ca_mode);
+		tty_putp(enter_ca_mode, 0);
 
 	signal(SIGINT, handle_sigint);
 }
@@ -653,11 +653,11 @@ tty_restore(void)
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
 
-	tty_putp(carriage_return);	/* move cursor to first column */
-	tty_putp(clr_eos);
+	tty_putp(carriage_return, 1);	/* move cursor to first column */
+	tty_putp(clr_eos, 1);
 
 	if (use_alternate_screen)
-		tty_putp(exit_ca_mode);
+		tty_putp(exit_ca_mode, 0);
 
 	fclose(tty_out);
 }
@@ -671,11 +671,11 @@ print_line(const char *string, size_t length, int so, ssize_t ulso, ssize_t uleo
 	int	non_printable = 0;
 
 	if (so)
-		tty_putp(enter_standout_mode);
+		tty_putp(enter_standout_mode, 1);
 
 	for (col = i = 0; i < length && col < columns; i++) {
 		if (i == (size_t)ulso)
-			tty_putp(enter_underline_mode);
+			tty_putp(enter_underline_mode, 1);
 
 		/*
 		 * Count the number of outputted ANSI escape sequences
@@ -714,14 +714,14 @@ print_line(const char *string, size_t length, int so, ssize_t ulso, ssize_t uleo
 		}
 
 		if (i + 1 == (size_t)uleo)
-			tty_putp(exit_underline_mode);
+			tty_putp(exit_underline_mode, 1);
 	}
 	for (col -= non_printable; col < columns; col++)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 
 	if (so)
-		tty_putp(exit_standout_mode);
+		tty_putp(exit_standout_mode, 1);
 }
 
 /*
