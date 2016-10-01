@@ -1,3 +1,10 @@
+# vX.Y.Z - YYYY-MM-DD
+
+## New features
+
+- Improve readability of tests by adding comment support and cleanup test code
+  #161 (Anton Lindqvist)
+
 # v1.5.0 - 2016-09-19
 
 ## New features
