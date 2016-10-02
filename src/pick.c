@@ -4,6 +4,7 @@
 
 #include <ctype.h>
 #include <err.h>
+#include <limits.h>
 #include <locale.h>
 #include <poll.h>
 #include <signal.h>
@@ -70,7 +71,7 @@ static int			 get_key(char *, size_t, size_t *);
 static void			 handle_sigint(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
-static int			 min_match(const char *, size_t, ssize_t *,
+static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
 static int			 print_choices(int, int);
 static void			 print_line(const char *, size_t, int, ssize_t,
@@ -534,7 +535,7 @@ score(struct choice *choice)
 	size_t	match_length;
 
 	if (min_match(choice->string, 0,
-		      &choice->match_start, &choice->match_end) == 0) {
+		      &choice->match_start, &choice->match_end) == INT_MAX) {
 		choice->match_start = choice->match_end = -1;
 		choice->score = 0;
 		return;
@@ -549,7 +550,7 @@ score(struct choice *choice)
 	choice->score = (float)query_length / match_length / choice->length;
 }
 
-int
+size_t
 min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 {
 	const char	*e, *q, *s;
@@ -557,7 +558,7 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 
 	q = query;
 	if ((s = e = strcasechr(&string[offset], q)) == NULL)
-		return 0;
+		return INT_MAX;
 
 	for (;;) {
 		for (e++, q++; isu8cont(*q); e++, q++)
@@ -565,18 +566,17 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 		if (*q == '\0')
 			break;
 		if ((e = strcasechr(e, q)) == NULL)
-			return 0;
+			return INT_MAX;
 	}
 
 	length = e - s;
-	*start = s - string;
-	*end = e - string;
-	if (length > query_length && min_match(string, offset + 1, start, end)
-	    && length < (size_t)(*end - *start)) {
+	if (length == query_length
+	    || length < min_match(string, offset + 1, start, end)) {
 		*start = s - string;
 		*end = e - string;
 	}
-	return 1;
+
+	return length;
 }
 
 /*
