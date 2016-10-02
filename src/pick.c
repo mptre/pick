@@ -586,7 +586,7 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 const char *
 strcasechr(const char *s1, const char *s2)
 {
-	wchar_t	 wc1, wc2;
+	wchar_t	wc1, wc2;
 
 	switch (mbtowc(&wc2, s2, MB_CUR_MAX)) {
 	case -1:
@@ -596,14 +596,11 @@ strcasechr(const char *s1, const char *s2)
 		return NULL;
 	}
 
-	for (; *s1; s1++) {
-		if (mbtowc(&wc1, s1, MB_CUR_MAX) == -1) {
+	for (; *s1 != '\0'; s1++)
+		if (mbtowc(&wc1, s1, MB_CUR_MAX) == -1)
 			mbtowc(NULL, NULL, MB_CUR_MAX);
-			continue;
-		}
-		if (wcsncasecmp(&wc1, &wc2, 1) == 0)
+		else if (wcsncasecmp(&wc1, &wc2, 1) == 0)
 			return s1;
-	}
 
 	return NULL;
 }
