@@ -848,11 +848,11 @@ delete_between(char *string, size_t length, size_t start, size_t end)
 int
 isu8cont(unsigned char c)
 {
-	return (c & (0x80 | 0x40)) == 0x80;
+	return MB_CUR_MAX > 1 && (c & (0x80 | 0x40)) == 0x80;
 }
 
 int
 isu8start(unsigned char c)
 {
-	return (c & (0x80 | 0x40)) == (0x80 | 0x40);
+	return MB_CUR_MAX > 1 && (c & (0x80 | 0x40)) == (0x80 | 0x40);
 }
