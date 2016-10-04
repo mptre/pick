@@ -1,3 +1,9 @@
+# vX.Y.Z - YYYY-MM-DD
+
+## Bug fixes
+
+- Refactoring and cleanup #164 (Anton Lindqvist)
+
 # v1.5.1 - 2016-10-04
 
 ## New features
