@@ -1,4 +1,4 @@
-# vX.Y.Z - YYYY-MM-DD
+# v1.5.1 - 2016-10-04
 
 ## New features
 
