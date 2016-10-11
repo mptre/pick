@@ -136,12 +136,12 @@ child(int master, int slave)
 
 	close(master);
 
-	/* Disconnect the controlling tty. */
-	if ((fd = open("/dev/tty", O_RDWR | O_NOCTTY)) == -1)
-		err(1, "/dev/tty");
-	/* Ignore any error. */
-	(void)ioctl(fd, TIOCNOTTY, NULL);
-	close(fd);
+	/* Disconnect the controlling tty, if present. */
+	if ((fd = open("/dev/tty", O_RDWR | O_NOCTTY)) >= 0) {
+		/* Ignore any error. */
+		(void)ioctl(fd, TIOCNOTTY, NULL);
+		close(fd);
+	}
 
 	/* Make the current process the session leader. */
 	if (setsid() == -1)
