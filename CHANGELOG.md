@@ -4,6 +4,9 @@
 
 - Refactoring and cleanup #164 (Anton Lindqvist)
 
+- Disconnect the controlling terminal if present when running the tests
+  (506a393) (Anton Lindqvist)
+
 # v1.5.1 - 2016-10-04
 
 ## New features
