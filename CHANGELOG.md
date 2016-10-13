@@ -1,4 +1,4 @@
-# vX.Y.Z - YYYY-MM-DD
+# v1.5.2 - 2016-10-13
 
 ## Bug fixes
 
