@@ -1,3 +1,5 @@
+#!/bin/sh
+
 usage() {
   echo "usage: sh tests/test.sh file ..." 1>&2
   exit 1
