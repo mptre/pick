@@ -461,7 +461,7 @@ selected_choice(void)
 			if (!isu8start(buf[0]) && !isprint(buf[0]))
 				continue;
 
-			if (query_size < query_length + length) {
+			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
 					    sizeof(char))) == NULL)
