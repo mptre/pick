@@ -25,7 +25,7 @@ Release
 
 1. Update the version in `configure.ac`:
 
-        AC_INIT([pick], [0.0.2], [hello@thoughtbot.com])
+        AC_INIT([pick], [0.0.2], [calle@calleerlandsson.com])
 
 2. Verify the tarball:
 
@@ -50,7 +50,7 @@ Release
         gpg --verify pick-0.0.2.tar.gz.asc pick-0.0.2.tar.gz
 
 6. [Announce the release on
-   GitHub](https://github.com/thoughtbot/pick/releases/new).
+   GitHub](https://github.com/calleerlandsson/pick/releases/new).
 
 7. Contact package maintainers:
 

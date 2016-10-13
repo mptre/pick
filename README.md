@@ -57,8 +57,8 @@ pkg install pick
    signature and extract the archive:
 
 ```sh
-wget https://github.com/thoughtbot/pick/releases/download/vVERSION/pick-VERSION.tar.gz
-wget https://github.com/thoughtbot/pick/releases/download/vVERSION/pick-VERSION.tar.gz.asc
+wget https://github.com/calleerlandsson/pick/releases/download/vVERSION/pick-VERSION.tar.gz
+wget https://github.com/calleerlandsson/pick/releases/download/vVERSION/pick-VERSION.tar.gz.asc
 gpg --verify pick-VERSION.tar.gz.asc
 tar -xzf pick-VERSION.tar.gz
 ```
@@ -73,7 +73,7 @@ less INSTALL.md
 [the AUR]: https://aur.archlinux.org/packages/pick/
 [Debian 9]: https://packages.debian.org/stretch/pick
 [Ubuntu 15.10]: http://packages.ubuntu.com/wily/pick
-[the releases page]: https://github.com/thoughtbot/pick/releases/
+[the releases page]: https://github.com/calleerlandsson/pick/releases/
 
 ## Usage
 
@@ -94,24 +94,9 @@ therefore cannot be run from within gvim or MacVim.
 
 See the `pick(1)` man page for detailed usage instructions and more examples.
 
-[the pick.vim Vim plugin]: https://github.com/thoughtbot/pick.vim/
-[the pick.vim source code]: https://github.com/thoughtbot/pick.vim/blob/master/plugin/pick.vim
+[the pick.vim Vim plugin]: https://github.com/calleerlandsson/pick.vim/
+[the pick.vim source code]: https://github.com/calleerlandsson/pick.vim/blob/master/plugin/pick.vim
 
 ## Copyright
 
 Copyright (c) 2016 Calle Erlandsson, Anton Lindqvist & thoughtbot.
-
-Lead by Calle Erlandsson & thoughtbot's
-[Stockholm software design and development team][team].
-
-[team]: https://thoughtbot.com/stockholm?utm_source=github
-
-## About thoughtbot
-
-![thoughtbot](https://thoughtbot.com/logo.png)
-
-See [our other open source projects][community] or
-[hire us][hire] to design, develop, and grow your product.
-
-[community]: https://thoughtbot.com/tools?utm_source=github
-[hire]: https://thoughtbot.com/hire-us?utm_source=github
