@@ -1,3 +1,6 @@
+# Use trusty environment for a up-to-date version of autotools
+sudo: required
+dist: trusty
 language: c
 os:
   - linux
@@ -7,6 +10,6 @@ compiler:
   - gcc
 script:
   - ./autogen.sh
-  - ./configure
+  - ./configure || (cat config.log; exit 1)
   - make || exit 1
   - make check || (cat test-suite.log; exit 1)
