@@ -9,7 +9,7 @@ to abide by its [code of conduct].
 - Set up your build environment in accordance to the instructions in
   `DEVELOPING.md`.
 - Make your changes.
-- Update `man/man1/pick.1` and `README.md` in accordance to your changes.
+- Update `pick.1` and `README.md` in accordance to your changes.
 - Make sure `pick(1)` builds and runs as expected: `make && printf
   "hello\ngoodbye" | src/pick`.
 - Make sure `make distcheck` runs successfully.
