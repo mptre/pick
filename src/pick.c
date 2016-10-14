@@ -616,6 +616,8 @@ tty_init(void)
 	tcgetattr(fileno(tty_in), &original_attributes);
 	new_attributes = original_attributes;
 	new_attributes.c_lflag &= ~(ICANON | ECHO);
+	/* Don't expand tabs to spaces. */
+	new_attributes.c_oflag &= ~(OXTABS);
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if ((tty_out = fopen("/dev/tty", "w")) == NULL)
