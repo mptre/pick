@@ -25,7 +25,7 @@ Release
 
 1. Update the version in `configure.ac`:
 
-        AC_INIT([pick], [0.0.2], [calle@calleerlandsson.com])
+        AC_INIT([pick], [0.0.2], [pick-maintainers@calleerlandsson.com])
 
 2. Verify the tarball:
 
