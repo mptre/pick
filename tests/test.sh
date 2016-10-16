@@ -29,7 +29,7 @@ for testcase; do
     fi
   done <$testcase
 
-  env PATH="./src:${PATH}" tests/pick-test \
+  env PATH=".:${PATH}" tests/pick-test \
     -k "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
   if [ "$exit" -ne "$e" ]; then
     echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2

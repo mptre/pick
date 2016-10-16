@@ -3,8 +3,8 @@ EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md
 
 AM_CFLAGS=-pedantic -Wall -Werror -Wextra
 
-bin_PROGRAMS=src/pick
-dist_src_pick_SOURCES=src/pick.c src/compat.h src/compat.c
+bin_PROGRAMS=pick
+dist_pick_SOURCES=pick.c compat.h compat.c
 dist_man_MANS=pick.1
 
 TESTS=tests/01.t tests/02.t tests/03.t tests/04.t tests/05.t tests/06.t \
