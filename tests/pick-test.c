@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 	/* Ensure room for program and null terminator. */
 	if ((pickargv = calloc(argc + 2, sizeof(const char **))) == NULL)
 		err(1, NULL);
-	pickargv[0] = "pick";
+	pickargv[0] = "./pick";
 	for (i = 0; i < argc; i++)
 		pickargv[i + 1] = argv[i];
 
