@@ -32,7 +32,7 @@
 #define tty_putp(capability, fatal) do {				\
 	if (tputs(capability, 1, tty_putc) == ERR && fatal)		\
 		errx(1, #capability ": unknown terminfo capability");	\
-	} while (0)
+} while (0)
 
 enum {
 	UNKNOWN,
