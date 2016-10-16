@@ -12,4 +12,4 @@ script:
   - ./autogen.sh
   - ./configure || (cat config.log; exit 1)
   - make || exit 1
-  - make check || (cat test-suite.log; exit 1)
+  - make distcheck || (cat test-suite.log; exit 1)
