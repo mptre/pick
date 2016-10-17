@@ -1,3 +1,14 @@
+# vX.Y.Z - YYYY-MM-DD
+
+## New features
+
+- Favor linking against curses instead of ncursesw (#167) (Anton Lindqvist)
+
+## Bug fixes
+
+- Fix off-by-one error related to query memory allocation (485b436) (Anton
+  Lindqvist)
+
 # v1.5.2 - 2016-10-13
 
 ## Bug fixes
