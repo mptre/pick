@@ -11,81 +11,73 @@
 .Op Fl x | Fl X
 .Op Fl q Ar query
 .Sh DESCRIPTION
+The
 .Nm
-allows users to select from a set of choices using an
-.Xr ncurses 3X
+utility allows users to select from a set of choices using an
+.Xr curses 3
 interface with fuzzy search functionality.
 .Pp
-.Nm
-accepts a list of choices as input and produces the selected choice as output.
+The choices are read from
+.Pa stdin ,
+and the selected choice written to
+.Pa stdout .
 .Pp
-.Nm
-supports these options and arguments:
-.Bl -tag -width "\&-q QUERY"
-.It Fl h
-output a help message and exit.
-.It Fl v
-output the version and exit.
-.It Fl S
-disable sorting.
-.Pp
-Only filter the choices instead of additionally sorting by score.
-.It Fl q Ar QUERY
-supply an initial search query.
+The options are as follows:
+.Bl -tag -width "-q query"
 .It Fl d
-read and display descriptions.
-.Pp
-When the
-.Fl d
-option is supplied, input lines will be split into two parts by the last
-occurrence of
+Read and display descriptions.
+Input lines will be split into two parts by the last occurrence of
 .Ev IFS .
 Both parts will be displayed but only the first part will be used when
 searching.
+.It Fl h
+Output a help message and exit.
 .It Fl o
-output description of selected on exit.
+Output description of selected choice on exit.
+.It Fl q Ar query
+Supply an initial search query.
+.It Fl S
+Disable sorting.
+Only filter the choices instead of additionally sorting by score.
+.It Fl v
+Output the version and exit.
 .It Fl x
-enable the use of the alternate screen terminal feature.
+Enable the use of the alternate screen terminal feature.
 .It Fl X
-disable the use of the alternate screen terminal feature.
+Disable the use of the alternate screen terminal feature.
 .El
-.Pp
-The
-.Nm
-.Xr ncurses 3X
-interface is operated with the following keys:
-.Bl -tag -width Backspace
-.It Ic "Ctrl\&-C"
-Exit with a status of 130 without outputting the selected choice.
-.It Ic "Up\&/Down or Ctrl\&-P\&/Ctrl\&-N"
+.Sh COMMANDS
+.Bl -tag -width XXXX
+.It Ic Ctrl-C
+Exit with a erroneous status without outputting the selected choice.
+.It Ic Up/Down | Ctrl-P/Ctrl-N
 Select between choices matching the current search query.
-.It Ic Page-Down\&/Page-Up
+.It Ic Page-Down/Page-Up
 Move the selection to the choice located one page down/up from the currently
 selected choice.
 .It Ic Enter
 Output the currently selected choice and exit.
-.It Ic Alt\&-Enter
+.It Ic Alt-Enter
 Output the current input query and exit.
-.It Ic "Printable characters"
-Printable characters are added to the search query input field and will refine
-the current search query.
-.It Ic "Left\&/Right or Ctrl\&-B\&/Ctrl\&-F"
+.It Ic Left/Right | Ctrl-B/Ctrl-F
 Move the cursor left and right in the search query input field.
-.It Ic "Ctrl\&-A"
+.It Ic Ctrl-A
 Move the cursor to the beginning of the line in the search query input field.
-.It Ic "Ctrl\&-E"
+.It Ic Ctrl-E
 Move the cursor to the end of the line in the search query input field.
 .It Ic Backspace
 Delete one character to the left of the cursor in the search query input field.
-.It Ic "Delete or Ctrl\&-D"
+.It Ic Delete | Ctrl-D
 Delete the character under the cursor in the search query input field.
-.It Ic "Ctrl\&-W"
+.It Ic Ctrl-W
 Delete to the beginning of the closest word to the left in the search query
 input field.
-.It Ic "Ctrl\&-U"
+.It Ic Ctrl-U
 Delete to the beginning of the line in the search query input field.
-.It Ic "Ctrl\&-K"
+.It Ic Ctrl-K
 Delete to the end of the line in the search query input field.
+.It Ic Printable characters
+Added to the search query and will refine the current search.
 .El
 .Sh ENVIRONMENT
 The following environment variables will affect the execution of
@@ -95,23 +87,16 @@ The following environment variables will affect the execution of
 Determines the separator used between choices and descriptions.
 .El
 .Sh EXAMPLES
-.Nm
-can be used to select anything and is very effective when combined with
-utilities like
-.Xr xargs 1 .
-.Pp
 Select a file in the current directory to open using
 .Xr xdg-open 1 :
-.Bd -literal -offset indent
-find -type f | pick | xargs xdg-open
-.Ed
+.Dl $ find -type f | pick | xargs xdg-open
 .Pp
 Select a man page to display with
 .Xr man 1 :
-.Bd -literal -offset indent
-apropos -l . | fltr | pick -do | tac | xargs man
-.Ed
+.Dl $ apropos -l . | fltr | pick -do | tac | xargs man
+.Sh DIAGNOSTICS
+.Ex -std
 .Sh AUTHORS
-.An "Calle Erlandsson" Aq calle@calleerlandsson.com
-.An "Anton Lindqvist" Aq anton.lindqvist@gmail.com
-.An "thoughtbot" Aq hello@thoughtbot.com
+.An Calle Erlandsson Aq Mt calle@calleerlandsson.com
+.An Anton Lindqvist Aq Mt anton.lindqvist@gmail.com
+.An thoughtbot Aq Mt hello@thoughtbot.com
