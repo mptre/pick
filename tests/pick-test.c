@@ -168,7 +168,7 @@ child(int master, int slave)
 		err(1, "setenv");
 
 	execv(pickargv[0], pickargv);
-	err(126 + (errno == ENOENT), "%s", pickargv[0]);
+	err(1, "%s", pickargv[0]);
 }
 
 static void
