@@ -167,7 +167,7 @@ child(int master, int slave)
 	if (setenv("MALLOC_OPTIONS", "S", 0) == -1)
 		err(1, "setenv");
 
-	execvp(pickargv[0], pickargv);
+	execv(pickargv[0], pickargv);
 	err(126 + (errno == ENOENT), "%s", pickargv[0]);
 }
 
