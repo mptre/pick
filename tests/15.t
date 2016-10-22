@@ -3,4 +3,5 @@ keys: 💩 \\n # ENTER
 stdin:
 😀
 💩
-stdout: 💩
+stdout:
+💩
