@@ -717,8 +717,9 @@ print_line(const char *string, size_t length, int so, ssize_t ulso, ssize_t uleo
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 
-	if (so)
-		tty_putp(exit_standout_mode, 1);
+	/* If uleo is greater than columns the underline attribute will spill
+	 * over on the next line unless all attributes are exited. */
+	tty_putp(exit_attribute_mode, 1);
 }
 
 /*
