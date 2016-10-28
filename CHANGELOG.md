@@ -8,10 +8,10 @@
 
 - Cleanup man page (#172) (Anton Lindqvist)
 
-## Bug fixes
-
 - Fix off-by-one error related to query memory allocation (485b436) (Anton
   Lindqvist)
+
+- Fix underline spill over bug (#174) (Anton Lindqvist)
 
 # v1.5.2 - 2016-10-13
 
