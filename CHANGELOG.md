@@ -13,6 +13,8 @@
 
 - Fix underline spill over bug (#174) (Anton Lindqvist)
 
+- Fix shortest left-most match bug (42c8197) (Anton Lindqvist)
+
 # v1.5.2 - 2016-10-13
 
 ## Bug fixes
