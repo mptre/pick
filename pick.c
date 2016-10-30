@@ -547,7 +547,7 @@ score(struct choice *choice)
 	}
 
 	match_length = choice->match_end - choice->match_start;
-	choice->score = (float)query_length / match_length / choice->length;
+	choice->score = (float)query_length/match_length;
 }
 
 size_t

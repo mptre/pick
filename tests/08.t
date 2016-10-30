@@ -6,4 +6,4 @@ ABC
 AB
 A
 stdout:
-A
+ABC
