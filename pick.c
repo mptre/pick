@@ -572,7 +572,7 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 	length = e - s;
 	/* LEQ is used to obtain the shortest left-most match. */
 	if (length == query_length
-	    || length <= min_match(string, offset + 1, start, end)) {
+	    || length <= min_match(string, s - string + 1, start, end)) {
 		*start = s - string;
 		*end = e - string;
 	}
