@@ -4,6 +4,8 @@
 
 - Favor linking against curses instead of ncursesw (#167) (Anton Lindqvist)
 
+- Improve performance (647b734) (Anton Lindqvist)
+
 ## Bug fixes
 
 - Cleanup man page (#172) (Anton Lindqvist)
