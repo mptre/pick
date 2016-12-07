@@ -756,6 +756,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		int		 key;
 	}	keys[] = {
 		{ "\n",		1,	ENTER },
+		{ "\r",		1,	ENTER },
 		{ "\177",	1,	BACKSPACE },
 		{ "\001",	1,	CTRL_A },
 		{ "\002",	1,	LEFT },
@@ -768,6 +769,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		{ "\025",	1,	CTRL_U },
 		{ "\027",	1,	CTRL_W },
 		{ "\033\n",	2,	ALT_ENTER },
+		{ "\033\r",	2,	ALT_ENTER },
 		{ "\033[A",	3,	UP },
 		{ "\033OA",	3,	UP },
 		{ "\033[B",	3,	DOWN },
