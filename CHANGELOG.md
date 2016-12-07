@@ -17,6 +17,8 @@
 
 - Fix shortest left-most match bug (42c8197) (Anton Lindqvist)
 
+- Recognize carriage return as enter (#178) (Anton Lindqvist)
+
 # v1.5.2 - 2016-10-13
 
 ## Bug fixes
