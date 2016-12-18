@@ -1,3 +1,10 @@
+# vX.Y.Z - YYYY-MM-DD
+
+## Bug fixes
+
+- Fix undefined behavior caused by shifting a signed integer (b4c8656) (Anton
+  Lindqvist)
+
 # v1.5.3 - 2016-12-07
 
 ## New features
