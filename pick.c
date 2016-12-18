@@ -826,7 +826,7 @@ getc:
 	 * the character consists of, followed by a zero. Therefore, as long as
 	 * the MSB is not zero there is still bytes left to read.
 	 */
-	while (((buf[0] << *nread) & 0x80) == 0x80 && size-- > 0)
+	while ((((unsigned int)buf[0] << *nread) & 0x80) == 0x80 && size-- > 0)
 		buf[(*nread)++] = tty_getc();
 
 	return UNKNOWN;
