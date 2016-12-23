@@ -76,7 +76,6 @@ static size_t			 min_match(const char *, size_t, ssize_t *,
 static int			 print_choices(int, int);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
-static void			 score(struct choice *);
 static const struct choice	*selected_choice(void);
 static const char		*strcasechr(const char *, const char *);
 static int			 tty_getc(void);
@@ -490,12 +489,23 @@ selected_choice(void)
 void
 filter_choices(void)
 {
-	struct pollfd	pfd;
-	size_t		i;
-	int		nready;
+	struct choice	*c;
+	struct pollfd	 pfd;
+	size_t		 i, match_length;
+	int		 nready;
 
 	for (i = 0; i < choices.length; i++) {
-		score(&choices.v[i]);
+		c = &choices.v[i];
+		if (min_match(c->string, 0,
+			    &c->match_start, &c->match_end) == INT_MAX) {
+			c->match_start = c->match_end = -1;
+			c->score = 0;
+		} else if (!sort) {
+			c->score = 1;
+		} else {
+			match_length = c->match_end - c->match_start;
+			c->score = (float)query_length/match_length/c->length;
+		}
 
 		/*
 		 * Regularly check if there is any new user input available. If
@@ -527,27 +537,6 @@ choicecmp(const void *p1, const void *p2)
 	if (c1->score > c2->score)
 		return -1;
 	return c1->string - c2->string;
-}
-
-void
-score(struct choice *choice)
-{
-	size_t	match_length;
-
-	if (min_match(choice->string, 0,
-		      &choice->match_start, &choice->match_end) == INT_MAX) {
-		choice->match_start = choice->match_end = -1;
-		choice->score = 0;
-		return;
-	}
-
-	if (!sort) {
-		choice->score = 1;
-		return;
-	}
-
-	match_length = choice->match_end - choice->match_start;
-	choice->score = (float)query_length / match_length / choice->length;
 }
 
 size_t
