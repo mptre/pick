@@ -5,6 +5,8 @@
 - Fix undefined behavior caused by shifting a signed integer (b4c8656) (Anton
   Lindqvist)
 
+- Only define __dead if it's missing (#180) (Anton Lindqvist)
+
 # v1.5.3 - 2016-12-07
 
 ## New features
