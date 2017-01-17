@@ -18,8 +18,19 @@ static char	*parsekeys(const char *);
 static void	 sighandler(int);
 static void	 usage(void);
 
-static char	**pickargv;
-static int	  gotsig;
+static char		**pickargv;
+/*
+ * Mandatory environment variables required by pick to operate correctly.
+ * If any of these variables is absent in the current environment, they will be
+ * defined using the corresponding value.
+ */
+static const char	 *pickenv[] = {
+	"LC_CTYPE",		"en_US.UTF-8",
+	"MALLOC_OPTIONS",	"S",	/* malloc.conf(5) options on OpenBSD */
+	"TERM",			"vt100",
+	NULL,
+};
+static int		  gotsig;
 
 int
 main(int argc, char *argv[])
@@ -131,8 +142,9 @@ sighandler(int sig)
 static void
 child(int master, int slave)
 {
-	struct winsize	ws;
-	int		fd;
+	const char	**env;
+	struct winsize	  ws;
+	int		  fd;
 
 	close(master);
 
@@ -159,13 +171,9 @@ child(int master, int slave)
 	if (ioctl(slave, TIOCSWINSZ, &ws) == -1)
 		err(1, "TIOCSWINSZ");
 
-	/*
-	 * Enable malloc.conf(5) options on OpenBSD which will abort the pick
-	 * process when reading/writing out-of-bounds or accessing already freed
-	 * memory.
-	 */
-	if (setenv("MALLOC_OPTIONS", "S", 0) == -1)
-		err(1, "setenv");
+	for (env = pickenv; *env != NULL; env += 2)
+		if (setenv(env[0], env[1], 0) == -1)
+			err(1, "setenv: %s", env[0]);
 
 	execv(pickargv[0], pickargv);
 	err(1, "%s", pickargv[0]);
