@@ -18,8 +18,9 @@ TEST_EXTENSIONS=.t
 T_LOG_COMPILER=$(top_srcdir)/tests/test.sh
 check_PROGRAMS=tests/pick-test
 tests_pick_test_SOURCES=tests/pick-test.c
+tests_pick_test_CFLAGS=$(AM_CFLAGS)
 # Required by posix_openpt on Linux.
-tests_pick_test_CFLAGS=-D_XOPEN_SOURCE=600
+tests_pick_test_CFLAGS+=-D_XOPEN_SOURCE=600
 
 EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md tests/test.sh $(TESTS)
 
