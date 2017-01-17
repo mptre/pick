@@ -15,14 +15,14 @@ TESTS=tests/01.t tests/02.t tests/03.t tests/04.t tests/05.t tests/06.t \
       tests/37.t tests/38.t tests/39.t tests/40.t tests/41.t tests/42.t \
       tests/43.t tests/44.t tests/45.t
 TEST_EXTENSIONS=.t
-T_LOG_COMPILER=$(top_srcdir)/tests/test.sh
+T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh
 check_PROGRAMS=tests/pick-test
 tests_pick_test_SOURCES=tests/pick-test.c
 tests_pick_test_CFLAGS=$(AM_CFLAGS)
 # Required by posix_openpt on Linux.
 tests_pick_test_CFLAGS+=-D_XOPEN_SOURCE=600
 
-EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md tests/test.sh $(TESTS)
+EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md tests/pick-test.sh $(TESTS)
 
 INSTALL.md: INSTALL.md.in
 	sed -e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $@.in > $@

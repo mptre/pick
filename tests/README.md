@@ -1,7 +1,7 @@
 Test suite
 ==========
 
-The test suite consists of a shell script `test.sh` responsible for running
+The test suite consists of a shell script `pick-test.sh` responsible for running
 tests written in the file format described below and `pick-test.c` which will
 invoke pick with a pseudo-terminal. This allows sending keyboard input sequences
 and reading the output on exit.
