@@ -1,5 +1,7 @@
 # vX.Y.Z - YYYY-MM-DD
 
+# v1.5.4 - 2017-01-23
+
 ## Bug fixes
 
 - Fix undefined behavior caused by shifting a signed integer (b4c8656) (Anton
