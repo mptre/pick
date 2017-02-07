@@ -8,6 +8,8 @@ os:
 compiler:
   - clang
   - gcc
+env:
+  - CFLAGS=-fsanitize=address
 # GCC is linked to Clang on macOS
 matrix:
   exclude:
