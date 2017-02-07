@@ -66,7 +66,7 @@ static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
 static void			 filter_choices(void);
-static void			 get_choices(void);
+static char			*get_choices(void);
 static int			 get_key(char *, size_t, size_t *);
 static void			 handle_sigint(int);
 static int			 isu8cont(unsigned char);
@@ -101,6 +101,7 @@ int
 main(int argc, char **argv)
 {
 	const struct choice	*choice;
+	char			*input;
 	int			 c;
 	int			 output_description = 0;
 
@@ -155,7 +156,7 @@ main(int argc, char **argv)
 			err(1, NULL);
 	}
 
-	get_choices();
+	input = get_choices();
 	tty_init();
 
 #ifdef HAVE_PLEDGE
@@ -171,6 +172,7 @@ main(int argc, char **argv)
 			printf("%s\n", choice->description);
 	}
 
+	free(input);
 	free(choices.v);
 	free(query);
 
@@ -193,7 +195,7 @@ usage(void)
 	exit(EX_USAGE);
 }
 
-void
+char *
 get_choices(void)
 {
 	char		*buf, *description, *field_separators, *start, *stop;
@@ -253,6 +255,8 @@ get_choices(void)
 				    sizeof(struct choice))) == NULL)
 			err(1, NULL);
 	}
+
+	return buf;
 }
 
 char *
