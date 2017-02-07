@@ -19,4 +19,4 @@ script:
   - ./autogen.sh
   - ./configure || (cat config.log; exit 1)
   - make || exit 1
-  - make distcheck || (cat test-suite.log; exit 1)
+  - make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
