@@ -167,6 +167,7 @@ child(int master, int slave)
 	 * Set window size to known dimensions, necessary in order to deduce
 	 * when scrolling should occur.
 	 */
+	memset(&ws, 0, sizeof(ws));
 	ws.ws_col = 80, ws.ws_row = 24;
 	if (ioctl(slave, TIOCSWINSZ, &ws) == -1)
 		err(1, "TIOCSWINSZ");
