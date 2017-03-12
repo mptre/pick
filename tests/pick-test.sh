@@ -9,9 +9,9 @@ usage() {
 
 fail=
 
-stdout=$(mktemp -t pick.act.XXXXXX)
+stdout=$(mktemp -t pick.exp.XXXXXX)
 stdin=$(mktemp -t pick.XXXXXX)
-out=$(mktemp -t pick.exp.XXXXXX)
+out=$(mktemp -t pick.act.XXXXXX)
 trap "rm "$stdout" "$stdin" "$out"" EXIT
 
 for testcase; do
@@ -35,7 +35,7 @@ for testcase; do
     cat "$out" 1>&2
     fail=1
   fi
-  if [ -s "$stdout" ] && ! diff -u "$out" "$stdout"; then
+  if [ -s "$stdout" ] && ! diff -u "$stdout" "$out"; then
     fail=1
   fi
 done
