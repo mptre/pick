@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sysexits.h>
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -25,9 +24,6 @@
 #endif
 
 #include "compat.h"
-
-#define EX_SIG 128
-#define EX_SIGINT (EX_SIG + SIGINT)
 
 #define tty_putp(capability, fatal) do {				\
 	if (tputs(capability, 1, tty_putc) == ERR && fatal)		\
@@ -135,7 +131,7 @@ main(int argc, char **argv)
 			break;
 		case 'v':
 			puts(PACKAGE_VERSION);
-			exit(EX_OK);
+			exit(0);
 		case 'x':
 			use_alternate_screen = 1;
 			break;
@@ -176,7 +172,7 @@ main(int argc, char **argv)
 	free(choices.v);
 	free(query);
 
-	return EX_OK;
+	return 0;
 }
 
 __dead void
@@ -192,7 +188,7 @@ usage(void)
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
 
-	exit(EX_USAGE);
+	exit(1);
 }
 
 char *
@@ -635,7 +631,7 @@ void
 handle_sigint(int sig __attribute__((unused)))
 {
 	tty_restore();
-	exit(EX_SIGINT);
+	exit(1);
 }
 
 void
