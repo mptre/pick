@@ -1,5 +1,18 @@
 # vX.Y.Z - YYYY-MM-DD
 
+## Bug fixes
+
+- Fix memory leak (63c7da5) (Anton Lindqvist)
+
+- Postpone initial pledge call (bb0ef4f) (Anton Lindqvist)
+
+## New features
+
+- Test suite improvements (5c339d8, 2a5196a, 618a490, fd824f5) (Anton Lindqvist)
+
+- Exit with `0` on success and `1` on failure instead of using the exit codes
+  defined in `sysexits.h` (e3a5207, #183) (Anton Lindqvist)
+
 # v1.5.4 - 2017-01-23
 
 ## Bug fixes
