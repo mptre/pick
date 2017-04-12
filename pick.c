@@ -613,7 +613,7 @@ tty_init(void)
 
 	setupterm((char *)0, fileno(tty_out), (int *)0);
 
-	choices_lines = lines - 1; /* available lines, minus query line */
+	choices_lines = lines - 1;	/* available lines, minus query line */
 
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode, 0);
