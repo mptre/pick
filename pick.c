@@ -101,12 +101,12 @@ main(int argc, char **argv)
 	int			 c;
 	int			 output_description = 0;
 
+	setlocale(LC_CTYPE, "");
+
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 #endif
-
-	setlocale(LC_CTYPE, "");
 
 	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
 		switch (c) {
