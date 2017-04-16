@@ -667,65 +667,95 @@ tty_restore(void)
 }
 
 void
-print_line(const char *string, size_t length, int so, ssize_t ulso, ssize_t uleo)
+print_line(const char *str, size_t len, int standout,
+    ssize_t enter_underline, ssize_t exit_underline)
 {
 	size_t	i;
-	int	c, col, tabwidth;
-	int	in_esc_seq = 0;
-	int	non_printable = 0;
+	wchar_t	wc;
+	int	col, in_esc_seq, nbytes, width;
 
-	if (so)
+	if (standout)
 		tty_putp(enter_standout_mode, 1);
 
-	for (col = i = 0; i < length && col < columns; i++) {
-		if (i == (size_t)ulso)
+	col = i = in_esc_seq = 0;
+	while (col < columns) {
+		if (enter_underline == (ssize_t)i)
 			tty_putp(enter_underline_mode, 1);
+		else if (exit_underline == (ssize_t)i)
+			tty_putp(exit_underline_mode, 1);
+		if (i == len)
+			break;
 
-		/*
-		 * Count the number of outputted ANSI escape sequences
-		 * in order to adjust the column count since they do not
-		 * occupy any screen real-estate.
-		 */
-		if (in_esc_seq) {
-			non_printable++;
-			if (string[i] >= '@' && string[i] <= '~')
-				in_esc_seq = 0;
-		} else if (i > 0 && string[i - 1] == '\033'
-		    && string[i] == '[') {
-			in_esc_seq = 1;
-			non_printable = 2;
-		}
-
-		c = string[i];
-		if (c == '\t') {
-			/* Ceil column count to multiple of 8. */
-			col += tabwidth = 8 - (col & 7);
-			while (tabwidth-- > 0)
+		if (str[i] == '\t') {
+			width = 8 - (col & 7);	/* ceil to multiple of 8 */
+			if (col + width > columns)
+				break;
+			for (; width > 0; width--)
 				if (tty_putc(' ') == ERR)
 					err(1, "tty_putc");
-		} else {
-			/*
-			 * A null character will be present prior the
-			 * terminating null character if descriptions is
-			 * enabled.
-			 */
-			if (c == '\0')
-				c = ' ';
-			if (!isu8cont(c))
-				col++;
-			if (tty_putc(c) == EOF)
-				err(1, "tty_putc");
+
+			i++, col += width;
+			continue;
 		}
 
-		if (i + 1 == (size_t)uleo)
-			tty_putp(exit_underline_mode, 1);
+		/*
+		 * A NUL will be present prior the NUL-terminator if
+		 * descriptions are enabled.
+		 */
+		if (str[i] == '\0') {
+			if (tty_putc(' ') == ERR)
+				err(1, "tty_putc");
+
+			i++, col++;
+			continue;
+		}
+
+		/*
+		 * Due to the explicit NUL-check above, the case where
+		 * mbtowc(3) returns 0 is not handled here.
+		 */
+		if ((nbytes = mbtowc(&wc, &str[i], MB_CUR_MAX)) == -1) {
+			mbtowc(NULL, NULL, MB_CUR_MAX);
+			i++;
+			continue;
+		}
+
+		width = 0;
+		if (i > 0 && str[i - 1] == '\033' && str[i] == '[')
+			/*
+			 * Start of ANSI escape sequence. The previous
+			 * ESC-character already has a zero width but any
+			 * following characters will not consume any columns
+			 * once displayed.
+			 */
+			in_esc_seq = 1;
+		else if (!in_esc_seq && (width = wcwidth(wc)) < 0)
+			/*
+			 * The character is not printable. However, it could be
+			 * an ESC-character marking the the beginning an escape
+			 * sequence so make sure to display every valid
+			 * characters.
+			 */
+			width = 0;
+		else if (str[i] >= '@' && str[i] <= '~')
+			in_esc_seq = 0;
+
+		if (col + width > columns)
+			break;
+		col += width;
+
+		for (; nbytes > 0; nbytes--, i++)
+			if (tty_putc(str[i]) == EOF)
+				err(1, "tty_putc");
 	}
-	for (col -= non_printable; col < columns; col++)
+	for (; col < columns; col++)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 
-	/* If uleo is greater than columns the underline attribute will spill
-	 * over on the next line unless all attributes are exited. */
+	/*
+	 * If exit_underline is greater than columns the underline attribute
+	 * will spill over on the next line unless all attributes are exited.
+	 */
 	tty_putp(exit_attribute_mode, 1);
 }
 
