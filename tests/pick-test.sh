@@ -24,7 +24,7 @@ for testcase; do
       case "$key" in
       stdin)  tmpfile=$stdin; >$tmpfile ;;
       stdout) tmpfile=$stdout; >$tmpfile ;;
-      *)      echo "$key" >>$tmpfile ;;
+      *)      printf "${key}\n" >>$tmpfile ;;
       esac
     fi
   done <$testcase

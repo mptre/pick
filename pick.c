@@ -571,12 +571,14 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 
 /*
  * Returns a pointer to first occurrence of the first character in s2 in s1 with
- * respect to Unicode characters and disregarding case.
+ * respect to Unicode characters, ANSI escape sequences and disregarding case.
  */
 const char *
 strcasechr(const char *s1, const char *s2)
 {
 	wchar_t	wc1, wc2;
+	size_t	i;
+	int	in_esc_seq, nbytes;
 
 	switch (mbtowc(&wc2, s2, MB_CUR_MAX)) {
 	case -1:
@@ -586,11 +588,26 @@ strcasechr(const char *s1, const char *s2)
 		return NULL;
 	}
 
-	for (; *s1 != '\0'; s1++)
-		if (mbtowc(&wc1, s1, MB_CUR_MAX) == -1)
+	in_esc_seq = 0;
+	for (i = 0; s1[i] != '\0';) {
+		nbytes = 1;
+
+		if (in_esc_seq) {
+			if (s1[i] >= '@' && s1[i] <= '~')
+				in_esc_seq = 0;
+		} else if (i > 0 && s1[i - 1] == '\033' && s1[i] == '[') {
+			in_esc_seq = 1;
+		} else if ((nbytes = mbtowc(&wc1, &s1[i], MB_CUR_MAX)) == -1) {
 			mbtowc(NULL, NULL, MB_CUR_MAX);
-		else if (wcsncasecmp(&wc1, &wc2, 1) == 0)
-			return s1;
+		} else if (wcsncasecmp(&wc1, &wc2, 1) == 0) {
+			return &s1[i];
+		}
+
+		if (nbytes > 0)
+			i += nbytes;
+		else
+			i++;
+	}
 
 	return NULL;
 }
