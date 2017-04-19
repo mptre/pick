@@ -6,6 +6,14 @@
 
 - Postpone initial pledge call (bb0ef4f) (Anton Lindqvist)
 
+- Don't match strings inside escape sequences (3c0b407) (Anton Lindqvist)
+
+- Calculate the width of each displayed character (369350b, #184, #185) (Anton
+  Lindqvist)
+
+- Define `_GNU_SOURCE` in order to make `wcwidth(3)` available on Linux
+  (ffb4ca4, #185) (Anton Lindqvist)
+
 ## New features
 
 - Test suite improvements (5c339d8, 2a5196a, 618a490, fd824f5) (Anton Lindqvist)
