@@ -1,5 +1,7 @@
 # vX.Y.Z - YYYY-MM-DD
 
+# v1.6.0 - 2017-04-19
+
 ## Bug fixes
 
 - Fix memory leak (63c7da5) (Anton Lindqvist)
