@@ -87,4 +87,4 @@ See the `pick(1)` man page for detailed usage instructions and more examples.
 
 ## Copyright
 
-Copyright (c) 2016 Calle Erlandsson, Anton Lindqvist & thoughtbot.
+Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
