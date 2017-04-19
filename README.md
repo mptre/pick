@@ -40,6 +40,10 @@ make install clean
 pkg install pick
 ```
 
+### OpenBSD
+
+Available in ports under `sysutils/pick`.
+
 ### From source
 
 1. Download the latest release from [the releases page], optionally check the
