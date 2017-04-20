@@ -690,11 +690,13 @@ print_line(const char *str, size_t len, int standout,
 			width = 8 - (col & 7);	/* ceil to multiple of 8 */
 			if (col + width > columns)
 				break;
+			col += width;
+
 			for (; width > 0; width--)
 				if (tty_putc(' ') == ERR)
 					err(1, "tty_putc");
 
-			i++, col += width;
+			i++;
 			continue;
 		}
 
