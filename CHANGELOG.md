@@ -1,5 +1,7 @@
 # vX.Y.Z - YYYY-MM-DD
 
+# v1.6.1 - 2017-04-24
+
 - Fix tab output bug (db2d9f4) (Anton Lindqvist)
 
 # v1.6.0 - 2017-04-19
