@@ -19,6 +19,7 @@ depcomp
 install-sh
 missing
 pick-*.tar.gz
+pick-*.tar.gz.asc
 stamp-h1
 .dirstamp
 test-driver
