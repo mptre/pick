@@ -846,14 +846,12 @@ get_key(char *buf, size_t size, size_t *nread)
 
 	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
 		/*
-		 * A escape sequence which is not a supported key is being read.
-		 * Discard the rest of the sequence.
+		 * An escape sequence which is not a supported key is being
+		 * read. Discard the rest of the sequence.
 		 */
-		for (;;) {
+		c = buf[(*nread) - 1];
+		while (c < '@' || c > '~')
 			c = tty_getc();
-			if (c >= '@' && c <= '~')
-				break;
-		}
 
 		return UNKNOWN;
 	}
