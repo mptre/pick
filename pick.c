@@ -826,20 +826,22 @@ get_key(char *buf, size_t size, size_t *nread)
 	int	c, i;
 
 	*nread = 0;
-getc:
-	buf[(*nread)++] = tty_getc();
-	size--;
-	for (i = 0; keys[i].s != NULL; i++) {
-		if (*nread > keys[i].length
-		    || strncmp(buf, keys[i].s, *nread) != 0)
-			continue;
+	for (; size > 0; size--) {
+		buf[(*nread)++] = tty_getc();
 
-		if (*nread == keys[i].length)
-			return keys[i].key;
+		for (i = 0; keys[i].s != NULL; i++) {
+			if (*nread > keys[i].length
+			    || strncmp(buf, keys[i].s, *nread) != 0)
+				continue;
 
-		/* Partial match found, continue reading. */
-		if (size > 0)
-			goto getc;
+			if (*nread == keys[i].length)
+				return keys[i].key;
+
+			/* Partial match found, continue reading. */
+			break;
+		}
+		if (keys[i].s == NULL)
+			break;
 	}
 
 	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
