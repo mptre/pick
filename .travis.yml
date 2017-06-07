@@ -10,9 +10,18 @@ compiler:
   - gcc
 env:
   - CFLAGS=-fsanitize=address
-# GCC is linked to Clang on macOS
+  - CFLAGS=-fsanitize=undefined
 matrix:
   exclude:
+    # UBSan requires GCC >= 4.9
+    - os: linux
+      compiler: gcc
+      env: CFLAGS=-fsanitize=undefined
+    # UBSan requires LLVM >= 3.3
+    - os: osx
+      compiler: clang
+      env: CFLAGS=-fsanitize=undefined
+    # GCC is linked to Clang on macOS
     - os: osx
       compiler: gcc
 script:
