@@ -788,39 +788,40 @@ print_choices(int offset, int selection)
 int
 get_key(char *buf, size_t size, size_t *nread)
 {
+#define	KEY(k, s)	{ k, s, sizeof(s) - 1 }
 	static struct {
+		int		 key;
 		const char	*s;
 		size_t		 length;
-		int		 key;
 	}	keys[] = {
-		{ "\n",		1,	ENTER },
-		{ "\r",		1,	ENTER },
-		{ "\177",	1,	BACKSPACE },
-		{ "\001",	1,	CTRL_A },
-		{ "\002",	1,	LEFT },
-		{ "\004",	1,	DEL },
-		{ "\005",	1,	CTRL_E },
-		{ "\006",	1,	RIGHT },
-		{ "\013",	1,	CTRL_K },
-		{ "\016",	1,	DOWN },
-		{ "\020",	1,	UP },
-		{ "\025",	1,	CTRL_U },
-		{ "\027",	1,	CTRL_W },
-		{ "\033\n",	2,	ALT_ENTER },
-		{ "\033\r",	2,	ALT_ENTER },
-		{ "\033[A",	3,	UP },
-		{ "\033OA",	3,	UP },
-		{ "\033[B",	3,	DOWN },
-		{ "\033OB",	3,	DOWN },
-		{ "\033[C",	3,	RIGHT },
-		{ "\033OC",	3,	RIGHT },
-		{ "\033[D",	3,	LEFT },
-		{ "\033OD",	3,	LEFT },
-		{ "\033[3~",	4,	DEL },
-		{ "\033O3~",	4,	DEL },
-		{ "\033[6~",	4,	PAGE_DOWN },
-		{ "\033[5~",	4,	PAGE_UP },
-		{ NULL,		0,	0 },
+		KEY(ALT_ENTER,	"\033\n"),
+		KEY(ALT_ENTER,	"\033\r"),
+		KEY(BACKSPACE,	"\177"),
+		KEY(CTRL_A,	"\001"),
+		KEY(CTRL_E,	"\005"),
+		KEY(CTRL_K,	"\013"),
+		KEY(CTRL_U,	"\025"),
+		KEY(CTRL_W,	"\027"),
+		KEY(DEL,	"\004"),
+		KEY(DEL,	"\033O3~"),
+		KEY(DEL,	"\033[3~"),
+		KEY(DOWN,	"\016"),
+		KEY(DOWN,	"\033OB"),
+		KEY(DOWN,	"\033[B"),
+		KEY(ENTER,	"\n"),
+		KEY(ENTER,	"\r"),
+		KEY(LEFT,	"\002"),
+		KEY(LEFT,	"\033OD"),
+		KEY(LEFT,	"\033[D"),
+		KEY(PAGE_DOWN,	"\033[6~"),
+		KEY(PAGE_UP,	"\033[5~"),
+		KEY(RIGHT,	"\006"),
+		KEY(RIGHT,	"\033OC"),
+		KEY(RIGHT,	"\033[C"),
+		KEY(UP,		"\020"),
+		KEY(UP,		"\033OA"),
+		KEY(UP,		"\033[A"),
+		{ 0, NULL, 0 },
 	};
 	int	c, i;
 
