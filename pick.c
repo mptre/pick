@@ -55,7 +55,7 @@ struct choice {
 	size_t		 length;
 	ssize_t		 match_start;	/* inclusive match start offset */
 	ssize_t		 match_end;	/* exclusive match end offset */
-	float		 score;
+	double		 score;
 };
 
 static int			 choicecmp(const void *, const void *);
