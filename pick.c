@@ -30,7 +30,7 @@
 		errx(1, #capability ": unknown terminfo capability");	\
 } while (0)
 
-enum {
+enum key {
 	UNKNOWN,
 	ALT_ENTER,
 	BACKSPACE,
@@ -46,7 +46,8 @@ enum {
 	DOWN,
 	LEFT,
 	PAGE_DOWN,
-	PAGE_UP
+	PAGE_UP,
+	PRINTABLE
 };
 
 struct choice {
@@ -63,7 +64,7 @@ static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
 static void			 filter_choices(void);
 static char			*get_choices(void);
-static int			 get_key(char *, size_t, size_t *);
+static enum key			 get_key(char *, size_t, size_t *);
 static void			 handle_sigint(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
@@ -275,7 +276,7 @@ selected_choice(void)
 	size_t	cursor_position, i, j, length;
 	size_t	xscroll = 0;
 	char	buf[6];
-	int	choices_count, key, word_position;
+	int	choices_count, word_position;
 	int	selection = 0;
 	int	yscroll = 0;
 
@@ -327,8 +328,7 @@ selected_choice(void)
 		tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
-		key = get_key(buf, sizeof(buf), &length);
-		switch (key) {
+		switch (get_key(buf, sizeof(buf), &length)) {
 		case ENTER:
 			if (choices_count > 0)
 				return &choices.v[selection];
@@ -456,10 +456,7 @@ selected_choice(void)
 			else
 				yscroll = selection = 0;
 			break;
-		default:
-			if (!isu8start(buf[0]) && !isprint(buf[0]))
-				continue;
-
+		case PRINTABLE:
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
@@ -478,6 +475,8 @@ selected_choice(void)
 			query[query_length] = '\0';
 			filter_choices();
 			selection = yscroll = 0;
+		case UNKNOWN:
+			break;
 		}
 	}
 }
@@ -785,12 +784,12 @@ print_choices(int offset, int selection)
 	return i;
 }
 
-int
+enum key
 get_key(char *buf, size_t size, size_t *nread)
 {
 #define	KEY(k, s)	{ k, s, sizeof(s) - 1 }
 	static struct {
-		int		 key;
+		enum key	 key;
 		const char	*s;
 		size_t		 length;
 	}	keys[] = {
@@ -856,8 +855,12 @@ get_key(char *buf, size_t size, size_t *nread)
 		return UNKNOWN;
 	}
 
-	if (!isu8start(buf[0]))
+	if (!isu8start(buf[0])) {
+		if (isprint(buf[0]))
+			return PRINTABLE;
+
 		return UNKNOWN;
+	}
 
 	/*
 	 * Ensure a whole Unicode character is read. The number of MSBs in the
@@ -865,10 +868,17 @@ get_key(char *buf, size_t size, size_t *nread)
 	 * the character consists of, followed by a zero. Therefore, as long as
 	 * the MSB is not zero there is still bytes left to read.
 	 */
-	while ((((unsigned int)buf[0] << *nread) & 0x80) == 0x80 && size-- > 0)
-		buf[(*nread)++] = tty_getc();
+	for (;;) {
+		if ((((unsigned int)buf[0] << *nread) & 0x80) == 0)
+			break;
+		if (size == 0)
+			return UNKNOWN;
 
-	return UNKNOWN;
+		buf[(*nread)++] = tty_getc();
+		size--;
+	}
+
+	return PRINTABLE;
 }
 
 int
