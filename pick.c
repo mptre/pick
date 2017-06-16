@@ -47,6 +47,8 @@ enum key {
 	LEFT,
 	PAGE_DOWN,
 	PAGE_UP,
+	HOME,
+	END,
 	PRINTABLE
 };
 
@@ -456,6 +458,16 @@ selected_choice(void)
 			else
 				yscroll = selection = 0;
 			break;
+		case HOME:
+			if (selection > 0)
+				yscroll = selection = 0;
+			break;
+		case END:
+			if (selection < choices_count - 1)
+				selection = choices_count - 1;
+				if (selection - yscroll >= choices_lines)
+					yscroll = selection - choices_lines + 1;
+			break;
 		case PRINTABLE:
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
@@ -795,6 +807,7 @@ get_key(char *buf, size_t size, size_t *nread)
 	}	keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
 		KEY(ALT_ENTER,	"\033\r"),
+		KEY(BACKSPACE,	"\b"),
 		KEY(BACKSPACE,	"\177"),
 		KEY(CTRL_A,	"\001"),
 		KEY(CTRL_E,	"\005"),
@@ -814,6 +827,10 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(LEFT,	"\033[D"),
 		KEY(PAGE_DOWN,	"\033[6~"),
 		KEY(PAGE_UP,	"\033[5~"),
+		KEY(HOME,	"\033[7~"),
+		KEY(HOME,	"\033[OH"),
+		KEY(END,	"\033[8~"),
+		KEY(END,	"\033[OF"),
 		KEY(RIGHT,	"\006"),
 		KEY(RIGHT,	"\033OC"),
 		KEY(RIGHT,	"\033[C"),
