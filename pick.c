@@ -621,6 +621,7 @@ tty_init(void)
 
 	tcgetattr(fileno(tty_in), &original_attributes);
 	new_attributes = original_attributes;
+	new_attributes.c_iflag |= ICRNL;	/* map CR to NL */
 	new_attributes.c_lflag &= ~(ICANON | ECHO);
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
@@ -794,7 +795,6 @@ get_key(char *buf, size_t size, size_t *nread)
 		size_t		 length;
 	}	keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
-		KEY(ALT_ENTER,	"\033\r"),
 		KEY(BACKSPACE,	"\177"),
 		KEY(CTRL_A,	"\001"),
 		KEY(CTRL_E,	"\005"),
@@ -808,7 +808,6 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(DOWN,	"\033OB"),
 		KEY(DOWN,	"\033[B"),
 		KEY(ENTER,	"\n"),
-		KEY(ENTER,	"\r"),
 		KEY(LEFT,	"\002"),
 		KEY(LEFT,	"\033OD"),
 		KEY(LEFT,	"\033[D"),
