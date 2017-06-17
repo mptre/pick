@@ -24,8 +24,11 @@ matrix:
     # GCC is linked to Clang on macOS
     - os: osx
       compiler: gcc
+install:
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew install mandoc; fi
 script:
   - ./autogen.sh
   - ./configure || (cat config.log; exit 1)
   - make || exit 1
   - make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
+  - if [ $TRAVIS_OS_NAME = osx ]; then mandoc -Tlint pick.1; fi
