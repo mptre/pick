@@ -27,7 +27,7 @@ static char		**pickargv;
 static const char	 *pickenv[] = {
 	"LC_CTYPE",		"en_US.UTF-8",
 	"MALLOC_OPTIONS",	"S",	/* malloc.conf(5) options on OpenBSD */
-	"TERM",			"vt100",
+	"TERM",			"xterm",
 	NULL,
 };
 static int		  gotsig;
@@ -173,7 +173,7 @@ child(int master, int slave)
 		err(1, "TIOCSWINSZ");
 
 	for (env = pickenv; *env != NULL; env += 2)
-		if (setenv(env[0], env[1], 0) == -1)
+		if (setenv(env[0], env[1], 1) == -1)
 			err(1, "setenv: %s", env[0]);
 
 	execv(pickargv[0], pickargv);
