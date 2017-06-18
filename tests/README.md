@@ -68,6 +68,16 @@ The following fields are recognized:
   A backslash character is expressed as `\\`,
   thus newline equals `\\n` and space `\\ `.
 
+  The test suite is executed with `TERM=xterm`,
+  therefore make sure to only use the corresponding value for a given capability
+  as defined by the xterm terminfo database.
+  Given a capability,
+  the value can be retrieved using `infocmp(1)`:
+
+  ```sh
+  $ infocmp -1 xterm | grep khome
+  ```
+
 - `stdin`
 
   Multi-line input to the pick process.
