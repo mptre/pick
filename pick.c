@@ -31,23 +31,30 @@
 } while (0)
 
 enum key {
-	UNKNOWN,
 	ALT_ENTER,
 	BACKSPACE,
-	DEL,
-	ENTER,
 	CTRL_A,
 	CTRL_E,
 	CTRL_K,
 	CTRL_U,
 	CTRL_W,
-	UP,
-	RIGHT,
+	DEL,
 	DOWN,
+	END,
+	ENTER,
+	HOME,
 	LEFT,
 	PAGE_DOWN,
 	PAGE_UP,
-	PRINTABLE
+	PRINTABLE,
+<<<<<<< HEAD
+	RIGHT,
+	UNKNOWN,
+=======
+	UNKNOWN,
+	RIGHT,
+>>>>>>> 302fa44add421cad65e4de086a03d43482aae3f0
+	UP
 };
 
 struct choice {
@@ -456,6 +463,16 @@ selected_choice(void)
 			else
 				yscroll = selection = 0;
 			break;
+		case END:
+			if (choices_count > 0) {
+				selection = choices_count - 1;
+				if (selection -yscroll >= choices_lines)
+					yscroll = choices_count - choices_lines;
+			}
+			break;
+		case HOME:
+			yscroll = selection = 0;
+			break;
 		case PRINTABLE:
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
@@ -807,8 +824,14 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(DOWN,	"\016"),
 		KEY(DOWN,	"\033OB"),
 		KEY(DOWN,	"\033[B"),
+		KEY(END,	"\033OF"),
+		KEY(END,	"\033[4~"),
+		KEY(END,	"\033[8~"),
 		KEY(ENTER,	"\n"),
 		KEY(ENTER,	"\r"),
+		KEY(HOME,	"\033OH"),
+		KEY(HOME,	"\033[1~"),
+		KEY(HOME,	"\033[7~"),
 		KEY(LEFT,	"\002"),
 		KEY(LEFT,	"\033OD"),
 		KEY(LEFT,	"\033[D"),
