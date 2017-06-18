@@ -78,6 +78,7 @@ static void			 print_line(const char *, size_t, int, ssize_t,
 static const struct choice	*selected_choice(void);
 static const char		*strcasechr(const char *, const char *);
 static int			 tty_getc(void);
+static const char		*tty_getcap(char *);
 static void			 tty_init(void);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
@@ -807,11 +808,13 @@ print_choices(int offset, int selection)
 enum key
 get_key(char *buf, size_t size, size_t *nread)
 {
-#define	KEY(k, s)	{ k, s, sizeof(s) - 1 }
+#define	CAP(k, s)	{ k,	s,	NULL,	0 }
+#define	KEY(k, s)	{ k,	NULL,	s,	sizeof(s) - 1 }
 	static struct {
 		enum key	 key;
-		const char	*s;
-		size_t		 length;
+		char		*cap;
+		const char	*str;
+		size_t		 len;
 	}	keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
 		KEY(BACKSPACE,	"\177"),
@@ -845,7 +848,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(UP,		"\020"),
 		KEY(UP,		"\033OA"),
 		KEY(UP,		"\033[A"),
-		{ 0, NULL, 0 },
+		KEY(UNKNOWN,	NULL),
 	};
 	int	c, i;
 
@@ -853,18 +856,21 @@ get_key(char *buf, size_t size, size_t *nread)
 	for (; size > 0; size--) {
 		buf[(*nread)++] = tty_getc();
 
-		for (i = 0; keys[i].s != NULL; i++) {
-			if (*nread > keys[i].length
-			    || strncmp(buf, keys[i].s, *nread) != 0)
+		for (i = 0; keys[i].key != UNKNOWN; i++) {
+			if (keys[i].str == NULL) {
+				keys[i].str = tty_getcap(keys[i].cap);
+				keys[i].len = strlen(keys[i].str);
+			}
+			if (strncmp(keys[i].str, buf, *nread) != 0)
 				continue;
 
-			if (*nread == keys[i].length)
+			if (*nread == keys[i].len)
 				return keys[i].key;
 
 			/* Partial match found, continue reading. */
 			break;
 		}
-		if (keys[i].s == NULL)
+		if (keys[i].key == UNKNOWN)
 			break;
 	}
 
@@ -915,6 +921,18 @@ tty_getc(void)
 		err(1, "getc");
 
 	return c;
+}
+
+const char *
+tty_getcap(char *cap)
+{
+	char	*str;
+
+	str = tigetstr(cap);
+	if (str == (char *)(-1) || str == NULL)
+		return "";
+
+	return str;
 }
 
 void
