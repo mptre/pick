@@ -47,8 +47,13 @@ enum key {
 	PAGE_DOWN,
 	PAGE_UP,
 	PRINTABLE,
+<<<<<<< HEAD
 	RIGHT,
 	UNKNOWN,
+=======
+	UNKNOWN,
+	RIGHT,
+>>>>>>> 302fa44add421cad65e4de086a03d43482aae3f0
 	UP
 };
 
