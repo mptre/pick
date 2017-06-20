@@ -1,5 +1,5 @@
 description: backspace
-keys: ab \177 c \\n ## BACKSPACE ENTER
+keys: abb \177 \b c \\n ## BACKSPACE BACKSPACE ENTER
 stdin:
 ab
 ac
