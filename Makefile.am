@@ -14,7 +14,7 @@ TESTS=tests/01.t tests/02.t tests/03.t tests/04.t tests/05.t tests/06.t \
       tests/25.t tests/26.t tests/27.t tests/28.t tests/29.t tests/30.t \
       tests/31.t tests/32.t tests/33.t tests/34.t tests/35.t tests/36.t \
       tests/37.t tests/38.t tests/39.t tests/40.t tests/41.t tests/42.t \
-      tests/43.t tests/44.t tests/45.t tests/46.t
+      tests/43.t tests/44.t tests/45.t tests/46.t tests/47.t tests/48.t
 TEST_EXTENSIONS=.t
 T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh
 check_PROGRAMS=tests/pick-test
