@@ -1,4 +1,4 @@
-description: select the last choice
+description: end selects the last choice
 keys: \033OF \\n # END ENTER
 stdin:
 1

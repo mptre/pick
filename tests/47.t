@@ -1,4 +1,4 @@
-description: select the first choice
+description: home selects the first choice
 keys: \016 \033OH \\n # DOWN HOME ENTER
 stdin:
 1
