@@ -312,7 +312,11 @@ selected_choice(void)
 				err(1, "tty_putc");
 			tty_putp(clr_eos, 1);
 			tty_putp(tparm(parm_up_cursor, choices_count + 1), 1);
-		} else {
+		} else if (choices_count > 0) {
+			/*
+			 * parm_up_cursor interprets 0 as 1, therefore only move
+			 * upwards if any choices where printed.
+			 */
 			tty_putp(tparm(parm_up_cursor,
 				    choices_count < choices_lines
 				    ? choices_count : choices_lines), 1);
