@@ -1,5 +1,31 @@
 # vX.Y.Z - YYYY-MM-DD
 
+## New features
+
+- Add support for HOME and END keys (10f04ae, 0a545bc, 1402ecc, #195) (Jenz)
+
+- Read keys from the `terminfo(3)` database, currently limited to HOME and END
+  (19ff2ea, 71f9505, 1ee1a1d, b8857fd, #197) (Anton Lindqvist)
+
+## Bug fixes
+
+- Don't move the cursor upwards if no choices where printed (ecdca3d, #196,
+  #198) (Anton Lindqvist)
+
+- Selection bar vanishes on Page-Down (92e492b, #199, #200) (Jenz)
+
+## Changes
+
+- Refactoring and cleanup (74aa733, 5b237d3, bfe26ae, c16475f, 7b99e29, #189)
+  (Anton Lindqvist)
+
+- Run `mandoc(1)` and UBSan on Travis (f37e5e8, 368d37d, #190, #193) (Anton
+  Lindqvist)
+
+- Update test suite documentation (9086de2) (Anton Lindqvist)
+
+- Enable `ICRNL` input mode (61a5ae5, #192) (Anton Lindqvist)
+
 # v1.6.1 - 2017-04-24
 
 ## Bug fixes
