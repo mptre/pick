@@ -451,10 +451,13 @@ selected_choice(void)
 				continue;
 			break;
 		case PAGE_DOWN:
-			if (selection + choices_lines < choices_count)
+			if (selection + choices_lines < choices_count) {
 				yscroll = selection += choices_lines;
-			else
+			} else {
 				selection = choices_count - 1;
+				if (selection - yscroll >= choices_lines)
+					yscroll = choices_count - choices_lines;
+			}
 			break;
 		case PAGE_UP:
 			if (selection - choices_lines > 0)
