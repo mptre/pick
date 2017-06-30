@@ -1,4 +1,4 @@
-# vX.Y.Z - YYYY-MM-DD
+# v1.7.0 - 2017-06-30
 
 ## New features
 
@@ -6,6 +6,9 @@
 
 - Read keys from the `terminfo(3)` database, currently limited to HOME and END
   (19ff2ea, 71f9505, 1ee1a1d, b8857fd, #197) (Anton Lindqvist)
+
+- Add support for Ctrl-V/Alt-V and Alt-</Alt-> alternative key bindings for HOME
+  and END, and Page-Down and Page-Up respectively (128418a, #201) (Jenz)
 
 ## Bug fixes
 
