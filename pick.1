@@ -6,7 +6,7 @@
 .Nd fuzzy select anything
 .Sh SYNOPSIS
 .Nm
-.Op Fl hvS
+.Op Fl hvQS
 .Op Fl d Op Fl o
 .Op Fl x | Fl X
 .Op Fl q Ar query
@@ -36,6 +36,8 @@ Output a help message and exit.
 Output description of selected choice on exit.
 .It Fl q Ar query
 Supply an initial search query.
+.It Fl Q
+Output selection with double quotes.
 .It Fl S
 Disable sorting.
 Only filter the choices instead of additionally sorting by score.
