@@ -104,6 +104,7 @@ main(int argc, char **argv)
 	char			*input;
 	int			 c;
 	int			 output_description = 0;
+	int			 quote = 0;
 
 	setlocale(LC_CTYPE, "");
 
@@ -112,7 +113,7 @@ main(int argc, char **argv)
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhoq:QSvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -129,6 +130,9 @@ main(int argc, char **argv)
 				err(1, "strdup");
 			query_length = strlen(query);
 			query_size = query_length + 1;
+			break;
+		case 'Q':
+			quote = 1;
 			break;
 		case 'S':
 			sort = 0;
@@ -167,7 +171,11 @@ main(int argc, char **argv)
 	choice = selected_choice();
 	tty_restore();
 	if (choice != NULL) {
-		printf("%s\n", choice->string);
+		if (quote)
+			printf("\"%s\"\n", choice->string);
+		else
+			printf("%s\n", choice->string);
+
 		if (output_description)
 			printf("%s\n", choice->description);
 	}
@@ -182,9 +190,10 @@ main(int argc, char **argv)
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvQS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
+	    "    -Q          output selection with double quotes\n"
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
