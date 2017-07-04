@@ -12,11 +12,13 @@
 #include <string.h>
 #include <unistd.h>
 
-static void	 child(int, int);
-static void	 parent(int, int, const char *);
-static char	*parsekeys(const char *);
-static void	 sighandler(int);
-static void	 usage(void);
+#include "compat.h"
+
+__dead static void	 child(int, int);
+static void		 parent(int, int, const char *);
+static char		*parsekeys(const char *);
+static void		 sighandler(int);
+__dead static void	 usage(void);
 
 static char		**pickargv;
 /*
@@ -88,7 +90,7 @@ main(int argc, char *argv[])
 	return 0;
 }
 
-static void
+__dead static void
 usage(void)
 {
 	fprintf(stderr, "usage: pick-test [-k keys] [-- argument ...]\n");
@@ -139,7 +141,7 @@ sighandler(int sig)
 	gotsig = sig == SIGCHLD;
 }
 
-static void
+__dead static void
 child(int master, int slave)
 {
 	const char	**env;
