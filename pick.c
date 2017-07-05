@@ -820,7 +820,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		size_t		 len;
 	}	keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
-		CAP(BACKSPACE,	"kbs"),
+		KEY(BACKSPACE,	"\177"),
 		KEY(BACKSPACE,	"\b"),
 		KEY(CTRL_A,	"\001"),
 		KEY(CTRL_E,	"\005"),
