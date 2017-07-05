@@ -654,6 +654,8 @@ tty_init(void)
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode, 0);
 
+	tty_putp(keypad_xmit, 0);
+
 	signal(SIGINT, handle_sigint);
 }
 
@@ -676,6 +678,7 @@ tty_restore(void)
 	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
 	fclose(tty_in);
 
+	tty_putp(keypad_local, 0);
 	tty_putp(carriage_return, 1);	/* move cursor to first column */
 	tty_putp(clr_eos, 1);
 
