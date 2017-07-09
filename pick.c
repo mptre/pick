@@ -86,9 +86,9 @@ __dead static void		 usage(void);
 
 static struct termios	 original_attributes;
 static struct {
-	size_t size;
-	size_t length;
-	struct choice *v;
+	size_t		 size;
+	size_t		 length;
+	struct choice	*v;
 }			 choices;
 static FILE		*tty_in, *tty_out;
 static char		*query;
