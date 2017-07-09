@@ -198,13 +198,13 @@ usage(void)
 char *
 get_choices(void)
 {
-	char		*buf, *description, *field_separators, *start, *stop;
+	char		*buf, *description, *ifs, *start, *stop;
 	ssize_t		 n;
 	size_t		 length = 0;
 	size_t		 size = BUFSIZ;
 
-	if ((field_separators = getenv("IFS")) == NULL)
-		field_separators = " ";
+	if ((ifs = getenv("IFS")) == NULL || *ifs == '\0')
+		ifs = " ";
 
 	if ((buf = malloc(size)) == NULL)
 		err(1, NULL);
@@ -233,7 +233,7 @@ get_choices(void)
 		*stop = '\0';
 
 		if (descriptions &&
-		    (description = eager_strpbrk(start, field_separators)))
+		    (description = eager_strpbrk(start, ifs)))
 			*description++ = '\0';
 		else
 			description = "";
