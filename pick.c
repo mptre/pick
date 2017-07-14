@@ -232,8 +232,7 @@ get_choices(void)
 	while ((stop = strchr(start, '\n')) != NULL) {
 		*stop = '\0';
 
-		if (descriptions &&
-		    (description = eager_strpbrk(start, ifs)))
+		if (descriptions && (description = eager_strpbrk(start, ifs)))
 			*description++ = '\0';
 		else
 			description = "";
