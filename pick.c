@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <sys/ioctl.h>
+
 #include <ctype.h>
 #include <err.h>
 #include <limits.h>
@@ -39,6 +41,7 @@ enum key {
 	CTRL_A,
 	CTRL_E,
 	CTRL_K,
+	CTRL_L,
 	CTRL_U,
 	CTRL_W,
 	RIGHT,
@@ -83,6 +86,7 @@ static void			 tty_init(void);
 static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
+static void			 tty_size(void);
 static __dead void		 usage(void);
 
 static struct termios	 original_attributes;
@@ -94,7 +98,7 @@ static struct {
 static FILE		*tty_in, *tty_out;
 static char		*query;
 static size_t		 query_length, query_size;
-static int		 descriptions, choices_lines;
+static int		 descriptions, choices_lines, tty_columns, tty_lines;
 static int		 sort = 1;
 static int		 use_alternate_screen = 1;
 
@@ -398,6 +402,10 @@ selected_choice(void)
 			filter_choices();
 			selection = yscroll = 0;
 			break;
+		case CTRL_L:
+			tty_size();
+			selection = yscroll = 0;
+			break;
 		case CTRL_W:
 			if (cursor_position == 0)
 				break;
@@ -652,7 +660,7 @@ tty_init(void)
 
 	setupterm((char *)0, fileno(tty_out), (int *)0);
 
-	choices_lines = lines - 1;	/* available lines, minus query line */
+	tty_size();
 
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode, 0);
@@ -692,6 +700,22 @@ tty_restore(void)
 }
 
 void
+tty_size(void)
+{
+	struct winsize	ws;
+
+	if (ioctl(fileno(tty_in), TIOCGWINSZ, &ws) != -1) {
+		tty_columns = ws.ws_col;
+		tty_lines = ws.ws_row;
+	} else {
+		tty_columns = tigetnum("cols");
+		tty_lines = tigetnum("lines");
+	}
+
+	choices_lines = tty_lines - 1;	/* available lines, minus query line */
+}
+
+void
 print_line(const char *str, size_t len, int standout,
     ssize_t enter_underline, ssize_t exit_underline)
 {
@@ -703,7 +727,7 @@ print_line(const char *str, size_t len, int standout,
 		tty_putp(enter_standout_mode, 1);
 
 	col = i = in_esc_seq = 0;
-	while (col < columns) {
+	while (col < tty_columns) {
 		if (enter_underline == (ssize_t)i)
 			tty_putp(enter_underline_mode, 1);
 		else if (exit_underline == (ssize_t)i)
@@ -713,7 +737,7 @@ print_line(const char *str, size_t len, int standout,
 
 		if (str[i] == '\t') {
 			width = 8 - (col & 7);	/* ceil to multiple of 8 */
-			if (col + width > columns)
+			if (col + width > tty_columns)
 				break;
 			col += width;
 
@@ -767,7 +791,7 @@ print_line(const char *str, size_t len, int standout,
 		else if (str[i] >= '@' && str[i] <= '~')
 			in_esc_seq = 0;
 
-		if (col + width > columns)
+		if (col + width > tty_columns)
 			break;
 		col += width;
 
@@ -775,7 +799,7 @@ print_line(const char *str, size_t len, int standout,
 			if (tty_putc(str[i]) == EOF)
 				err(1, "tty_putc");
 	}
-	for (; col < columns; col++)
+	for (; col < tty_columns; col++)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 
@@ -827,6 +851,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(CTRL_A,	"\001"),
 		KEY(CTRL_E,	"\005"),
 		KEY(CTRL_K,	"\013"),
+		KEY(CTRL_L,	"\014"),
 		KEY(CTRL_U,	"\025"),
 		KEY(CTRL_W,	"\027"),
 		CAP(DEL,	"kdch1"),
