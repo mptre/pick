@@ -123,9 +123,7 @@ parsekeys(const char *s)
 		buf[len++] = c;
 
 		if (size <= len) {
-			if (size > ULONG_MAX/2)
-				errx(1, "buffer size overflow");
-			if ((buf = realloc(buf, 2*size)) == NULL)
+			if ((buf = reallocarray(buf, 2, size)) == NULL)
 				err(1, NULL);
 			size *= 2;
 		}
