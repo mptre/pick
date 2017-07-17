@@ -23,12 +23,11 @@ __dead static void	 usage(void);
 static char		**pickargv;
 /*
  * Mandatory environment variables required by pick to operate correctly.
- * If any of these variables is absent in the current environment, they will be
- * defined using the corresponding value.
+ * Any existing value will be overwritten.
  */
 static const char	 *pickenv[] = {
 	"LC_CTYPE",		"en_US.UTF-8",
-	"MALLOC_OPTIONS",	"S",	/* malloc.conf(5) options on OpenBSD */
+	"MALLOC_OPTIONS",	"S",		/* malloc.conf(5) options on OpenBSD */
 	"TERM",			"xterm",
 	NULL,
 };
