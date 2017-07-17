@@ -18,7 +18,7 @@ TESTS=tests/01.t tests/02.t tests/03.t tests/04.t tests/05.t tests/06.t \
 TEST_EXTENSIONS=.t
 T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh
 check_PROGRAMS=tests/pick-test
-tests_pick_test_SOURCES=tests/pick-test.c
+tests_pick_test_SOURCES=tests/pick-test.c compat-reallocarray.c
 tests_pick_test_CFLAGS=$(AM_CFLAGS)
 
 EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md tests/pick-test.sh $(TESTS)
