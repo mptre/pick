@@ -4,7 +4,7 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_CHECK_FUNCS([pledge reallocarray])
+AC_CHECK_FUNCS([pledge reallocarray strtonum])
 AC_SEARCH_LIBS([setupterm], [curses], [],
   [
     AC_SEARCH_LIBS([setupterm], [ncursesw],

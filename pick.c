@@ -702,15 +702,31 @@ tty_restore(void)
 void
 tty_size(void)
 {
-	struct winsize	ws;
+	const char	*cp;
+	struct winsize	 ws;
+	int		 sz;
 
 	if (ioctl(fileno(tty_in), TIOCGWINSZ, &ws) != -1) {
 		tty_columns = ws.ws_col;
 		tty_lines = ws.ws_row;
-	} else {
-		tty_columns = tigetnum("cols");
-		tty_lines = tigetnum("lines");
 	}
+
+	if (tty_columns == 0)
+		tty_columns = tigetnum("cols");
+	if (tty_lines == 0)
+		tty_lines = tigetnum("lines");
+
+	if ((cp = getenv("COLUMNS")) != NULL &&
+	    (sz = strtonum(cp, 1, INT_MAX, NULL)) > 0)
+		tty_columns = sz;
+	if ((cp = getenv("LINES")) != NULL &&
+	    (sz = strtonum(cp, 1, INT_MAX, NULL)) > 0)
+		tty_lines = sz;
+
+	if (tty_columns == 0)
+		tty_columns = 80;
+	if (tty_lines == 0)
+		tty_lines = 24;
 
 	choices_lines = tty_lines - 1;	/* available lines, minus query line */
 }

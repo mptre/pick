@@ -9,6 +9,9 @@
 /* Define to 1 if you have the `reallocarray' function. */
 #undef HAVE_REALLOCARRAY
 
+/* Define to 1 if you have the `strtonum' function. */
+#undef HAVE_STRTONUM
+
 /* Name of package */
 #undef PACKAGE
 

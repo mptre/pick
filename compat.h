@@ -25,4 +25,10 @@ void	*reallocarray(void *, size_t, size_t);
 
 #endif /* !HAVE_REALLOCARRAY */
 
+#ifndef HAVE_STRTONUM
+
+long long	strtonum(const char *, long long, long long, const char **);
+
+#endif /* !HAVE_STRTONUM */
+
 #endif /* COMPAT_H */
