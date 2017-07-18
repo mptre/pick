@@ -1,5 +1,5 @@
 description: home selects the first choice
-keys: \016 \033OH \\n # DOWN HOME ENTER
+keys: \016 \033OH \n # DOWN HOME ENTER
 stdin:
 1
 2

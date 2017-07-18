@@ -1,5 +1,5 @@
 description: page up, selected choice below the first page
-keys: \033[6~ \016 \033[5~ \\n  # PAGE_DOWN DOWN PAGE_UP ENTER
+keys: \033[6~ \016 \033[5~ \n  # PAGE_DOWN DOWN PAGE_UP ENTER
 env: LINES=5
 stdin:
 01

@@ -92,34 +92,35 @@ main(int argc, char *argv[])
 __dead static void
 usage(void)
 {
-	fprintf(stderr, "usage: pick-test [-k keys] [-- argument ...]\n");
+	fprintf(stderr, "usage: pick-test [-k path] [-- argument ...]\n");
 	exit(1);
 }
 
 static char *
-parsekeys(const char *s)
+parsekeys(const char *path)
 {
+	FILE	*fh;
 	char	*buf;
 	size_t	 len = 0;
 	size_t	 size = 16;
-	int	 c;
+	int	 c, esc;
+
+	if ((fh = fopen(path, "r")) == NULL)
+		err(1, "fopen: %s", path);
 
 	if ((buf = malloc(size)) == NULL)
 		err(1, NULL);
 
-	for (; (c = *s) != '\0'; s++) {
+	esc = 0;
+	while ((c = fgetc(fh)) != EOF) {
 		if (c == '\\') {
-			switch (*++s) {
-			case 'n':
-				c = '\n';
-				break;
-			default:
-				c = *s;
-			}
-		} else if (c == ' ') {
+			esc = 1;
+		} else if (!esc && c == ' ') {
 			continue;
+		} else {
+			buf[len++] = c;
+			esc = 0;
 		}
-		buf[len++] = c;
 
 		if (size <= len) {
 			if ((buf = reallocarray(buf, 2, size)) == NULL)
@@ -127,6 +128,9 @@ parsekeys(const char *s)
 			size *= 2;
 		}
 	}
+	if (ferror(fh))
+		err(1, "fgetc: %s", path);
+	fclose(fh);
 	buf[len] = '\0';
 
 	return buf;

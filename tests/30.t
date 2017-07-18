@@ -1,5 +1,5 @@
 description: page up
-keys: \033[6~ \033[6~ \033[5~ \\n # PAGE_DOWN PAGE_UP ENTER
+keys: \033[6~ \033[6~ \033[5~ \n # PAGE_DOWN PAGE_UP ENTER
 env: LINES=5
 stdin:
 01

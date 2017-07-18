@@ -1,5 +1,5 @@
 description: vertical scroll down
-keys: \016 \016 \016 \016 \\n # DOWN ENTER
+keys: \016 \016 \016 \016 \n # DOWN ENTER
 env: LINES=5
 stdin:
 01

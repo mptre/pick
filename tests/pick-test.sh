@@ -9,16 +9,19 @@ usage() {
 
 fail=
 
-stdout=$(mktemp -t pick.exp.XXXXXX)
 stdin=$(mktemp -t pick.XXXXXX)
+stdout=$(mktemp -t pick.exp.XXXXXX)
 out=$(mktemp -t pick.act.XXXXXX)
-trap "rm "$stdout" "$stdin" "$out"" EXIT
+keys=$(mktemp -t pick.keys.XXXXXX)
+trap 'rm $stdin $stdout $out $keys' EXIT
 
 for testcase; do
   exit=0
 
   while IFS=: read -r key val; do
-    if [ -n "$val" ]; then
+    if [ "$key" = "keys" ]; then
+      printf "${val%%#*}" >$keys
+    elif [ -n "$val" ]; then
       eval "${key}='${val%%#*}'"
     else
       case "$key" in
@@ -29,7 +32,7 @@ for testcase; do
     fi
   done <$testcase
 
-  env $env tests/pick-test -k "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
+  env $env tests/pick-test -k $keys -- $args <$stdin >$out 2>&1; e=$?
   if [ "$exit" -ne "$e" ]; then
     echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2
     cat "$out" 1>&2

@@ -1,5 +1,5 @@
 description: down arrow
-keys: \033OB \\n # DOWN ENTER
+keys: \033OB \n # DOWN ENTER
 stdin:
 1
 2

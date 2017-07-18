@@ -1,5 +1,5 @@
 description: end selects the last choice
-keys: \033OF \\n # END ENTER
+keys: \033OF \n # END ENTER
 stdin:
 1
 2

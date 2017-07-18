@@ -35,7 +35,7 @@ A trivial example:
 
 ```
 description: select the first choice
-keys: \\n
+keys: \n
 stdin:
 1
 2
@@ -71,9 +71,7 @@ The following fields are recognized:
   The value will be sent through `printf(1)` prior sending it to the pick
   process.
   Spaces will be stripped,
-  if not escaped.
-  A backslash character is expressed as `\\`,
-  thus newline equals `\\n` and space `\\ `.
+  if not escaped as `\\ `.
 
   The test suite is executed with `TERM=xterm`,
   therefore make sure to only use the corresponding value for a given capability

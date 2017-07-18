@@ -1,5 +1,5 @@
 description: with sorting enabled
-keys: A \\n # ENTER
+keys: A \n # ENTER
 stdin:
 BBB
 ABC
