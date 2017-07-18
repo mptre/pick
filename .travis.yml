@@ -2,33 +2,37 @@
 sudo: required
 dist: trusty
 language: c
-os:
-  - linux
-  - osx
-compiler:
-  - clang
-  - gcc
-env:
-  - CFLAGS=-fsanitize=address
-  - CFLAGS=-fsanitize=undefined
 matrix:
-  exclude:
-    # UBSan requires GCC >= 4.9
+  include:
+    - os: linux
+      compiler: clang
+      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
+    - os: linux
+      compiler: clang
+      env: BUILD_TYPE=default CFLAGS=-fsanitize=undefined
     - os: linux
       compiler: gcc
-      env: CFLAGS=-fsanitize=undefined
-    # UBSan requires LLVM >= 3.3
+      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
     - os: osx
       compiler: clang
-      env: CFLAGS=-fsanitize=undefined
-    # GCC is linked to Clang on macOS
+      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
     - os: osx
-      compiler: gcc
+      compiler: clang
+      env: BUILD_TYPE=mandoc
 install:
-  - if [ $TRAVIS_OS_NAME = osx ]; then brew install mandoc; fi
+  - |
+    if [ $BUILD_TYPE = mandoc ]; then
+      brew install mandoc
+    fi
 script:
-  - ./autogen.sh
-  - ./configure || (cat config.log; exit 1)
-  - make || exit 1
-  - make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
-  - if [ $TRAVIS_OS_NAME = osx ]; then mandoc -Tlint pick.1; fi
+  - |
+    if [ $BUILD_TYPE = default ]; then
+      ./autogen.sh
+      ./configure || (cat config.log; exit 1)
+      make || exit 1
+      make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
+    fi
+  - |
+    if [ $BUILD_TYPE = mandoc ]; then
+      mandoc -Tlint pick.1
+    fi
