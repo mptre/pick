@@ -53,6 +53,13 @@ The following fields are recognized:
 
   Purpose of the test.
 
+- `env`
+
+  Variables set in the environment before the pick process is
+  started.
+  The variables are specified as `name=value` separated by space,
+  see `env(1)`.
+
 - `exit`
 
   Exit code of the pick process,

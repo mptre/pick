@@ -29,7 +29,7 @@ for testcase; do
     fi
   done <$testcase
 
-  tests/pick-test -k "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
+  env $env tests/pick-test -k "$(printf "$keys")" -- $args <$stdin >$out 2>&1; e=$?
   if [ "$exit" -ne "$e" ]; then
     echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2
     cat "$out" 1>&2
