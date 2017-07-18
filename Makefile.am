@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS=foreign
 
-AM_CFLAGS=-pedantic -Wall -Werror -Wextra
+AM_CFLAGS=-Wall -Werror -Wextra
 AM_CPPFLAGS=-D_GNU_SOURCE
 
 bin_PROGRAMS=pick
