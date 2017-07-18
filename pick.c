@@ -641,7 +641,7 @@ tty_init(void)
 	tcgetattr(fileno(tty_in), &original_attributes);
 	new_attributes = original_attributes;
 	new_attributes.c_iflag |= ICRNL;	/* map CR to NL */
-	new_attributes.c_lflag &= ~(ICANON | ECHO);
+	new_attributes.c_lflag &= ~(ICANON | ECHO | IEXTEN);
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if ((tty_out = fopen("/dev/tty", "w")) == NULL)
