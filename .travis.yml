@@ -16,10 +16,16 @@ matrix:
     - os: osx
       compiler: clang
       env: BUILD_TYPE=default CFLAGS=-fsanitize=address
+    - os: linux
+      env: BUILD_TYPE=cppcheck
     - os: osx
-      compiler: clang
       env: BUILD_TYPE=mandoc
 install:
+  - |
+    if [ $BUILD_TYPE = cppcheck ]; then
+      sudo apt-get -qq update
+      sudo apt-get install -y cppcheck
+    fi
   - |
     if [ $BUILD_TYPE = mandoc ]; then
       brew install mandoc
@@ -31,6 +37,10 @@ script:
       ./configure || (cat config.log; exit 1)
       make || exit 1
       make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
+    fi
+  - |
+    if [ $BUILD_TYPE = cppcheck ]; then
+      git ls-files | grep '\.c$' | cppcheck --quiet --error-exitcode=1 --file-list=-
     fi
   - |
     if [ $BUILD_TYPE = mandoc ]; then
