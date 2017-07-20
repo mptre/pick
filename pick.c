@@ -98,7 +98,7 @@ static int		 sort = 1;
 static int		 use_alternate_screen = 1;
 
 int
-main(int argc, char **argv)
+main(int argc, char *argv[])
 {
 	const struct choice	*choice;
 	char			*input;
