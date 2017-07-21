@@ -3,6 +3,13 @@ AC_INIT([pick], [1.7.0], [pick-maintainers@calleerlandsson.com])
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
+AC_CHECK_DECLS([SIGWINCH], [], [],
+	[#include <signal.h>
+	/* NetBSD declares sys_siglist in unistd.h.  */
+	#ifdef HAVE_UNISTD_H
+	# include <unistd.h>
+	#endif
+	])
 AC_CHECK_FUNCS([pledge reallocarray])
 AC_SEARCH_LIBS([setupterm], [curses], [],
   [
