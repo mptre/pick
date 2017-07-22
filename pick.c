@@ -70,7 +70,7 @@ static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
 static void			 filter_choices(void);
 static char			*get_choices(void);
-static enum key			 get_key(char *, size_t, size_t *);
+static enum key			 get_key(const char **);
 static __dead void		 handle_sigint(int);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
@@ -286,11 +286,11 @@ eager_strpbrk(const char *string, const char *separators)
 const struct choice *
 selected_choice(void)
 {
-	size_t	cursor_position, i, j, length, xscroll;
-	char	buf[6];
-	int	choices_count;
-	int	selection = 0;
-	int	yscroll = 0;
+	const char	*buf;
+	size_t		 cursor_position, i, j, length, xscroll;
+	int		 choices_count;
+	int		 selection = 0;
+	int		 yscroll = 0;
 
 	cursor_position = query_length;
 
@@ -345,7 +345,7 @@ selected_choice(void)
 		tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
-		switch (get_key(buf, sizeof(buf), &length)) {
+		switch (get_key(&buf)) {
 		case ENTER:
 			if (choices_count > 0)
 				return &choices.v[selection];
@@ -490,6 +490,8 @@ selected_choice(void)
 			yscroll = selection = 0;
 			break;
 		case PRINTABLE:
+			length = strlen(buf);
+
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
@@ -888,7 +890,7 @@ print_choices(int offset, int selection)
 }
 
 enum key
-get_key(char *buf, size_t size, size_t *nread)
+get_key(const char **key)
 {
 #define	CAP(k, s)	{ k,	s,	NULL,	0 }
 #define	KEY(k, s)	{ k,	NULL,	s,	sizeof(s) - 1 }
@@ -897,7 +899,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		char		*cap;
 		const char	*str;
 		size_t		 len;
-	}	keys[] = {
+	}			keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
 		KEY(BACKSPACE,	"\177"),
 		KEY(BACKSPACE,	"\b"),
@@ -928,16 +930,20 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(RIGHT,	"\006"),
 		KEY(UNKNOWN,	NULL),
 	};
-	int	c, i;
+	static unsigned char	buf[8];
+	size_t			len;
+	int			c, i;
 
-	*nread = 0;
+	memset(buf, 0, sizeof(buf));
+	*key = (const char *)buf;
+	len = 0;
 
 	/*
 	 * Allow SIGWINCH on the first read. If the signal is received, return
 	 * CTRL_L which will trigger a resize.
 	 */
 	toggle_sigwinch(1);
-	buf[(*nread)++] = tty_getc();
+	buf[len++] = tty_getc();
 	toggle_sigwinch(0);
 	if (gotsigwinch) {
 		gotsigwinch = 0;
@@ -950,10 +956,10 @@ get_key(char *buf, size_t size, size_t *nread)
 				keys[i].str = tty_getcap(keys[i].cap);
 				keys[i].len = strlen(keys[i].str);
 			}
-			if (strncmp(keys[i].str, buf, *nread) != 0)
+			if (strncmp(keys[i].str, *key, len) != 0)
 				continue;
 
-			if (*nread == keys[i].len)
+			if (len == keys[i].len)
 				return keys[i].key;
 
 			/* Partial match found, continue reading. */
@@ -962,17 +968,17 @@ get_key(char *buf, size_t size, size_t *nread)
 		if (keys[i].key == UNKNOWN)
 			break;
 
-		if (size-- == 0)
+		if (len == sizeof(buf) - 1)
 			break;
-		buf[(*nread)++] = tty_getc();
+		buf[len++] = tty_getc();
 	}
 
-	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
+	if (len > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
 		/*
 		 * An escape sequence which is not a supported key is being
 		 * read. Discard the rest of the sequence.
 		 */
-		c = buf[(*nread) - 1];
+		c = buf[len - 1];
 		while (c < '@' || c > '~')
 			c = tty_getc();
 
@@ -993,13 +999,12 @@ get_key(char *buf, size_t size, size_t *nread)
 	 * the MSB is not zero there is still bytes left to read.
 	 */
 	for (;;) {
-		if ((((unsigned int)buf[0] << *nread) & 0x80) == 0)
+		if (((buf[0] << len) & 0x80) == 0)
 			break;
-		if (size == 0)
+		if (len == sizeof(buf) - 1)
 			return UNKNOWN;
 
-		buf[(*nread)++] = tty_getc();
-		size--;
+		buf[len++] = tty_getc();
 	}
 
 	return PRINTABLE;
