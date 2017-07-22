@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <sys/ioctl.h>
+
 #include <ctype.h>
 #include <err.h>
 #include <limits.h>
@@ -39,6 +41,7 @@ enum key {
 	CTRL_A,
 	CTRL_E,
 	CTRL_K,
+	CTRL_L,
 	CTRL_U,
 	CTRL_W,
 	UP,
@@ -68,6 +71,9 @@ static void			 filter_choices(void);
 static char			*get_choices(void);
 static enum key			 get_key(char *, size_t, size_t *);
 static void			 handle_sigint(int);
+#if HAVE_DECL_SIGWINCH
+static void			 handle_sigwinch(int);
+#endif
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static size_t			 min_match(const char *, size_t, ssize_t *,
@@ -77,11 +83,13 @@ static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
 static const char		*strcasechr(const char *, const char *);
+static void			 tty_draw(void);
 static int			 tty_getc(void);
 static const char		*tty_getcap(char *);
 static void			 tty_init(void);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
+static void			 tty_size(void);
 __dead static void		 usage(void);
 
 static struct termios	 original_attributes;
@@ -93,9 +101,14 @@ static struct {
 static FILE		*tty_in, *tty_out;
 static char		*query;
 static size_t		 query_length, query_size;
-static int		 descriptions, choices_lines;
+static size_t		 cursor_position;
+static int		 descriptions, choices_count, choices_lines;
+static int		 selection = 0;
 static int		 sort = 1;
+static int		 tty_columns, tty_lines;
 static int		 use_alternate_screen = 1;
+static int		 word_position;
+static int		 yscroll = 0;
 
 int
 main(int argc, char *argv[])
@@ -275,64 +288,15 @@ eager_strpbrk(const char *string, const char *separators)
 const struct choice *
 selected_choice(void)
 {
-	size_t	cursor_position, i, j, length;
-	size_t	xscroll = 0;
+	size_t	length;
 	char	buf[6];
-	int	choices_count, word_position;
-	int	selection = 0;
-	int	yscroll = 0;
 
 	cursor_position = query_length;
 
 	filter_choices();
 
 	for (;;) {
-		tty_putp(cursor_invisible, 0);
-		tty_putp(carriage_return, 1);	/* move cursor to first column */
-		if (cursor_position >= xscroll + columns)
-			xscroll = cursor_position - columns + 1;
-		if (cursor_position < xscroll)
-			xscroll = cursor_position;
-		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
-		choices_count = print_choices(yscroll, selection);
-		if ((size_t)choices_count - yscroll < choices.length
-		    && choices_count - yscroll < choices_lines) {
-			/*
-			 * Printing the choices did not consume all available
-			 * lines and there could still be choices left from the
-			 * last print in the lines not yet consumed.
-			 *
-			 * The clr_eos capability clears the screen from the
-			 * current column to the end. If the last visible choice
-			 * is selected, the standout in the last and current
-			 * column will be also be cleared. Therefore, move down
-			 * one line before clearing the screen.
-			 */
-			if (tty_putc('\n') == EOF)
-				err(1, "tty_putc");
-			tty_putp(clr_eos, 1);
-			tty_putp(tparm(parm_up_cursor, choices_count + 1), 1);
-		} else if (choices_count > 0) {
-			/*
-			 * parm_up_cursor interprets 0 as 1, therefore only move
-			 * upwards if any choices where printed.
-			 */
-			tty_putp(tparm(parm_up_cursor,
-				    choices_count < choices_lines
-				    ? choices_count : choices_lines), 1);
-		}
-		tty_putp(carriage_return, 1);	/* move cursor to first column */
-		for (i = j = 0; i < cursor_position; j++)
-			while (isu8cont(query[++i]))
-				continue;
-		if (j > 0)
-			/*
-			 * parm_right_cursor interprets 0 as 1, therefore only
-			 * move the cursor if the position is non zero.
-			 */
-			tty_putp(tparm(parm_right_cursor, j), 1);
-		tty_putp(cursor_normal, 0);
-		fflush(tty_out);
+		tty_draw();
 
 		switch (get_key(buf, sizeof(buf), &length)) {
 		case ENTER:
@@ -397,6 +361,9 @@ selected_choice(void)
 			filter_choices();
 			selection = yscroll = 0;
 			break;
+		case CTRL_L:
+			tty_size();
+			break;
 		case CTRL_W:
 			if (cursor_position == 0)
 				break;
@@ -455,8 +422,6 @@ selected_choice(void)
 				yscroll = selection += choices_lines;
 			} else {
 				selection = choices_count - 1;
-				if (selection - yscroll >= choices_lines)
-					yscroll = choices_count - choices_lines;
 			}
 			break;
 		case PAGE_UP:
@@ -468,8 +433,6 @@ selected_choice(void)
 		case END:
 			if (choices_count > 0) {
 				selection = choices_count - 1;
-				if (selection - yscroll >= choices_lines)
-					yscroll = choices_count - choices_lines;
 			}
 			break;
 		case HOME:
@@ -649,7 +612,7 @@ tty_init(void)
 
 	setupterm((char *)0, fileno(tty_out), (int *)0);
 
-	choices_lines = lines - 1;	/* available lines, minus query line */
+	tty_size();
 
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode, 0);
@@ -657,6 +620,65 @@ tty_init(void)
 	tty_putp(keypad_xmit, 0);
 
 	signal(SIGINT, handle_sigint);
+#if HAVE_DECL_SIGWINCH
+	signal(SIGWINCH, handle_sigwinch);
+#endif
+}
+
+void tty_draw(void)
+{
+	size_t	i, j;
+	size_t	xscroll = 0;
+
+	tty_putp(cursor_invisible, 0);
+	tty_putp(carriage_return, 1);	/* move cursor to first column */
+	if (cursor_position >= xscroll + tty_columns)
+		xscroll = cursor_position - tty_columns + 1;
+	if (cursor_position < xscroll)
+		xscroll = cursor_position;
+	print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
+
+	if (selection - yscroll >= choices_lines)
+		yscroll = selection - choices_lines + 1;
+	choices_count = print_choices(yscroll, selection);
+	if ((size_t)choices_count - yscroll < choices.length
+	    && choices_count - yscroll < choices_lines) {
+		/*
+		 * Printing the choices did not consume all available
+		 * lines and there could still be choices left from the
+		 * last print in the lines not yet consumed.
+		 *
+		 * The clr_eos capability clears the screen from the
+		 * current column to the end. If the last visible choice
+		 * is selected, the standout in the last and current
+		 * column will be also be cleared. Therefore, move down
+		 * one line before clearing the screen.
+		 */
+		if (tty_putc('\n') == EOF)
+			err(1, "tty_putc");
+		tty_putp(clr_eos, 1);
+		tty_putp(tparm(parm_up_cursor, choices_count + 1), 1);
+	} else if (choices_count > 0) {
+		/*
+		 * parm_up_cursor interprets 0 as 1, therefore only move
+		 * upwards if any choices where printed.
+		 */
+		tty_putp(tparm(parm_up_cursor,
+			    choices_count < choices_lines
+			    ? choices_count : choices_lines), 1);
+	}
+	tty_putp(carriage_return, 1);	/* move cursor to first column */
+	for (i = j = 0; i < cursor_position; j++)
+		while (isu8cont(query[++i]))
+			continue;
+	if (j > 0)
+		/*
+		 * parm_right_cursor interprets 0 as 1, therefore only
+		 * move the cursor if the position is non zero.
+		 */
+		tty_putp(tparm(parm_right_cursor, j), 1);
+	tty_putp(cursor_normal, 0);
+	fflush(tty_out);
 }
 
 int
@@ -671,6 +693,17 @@ handle_sigint(int sig __attribute__((unused)))
 	tty_restore();
 	exit(1);
 }
+
+#if HAVE_DECL_SIGWINCH
+void
+handle_sigwinch(int sig __attribute__((unused)))
+{
+	signal(SIGWINCH, SIG_IGN);
+	tty_size();
+	tty_draw();
+	signal(SIGWINCH, handle_sigwinch);
+}
+#endif
 
 void
 tty_restore(void)
@@ -689,6 +722,36 @@ tty_restore(void)
 }
 
 void
+tty_size(void)
+{
+	struct winsize	 ws;
+	char		*env;
+
+	if (ioctl(fileno(tty_in), TIOCGWINSZ, &ws) != -1) {
+		tty_columns = ws.ws_col;
+		tty_lines = ws.ws_row;
+	} else {
+		tty_columns = tigetnum("cols");
+		tty_lines = tigetnum("lines");
+	}
+
+	if ((env = getenv("COLUMNS")) != NULL)
+		tty_columns = (int)strtol(env, NULL, 10);
+
+	if ((env = getenv("LINES")) != NULL)
+		tty_lines = (int)strtol(env, NULL, 10);
+
+	/* Use values from setupterm as fallback */
+	if (tty_columns <= 0)
+		tty_columns = columns;
+
+	if (tty_lines <= 0)
+		tty_lines = lines;
+
+	choices_lines = tty_lines - 1;	/* available lines, minus query line */
+}
+
+void
 print_line(const char *str, size_t len, int standout,
     ssize_t enter_underline, ssize_t exit_underline)
 {
@@ -700,7 +763,7 @@ print_line(const char *str, size_t len, int standout,
 		tty_putp(enter_standout_mode, 1);
 
 	col = i = in_esc_seq = 0;
-	while (col < columns) {
+	while (col < tty_columns) {
 		if (enter_underline == (ssize_t)i)
 			tty_putp(enter_underline_mode, 1);
 		else if (exit_underline == (ssize_t)i)
@@ -710,7 +773,7 @@ print_line(const char *str, size_t len, int standout,
 
 		if (str[i] == '\t') {
 			width = 8 - (col & 7);	/* ceil to multiple of 8 */
-			if (col + width > columns)
+			if (col + width > tty_columns)
 				break;
 			col += width;
 
@@ -764,7 +827,7 @@ print_line(const char *str, size_t len, int standout,
 		else if (str[i] >= '@' && str[i] <= '~')
 			in_esc_seq = 0;
 
-		if (col + width > columns)
+		if (col + width > tty_columns)
 			break;
 		col += width;
 
@@ -772,7 +835,7 @@ print_line(const char *str, size_t len, int standout,
 			if (tty_putc(str[i]) == EOF)
 				err(1, "tty_putc");
 	}
-	for (; col < columns; col++)
+	for (; col < tty_columns; col++)
 		if (tty_putc(' ') == EOF)
 			err(1, "tty_putc");
 
@@ -824,6 +887,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(CTRL_A,	"\001"),
 		KEY(CTRL_E,	"\005"),
 		KEY(CTRL_K,	"\013"),
+		KEY(CTRL_L,	"\014"),
 		KEY(CTRL_U,	"\025"),
 		KEY(CTRL_W,	"\027"),
 		CAP(DEL,	"kdch1"),
