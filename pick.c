@@ -41,6 +41,7 @@ enum key {
 	CTRL_A,
 	CTRL_E,
 	CTRL_K,
+	CTRL_L,
 	CTRL_U,
 	CTRL_W,
 	UP,
@@ -359,6 +360,9 @@ selected_choice(void)
 			query_length = cursor_position;
 			filter_choices();
 			selection = yscroll = 0;
+			break;
+		case CTRL_L:
+			tty_size();
 			break;
 		case CTRL_W:
 			if (cursor_position == 0)
@@ -883,6 +887,7 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(CTRL_A,	"\001"),
 		KEY(CTRL_E,	"\005"),
 		KEY(CTRL_K,	"\013"),
+		KEY(CTRL_L,	"\014"),
 		KEY(CTRL_U,	"\025"),
 		KEY(CTRL_W,	"\027"),
 		CAP(DEL,	"kdch1"),
