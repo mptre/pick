@@ -67,7 +67,7 @@ static char			*eager_strpbrk(const char *, const char *);
 static void			 filter_choices(void);
 static char			*get_choices(void);
 static enum key			 get_key(char *, size_t, size_t *);
-__dead static void		 handle_sigint(int);
+static __dead void		 handle_sigint(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static size_t			 min_match(const char *, size_t, ssize_t *,
@@ -82,7 +82,7 @@ static const char		*tty_getcap(char *);
 static void			 tty_init(void);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
-__dead static void		 usage(void);
+static __dead void		 usage(void);
 
 static struct termios	 original_attributes;
 static struct {
