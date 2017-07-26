@@ -71,6 +71,7 @@ static void			 filter_choices(void);
 static char			*get_choices(void);
 static enum key			 get_key(char *, size_t, size_t *);
 static __dead void		 handle_sigint(int);
+static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static size_t			 min_match(const char *, size_t, ssize_t *,
@@ -80,6 +81,7 @@ static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
 static const char		*strcasechr(const char *, const char *);
+static void			 toggle_sigwinch(int);
 static int			 tty_getc(void);
 static const char		*tty_getcap(char *);
 static void			 tty_init(void);
@@ -89,18 +91,19 @@ static void			 tty_restore(void);
 static void			 tty_size(void);
 static __dead void		 usage(void);
 
-static struct termios	 original_attributes;
+static struct termios		 original_attributes;
 static struct {
 	size_t		 size;
 	size_t		 length;
 	struct choice	*v;
-}			 choices;
-static FILE		*tty_in, *tty_out;
-static char		*query;
-static size_t		 query_length, query_size;
-static int		 descriptions, choices_lines, tty_columns, tty_lines;
-static int		 sort = 1;
-static int		 use_alternate_screen = 1;
+}				 choices;
+static FILE			*tty_in, *tty_out;
+static char			*query;
+static size_t			 query_length, query_size;
+static volatile sig_atomic_t	 gotsigwinch;
+static int			 descriptions, choices_lines, tty_columns, tty_lines;
+static int			 sort = 1;
+static int			 use_alternate_screen = 1;
 
 int
 main(int argc, char *argv[])
@@ -668,6 +671,7 @@ tty_init(void)
 	tty_putp(keypad_xmit, 0);
 
 	signal(SIGINT, handle_sigint);
+	toggle_sigwinch(0);
 }
 
 int
@@ -681,6 +685,25 @@ handle_sigint(int sig __attribute__((unused)))
 {
 	tty_restore();
 	exit(1);
+}
+
+void
+handle_sigwinch(int sig)
+{
+	gotsigwinch = sig == SIGWINCH;
+}
+
+void
+toggle_sigwinch(int enable)
+{
+	struct sigaction	sa;
+
+	sa.sa_flags = 0;
+	sa.sa_handler = enable ? handle_sigwinch : SIG_IGN;
+	sigemptyset(&sa.sa_mask);
+
+	if (sigaction(SIGWINCH, &sa, NULL) == -1)
+		err(1, "sigaction: SIGWINCH");
 }
 
 void
@@ -894,9 +917,20 @@ get_key(char *buf, size_t size, size_t *nread)
 	int	c, i;
 
 	*nread = 0;
-	for (; size > 0; size--) {
-		buf[(*nread)++] = tty_getc();
 
+	/*
+	 * Allow SIGWINCH on the first read. If the signal is received, return
+	 * CTRL_L which will trigger a resize.
+	 */
+	toggle_sigwinch(1);
+	buf[(*nread)++] = tty_getc();
+	toggle_sigwinch(0);
+	if (gotsigwinch) {
+		gotsigwinch = 0;
+		return CTRL_L;
+	}
+
+	for (;;) {
 		for (i = 0; keys[i].key != UNKNOWN; i++) {
 			if (keys[i].str == NULL) {
 				keys[i].str = tty_getcap(keys[i].cap);
@@ -913,6 +947,10 @@ get_key(char *buf, size_t size, size_t *nread)
 		}
 		if (keys[i].key == UNKNOWN)
 			break;
+
+		if (size-- == 0)
+			break;
+		buf[(*nread)++] = tty_getc();
 	}
 
 	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
@@ -958,7 +996,7 @@ tty_getc(void)
 {
 	int	c;
 
-	if ((c = getc(tty_in)) == ERR)
+	if ((c = getc(tty_in)) == ERR && !gotsigwinch)
 		err(1, "getc");
 
 	return c;
