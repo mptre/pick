@@ -2,20 +2,22 @@
 
 ## New features
 
-- Add support for HOME and END keys (10f04ae, 0a545bc, 1402ecc, #195) (Jenz)
+- Add support for HOME and END keys (10f04ae, 0a545bc, 1402ecc, #195) (Jenz
+  Guenther)
 
 - Read keys from the `terminfo(3)` database, currently limited to HOME and END
   (19ff2ea, 71f9505, 1ee1a1d, b8857fd, #197) (Anton Lindqvist)
 
 - Add support for Ctrl-V/Alt-V and Alt-</Alt-> alternative key bindings for HOME
-  and END, and Page-Down and Page-Up respectively (128418a, #201) (Jenz)
+  and END, and Page-Down and Page-Up respectively (128418a, #201) (Jenz
+  Guenther)
 
 ## Bug fixes
 
 - Don't move the cursor upwards if no choices where printed (ecdca3d, #196,
   #198) (Anton Lindqvist)
 
-- Selection bar vanishes on Page-Down (92e492b, #199, #200) (Jenz)
+- Selection bar vanishes on Page-Down (92e492b, #199, #200) (Jenz Guenther)
 
 ## Changes
 
