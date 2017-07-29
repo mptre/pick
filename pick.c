@@ -153,7 +153,7 @@ main(int argc, char *argv[])
 	if (query == NULL) {
 		query_size = 64;
 		if ((query = calloc(query_size, sizeof(char))) == NULL)
-			err(1, NULL);
+			err(1, "calloc");
 	}
 
 	input = get_choices();
@@ -207,7 +207,7 @@ get_choices(void)
 		ifs = " ";
 
 	if ((buf = malloc(size)) == NULL)
-		err(1, NULL);
+		err(1, "malloc");
 	for (;;) {
 		if ((n = read(STDIN_FILENO, buf + length, size - length)) == -1)
 			err(1, "read");
@@ -218,7 +218,7 @@ get_choices(void)
 		if (length + 1 < size)
 			continue;
 		if ((buf = reallocarray(buf, 2, size)) == NULL)
-			err(1, NULL);
+			err(1, "reallocarray");
 		size *= 2;
 	}
 	memset(buf + length, '\0', size - length);
@@ -226,7 +226,7 @@ get_choices(void)
 	choices.size = 16;
 	if ((choices.v = reallocarray(NULL, choices.size,
 			    sizeof(struct choice))) == NULL)
-		err(1, NULL);
+		err(1, "reallocarray");
 
 	start = buf;
 	while ((stop = strchr(start, '\n')) != NULL) {
@@ -252,7 +252,7 @@ get_choices(void)
 		choices.size *= 2;
 		if ((choices.v = reallocarray(choices.v, choices.size,
 				    sizeof(struct choice))) == NULL)
-			err(1, NULL);
+			err(1, "reallocarray");
 	}
 
 	return buf;
@@ -480,7 +480,7 @@ selected_choice(void)
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
 					    sizeof(char))) == NULL)
-					err(1, NULL);
+					err(1, "reallocarray");
 			}
 
 			if (cursor_position < query_length)
