@@ -884,7 +884,7 @@ get_key(char *buf, size_t size, size_t *nread)
 	}
 
 	if (!isu8start(buf[0])) {
-		if (isprint(buf[0]))
+		if (isprint((unsigned char)buf[0]))
 			return PRINTABLE;
 
 		return UNKNOWN;
