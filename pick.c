@@ -80,6 +80,7 @@ static const char		*strcasechr(const char *, const char *);
 static int			 tty_getc(void);
 static const char		*tty_getcap(char *);
 static void			 tty_init(void);
+static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
 static __dead void		 usage(void);
@@ -311,13 +312,14 @@ selected_choice(void)
 			if (tty_putc('\n') == EOF)
 				err(1, "tty_putc");
 			tty_putp(clr_eos, 1);
-			tty_putp(tparm(parm_up_cursor, choices_count + 1), 1);
+			tty_putp(tty_parm1(parm_up_cursor, choices_count + 1),
+			    1);
 		} else if (choices_count > 0) {
 			/*
 			 * parm_up_cursor interprets 0 as 1, therefore only move
 			 * upwards if any choices where printed.
 			 */
-			tty_putp(tparm(parm_up_cursor,
+			tty_putp(tty_parm1(parm_up_cursor,
 				    choices_count < choices_lines
 				    ? choices_count : choices_lines), 1);
 		}
@@ -330,7 +332,7 @@ selected_choice(void)
 			 * parm_right_cursor interprets 0 as 1, therefore only
 			 * move the cursor if the position is non zero.
 			 */
-			tty_putp(tparm(parm_right_cursor, j), 1);
+			tty_putp(tty_parm1(parm_right_cursor, j), 1);
 		tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
@@ -930,6 +932,12 @@ tty_getcap(char *cap)
 		return "";
 
 	return str;
+}
+
+const char *
+tty_parm1(const char *cap, int a)
+{
+	return tparm((char *)cap, a, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void
