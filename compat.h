@@ -9,6 +9,11 @@
 #define __dead __dead2
 #endif /* __FreeBSD__ */
 
+#ifdef __NetBSD__
+#define tparm(a, b)	tparm(a, b, 0, 0, 0, 0, 0, 0, 0, 0)
+#define UP		_UP
+#endif
+
 #if defined(__linux__) || defined(__CYGWIN__)
 #ifndef __dead
 #ifdef __GNUC__
