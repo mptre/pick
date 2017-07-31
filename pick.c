@@ -304,6 +304,8 @@ selected_choice(void)
 		else
 			xscroll = 0;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
+		if (selection - yscroll >= choices_lines)
+			yscroll = selection - choices_lines + 1;
 		choices_count = print_choices(yscroll, selection);
 		if (choices_count - yscroll < choices.length
 		    && choices_count - yscroll < choices_lines) {
@@ -465,13 +467,10 @@ selected_choice(void)
 				continue;
 			break;
 		case PAGE_DOWN:
-			if (selection + choices_lines < choices_count) {
+			if (selection + choices_lines < choices_count)
 				yscroll = selection += choices_lines;
-			} else {
+			else
 				selection = choices_count - 1;
-				if (selection - yscroll >= choices_lines)
-					yscroll = choices_count - choices_lines;
-			}
 			break;
 		case PAGE_UP:
 			if (selection > choices_lines)
@@ -480,11 +479,8 @@ selected_choice(void)
 				yscroll = selection = 0;
 			break;
 		case END:
-			if (choices_count > 0) {
+			if (choices_count > 0)
 				selection = choices_count - 1;
-				if (selection - yscroll >= choices_lines)
-					yscroll = choices_count - choices_lines;
-			}
 			break;
 		case HOME:
 			yscroll = selection = 0;
