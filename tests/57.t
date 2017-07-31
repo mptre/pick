@@ -1,7 +1,7 @@
-description: CTRL-L clears the selection
+description: CTRL-L does not clear the selection
 keys: \016 \014 \n # DOWN CTRL_L ENTER
 stdin:
 a
 b
 stdout:
-a
+b
