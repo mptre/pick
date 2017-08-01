@@ -41,10 +41,10 @@ enum key {
 	CTRL_K,
 	CTRL_U,
 	CTRL_W,
-	UP,
 	RIGHT,
-	DOWN,
 	LEFT,
+	LINE_DOWN,
+	LINE_UP,
 	PAGE_DOWN,
 	PAGE_UP,
 	END,
@@ -428,14 +428,14 @@ selected_choice(void)
 		case CTRL_E:
 			cursor_position = query_length;
 			break;
-		case DOWN:
+		case LINE_DOWN:
 			if (selection < choices_count - 1) {
 				selection++;
 				if (selection - yscroll == choices_lines)
 					yscroll++;
 			}
 			break;
-		case UP:
+		case LINE_UP:
 			if (selection > 0) {
 				selection--;
 				if (selection - yscroll < 0)
@@ -832,8 +832,6 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(CTRL_W,	"\027"),
 		CAP(DEL,	"kdch1"),
 		KEY(DEL,	"\004"),
-		CAP(DOWN,	"kcud1"),
-		KEY(DOWN,	"\016"),
 		CAP(END,	"kend"),
 		KEY(END,	"\033>"),
 		KEY(ENTER,	"\n"),
@@ -841,14 +839,16 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(HOME,	"\033<"),
 		CAP(LEFT,	"kcub1"),
 		KEY(LEFT,	"\002"),
+		CAP(LINE_DOWN,	"kcud1"),
+		KEY(LINE_DOWN,	"\016"),
+		CAP(LINE_UP,	"kcuu1"),
+		KEY(LINE_UP,	"\020"),
 		CAP(PAGE_DOWN,	"knp"),
 		KEY(PAGE_DOWN,	"\026"),
 		CAP(PAGE_UP,	"kpp"),
 		KEY(PAGE_UP,	"\033v"),
 		CAP(RIGHT,	"kcuf1"),
 		KEY(RIGHT,	"\006"),
-		CAP(UP,		"kcuu1"),
-		KEY(UP,		"\020"),
 		KEY(UNKNOWN,	NULL),
 	};
 	int	c, i;
