@@ -25,8 +25,8 @@ for testcase; do
       eval "${key}='${val%%#*}'"
     else
       case "$key" in
-      stdin)  tmpfile=$stdin; >$tmpfile ;;
-      stdout) tmpfile=$stdout; >$tmpfile ;;
+      stdin)  { tmpfile=$stdin; >$tmpfile; } ;;
+      stdout) { tmpfile=$stdout; >$tmpfile; } ;;
       *)      printf "${key}\n" >>$tmpfile ;;
       esac
     fi
