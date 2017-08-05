@@ -644,8 +644,8 @@ tty_init(void)
 	new_attributes = original_attributes;
 	new_attributes.c_iflag |= ICRNL;	/* map CR to NL */
 	new_attributes.c_lflag &= ~(ECHO | ICANON | IEXTEN);
-	new_attributes.c_cc[VMIN] = 1;
-	new_attributes.c_cc[VTIME] = 0;
+	new_attributes.c_cc[VMIN] = 0;
+	new_attributes.c_cc[VTIME] = 1;
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if ((tty_out = fopen("/dev/tty", "w")) == NULL)
@@ -854,9 +854,18 @@ get_key(char *buf, size_t size, size_t *nread)
 	int	c, i;
 
 	*nread = 0;
-	for (; size > 0; size--) {
-		buf[(*nread)++] = tty_getc();
+	buf[(*nread)++] = tty_getc();
 
+	if (buf[0] == '\033') {
+		struct pollfd	pfd;
+
+		pfd.fd = fileno(tty_in);
+		pfd.events = POLLIN;
+		if (poll(&pfd, 1, 200) == 0)
+			kill(0, SIGINT);
+	}
+
+	for (;;) {
 		for (i = 0; keys[i].key != UNKNOWN; i++) {
 			if (keys[i].str == NULL) {
 				keys[i].str = tty_getcap(keys[i].cap);
@@ -873,6 +882,11 @@ get_key(char *buf, size_t size, size_t *nread)
 		}
 		if (keys[i].key == UNKNOWN)
 			break;
+
+		if (size-- == 0)
+			break;
+
+		buf[(*nread)++] = tty_getc();
 	}
 
 	if (*nread > 1 && buf[0] == '\033' && (buf[1] == '[' || buf[1] == 'O')) {
@@ -882,7 +896,8 @@ get_key(char *buf, size_t size, size_t *nread)
 		 */
 		c = buf[(*nread) - 1];
 		while (c < '@' || c > '~')
-			c = tty_getc();
+			if (read(fileno(tty_in), &c, 1) == ERR)
+				err(1, "read");
 
 		return UNKNOWN;
 	}
@@ -916,9 +931,10 @@ get_key(char *buf, size_t size, size_t *nread)
 int
 tty_getc(void)
 {
-	int	c;
+	int	c, n;
 
-	if ((c = getc(tty_in)) == ERR)
+	while ((n = read(fileno(tty_in), &c, 1)) == 0);
+	if (n == ERR)
 		err(1, "getc");
 
 	return c;
