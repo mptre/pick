@@ -53,6 +53,7 @@ enum key {
 	PAGE_UP,
 	END,
 	HOME,
+	TAB,
 	PRINTABLE
 };
 
@@ -490,6 +491,25 @@ selected_choice(void)
 		case HOME:
 			yscroll = selection = 0;
 			break;
+		case TAB:
+			if (choices_count > 0) {
+				length = choices.v[selection].length;
+
+				if (query_length + length >= query_size) {
+					query_size = 2*query_length + length;
+					if ((query = reallocarray(query, query_size,
+						    sizeof(char))) == NULL)
+						err(1, NULL);
+				}
+
+				memcpy(query, choices.v[selection].string, length);
+				cursor_position = length;
+				query_length = length;
+				query[query_length] = '\0';
+				filter_choices();
+				selection = yscroll = 0;
+			}
+			break;
 		case PRINTABLE:
 			length = strlen(buf);
 
@@ -919,6 +939,7 @@ get_key(const char **key)
 		KEY(PAGE_UP,	"\033v"),
 		CAP(RIGHT,	"kcuf1"),
 		KEY(RIGHT,	"\006"),
+		KEY(TAB,	"\t"),
 		KEY(UNKNOWN,	NULL),
 	};
 	static unsigned char	buf[8];
