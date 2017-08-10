@@ -59,6 +59,11 @@ enum return_index {
         NTH
 };
 
+struct element {
+        enum return_index type;
+        int pos;
+};
+
 struct choice {
 	const char	*description;
 	const char	*string;
@@ -104,7 +109,7 @@ static size_t		 query_length, query_size;
 static int		 descriptions, choices_lines;
 static int		 sort = 1;
 static int		 use_alternate_screen = 1;
-static enum return_index rtn_idx = NONE;
+static struct element    pick_element;
 
 int
 main(int argc, char *argv[])
@@ -116,6 +121,8 @@ main(int argc, char *argv[])
 	int			 output_description = 0;
 
 	setlocale(LC_CTYPE, "");
+        pick_element.type = NONE;
+        pick_element.pos  = -1;
 
         static struct option long_options[] =
         {
@@ -143,13 +150,16 @@ main(int argc, char *argv[])
 			descriptions = 1;
 			break;
                 case 'e':
-                        rtn_idx = FIRST;
+                        pick_element.type = FIRST;
+                        pick_element.pos  = 0;
                         break;
                 case 'E':
-                        rtn_idx = LAST;
+                        pick_element.type = LAST;
+                        // we do not know what is the last index so far
                         break;
                 case 'n':
-                        rtn_idx = NTH;
+                        pick_element.type = NTH;
+                        pick_element.pos  = atoi(optarg); // it returns '0' by default, which is fine
                         break;
 		case 'o':
 			/*
