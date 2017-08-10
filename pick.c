@@ -52,6 +52,13 @@ enum key {
 	PRINTABLE
 };
 
+enum return_index {
+        NONE,
+        FIRST,
+        LAST,
+        NTH
+};
+
 struct choice {
 	const char	*description;
 	const char	*string;
@@ -97,6 +104,7 @@ static size_t		 query_length, query_size;
 static int		 descriptions, choices_lines;
 static int		 sort = 1;
 static int		 use_alternate_screen = 1;
+static enum return_index rtn_idx = NONE;
 
 int
 main(int argc, char *argv[])
@@ -135,10 +143,14 @@ main(int argc, char *argv[])
 			descriptions = 1;
 			break;
                 case 'e':
+                        rtn_idx = FIRST;
+                        break;
                 case 'E':
+                        rtn_idx = LAST;
+                        break;
                 case 'n':
-                        puts("blah");
-                        exit(0);
+                        rtn_idx = NTH;
+                        break;
 		case 'o':
 			/*
 			 * Only output description if descriptions are read and
