@@ -61,7 +61,7 @@ enum return_index {
 
 struct element {
         enum return_index type;
-        int pos;
+        int index;
 };
 
 struct choice {
@@ -96,6 +96,7 @@ static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
 static __dead void		 usage(void);
+static void                      print_element_at_index(void);
 
 static struct termios	 original_attributes;
 static struct {
@@ -121,8 +122,8 @@ main(int argc, char *argv[])
 	int			 output_description = 0;
 
 	setlocale(LC_CTYPE, "");
-        pick_element.type = NONE;
-        pick_element.pos  = -1;
+        pick_element.type  = NONE;
+        pick_element.index = -1;
 
         static struct option long_options[] =
         {
@@ -151,7 +152,7 @@ main(int argc, char *argv[])
 			break;
                 case 'e':
                         pick_element.type = FIRST;
-                        pick_element.pos  = 0;
+                        pick_element.index  = 0;
                         break;
                 case 'E':
                         pick_element.type = LAST;
@@ -159,7 +160,7 @@ main(int argc, char *argv[])
                         break;
                 case 'n':
                         pick_element.type = NTH;
-                        pick_element.pos  = atoi(optarg); // it returns '0' by default, which is fine
+                        pick_element.index  = atoi(optarg); // it returns '0' by default, which is fine
                         break;
 		case 'o':
 			/*
@@ -201,20 +202,24 @@ main(int argc, char *argv[])
 	}
 
 	input = get_choices();
-	tty_init();
+        if (pick_element.type == NONE) {
+	        tty_init();
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
 		err(1, "pledge");
 #endif
 
-	choice = selected_choice();
-	tty_restore();
-	if (choice != NULL) {
-		printf("%s\n", choice->string);
-		if (output_description)
-			printf("%s\n", choice->description);
-	}
+	        choice = selected_choice();
+	        tty_restore();
+	        if (choice != NULL) {
+		        printf("%s\n", choice->string);
+		        if (output_description)
+			        printf("%s\n", choice->description);
+	        }
+        } else {
+                print_element_at_index();
+        }
 
 	free(input);
 	free(choices.v);
@@ -303,6 +308,11 @@ get_choices(void)
 	}
 
 	return buf;
+}
+
+void
+print_element_at_index(void)
+{
 }
 
 char *
