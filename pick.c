@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
-#include <unistd.h>
 #include <wchar.h>
 #include <getopt.h>
 
@@ -112,16 +111,16 @@ main(int argc, char *argv[])
 
         static struct option long_options[] =
         {
-                {"x", no_argument, &use_alternate_screen, 1},
-                {"X", no_argument, &use_alternate_screen, 0},
-                {"S", no_argument, &sort, 0},
-                {"desc", no_argument, 0, 'd'},
-                {"output", no_argument, 0, 'o'},
-                {"query", no_argument, 0, 'q'},
+                {"",        no_argument, 0, 'x'},
+                {"",        no_argument, 0, 'X'},
+                {"",        no_argument, 0, 'S'},
+                {"",        no_argument, 0, 'd'},
+                {"output",  no_argument, 0, 'o'},
+                {"query",   no_argument, 0, 'q'},
                 {"version", no_argument, 0, 'v'},
-                {"first", no_argument,  0, 'e'},
-                {"last", no_argument, 0, 'E'},
-                {"nth", required_argument, 0, 'n'},
+                {"first",   no_argument, 0, 'e'},
+                {"last",    no_argument, 0, 'E'},
+                {"nth",     required_argument, 0, 'n'},
                 {0, 0, 0, 0}
         };
 
@@ -130,7 +129,7 @@ main(int argc, char *argv[])
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt_long(argc, argv, "dhoqv:e:E:n", long_options, &option_index)) != -1)
+	while ((c = getopt_long(argc, argv, "dhoq:SvxX", long_options, &option_index)) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -153,9 +152,18 @@ main(int argc, char *argv[])
 			query_length = strlen(query);
 			query_size = query_length + 1;
 			break;
-		case 'v':
+	        case 'S':
+			sort = 0;
+			break;
+           	case 'v':
 			puts(PACKAGE_VERSION);
 			exit(0);
+		case 'x':
+			use_alternate_screen = 1;
+			break;
+		case 'X':
+			use_alternate_screen = 0;
+			break;
 		default:
 			usage();
 		}
