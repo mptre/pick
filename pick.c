@@ -129,7 +129,7 @@ main(int argc, char *argv[])
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt_long(argc, argv, "dhoq:SvxX", long_options, &option_index)) != -1)
+	while ((c = getopt_long(argc, argv, "dhoq:SvxXeEn:", long_options, &option_index)) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
