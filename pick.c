@@ -14,6 +14,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <getopt.h>
 
 #ifdef HAVE_NCURSESW_H
 #include <ncursesw/curses.h>
@@ -104,20 +105,41 @@ main(int argc, char *argv[])
 	const struct choice	*choice;
 	char			*input;
 	int			 c;
+        int                      option_index = 0;
 	int			 output_description = 0;
 
 	setlocale(LC_CTYPE, "");
+
+        static struct option long_options[] =
+        {
+                {"x", no_argument, &use_alternate_screen, 1},
+                {"X", no_argument, &use_alternate_screen, 0},
+                {"S", no_argument, &sort, 0},
+                {"desc", no_argument, 0, 'd'},
+                {"output", no_argument, 0, 'o'},
+                {"query", no_argument, 0, 'q'},
+                {"version", no_argument, 0, 'v'},
+                {"first", no_argument,  0, 'e'},
+                {"last", no_argument, 0, 'E'},
+                {"nth", required_argument, 0, 'n'},
+                {0, 0, 0, 0}
+        };
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
+	while ((c = getopt_long(argc, argv, "dhoqv:e:E:n", long_options, &option_index)) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
 			break;
+                case 'e':
+                case 'E':
+                case 'n':
+                        puts("blah");
+                        exit(0);
 		case 'o':
 			/*
 			 * Only output description if descriptions are read and
@@ -131,18 +153,9 @@ main(int argc, char *argv[])
 			query_length = strlen(query);
 			query_size = query_length + 1;
 			break;
-		case 'S':
-			sort = 0;
-			break;
 		case 'v':
 			puts(PACKAGE_VERSION);
 			exit(0);
-		case 'x':
-			use_alternate_screen = 1;
-			break;
-		case 'X':
-			use_alternate_screen = 0;
-			break;
 		default:
 			usage();
 		}
@@ -183,7 +196,7 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query] [-first] [-last] [-nth=<n>]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -S          disable sorting\n"
@@ -191,7 +204,10 @@ usage(void)
 	    "    -o          output description of selected on exit\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
-	    "    -q query    supply an initial search query\n");
+	    "    -q query    supply an initial search query\n"
+            "    -first      pick first element and exit\n"
+            "    -last       pick last  element and exit\n"
+            "    -nth=<n>    pick nth   element and exit\n");
 
 	exit(1);
 }
