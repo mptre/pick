@@ -2,14 +2,14 @@
 sudo: required
 dist: trusty
 language: c
+env:
+  global:
+    - secure: "QI0qw+0hitEfPcGNrX8pjw7peRBlO204z7bmHWNsvg/pCkzFVsGPsMm2nijn0Ey8gn8HyRR6wD6F4i4n3NTh2D4E03TWZmNtfxWjKqmalXQmQswdkByJeC+H211MQMrcQg8MaXPNbFzFeDWWn+YIkNbYySJO8IjYNfpGwxQ51kU="
 matrix:
   include:
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
-    - os: linux
-      compiler: clang
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=undefined
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined'
     - os: linux
       compiler: gcc
       env: BUILD_TYPE=default CFLAGS=-fsanitize=address
@@ -17,9 +17,22 @@ matrix:
       compiler: clang
       env: BUILD_TYPE=default CFLAGS=-fsanitize=address
     - os: linux
+      compiler: clang
+      env: BUILD_TYPE=coverity
+    - os: linux
       env: BUILD_TYPE=cppcheck
     - os: osx
       env: BUILD_TYPE=mandoc
+before_install:
+  - |
+    # Don't trigger Coverity unless it's a coverity build.
+    if [ $BUILD_TYPE != coverity ]; then
+      COVERITY_SCAN_BRANCH_PATTERN='^$'
+    fi
+    # Disable all builds while submitting to Coverity.
+    if [ $TRAVIS_BRANCH = coverity_scan ]; then
+      BUILD_TYPE=unknown
+    fi
 install:
   - |
     if [ $BUILD_TYPE = cppcheck ]; then
@@ -46,3 +59,12 @@ script:
     if [ $BUILD_TYPE = mandoc ]; then
       mandoc -Tlint pick.1
     fi
+addons:
+  coverity_scan:
+    project:
+      name: calleerlandsson/pick
+      description: a fuzzy search tool for the command-line
+    notification_email: pick-maintainers@calleerlandsson.com
+    build_command_prepend: ./autogen.sh; ./configure
+    build_command: make
+    branch_pattern: coverity_scan
