@@ -160,7 +160,7 @@ main(int argc, char *argv[])
                         break;
                 case 'n':
                         pick_element.type = NTH;
-                        pick_element.index  = atoi(optarg); // it returns '0' by default, which is fine
+                        pick_element.index  = atoi(optarg) - 1; // it returns '0' by default, which is fine
                         break;
 		case 'o':
 			/*
@@ -232,7 +232,7 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query] [-first] [-last] [-nth=<n>]\n"
+	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query] [--first] [--last] [--nth n]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -S          disable sorting\n"
@@ -241,9 +241,9 @@ usage(void)
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n"
-            "    -first      pick first element and exit\n"
-            "    -last       pick last  element and exit\n"
-            "    -nth=<n>    pick nth   element and exit\n");
+            "    --first     pick first element and exit\n"
+            "    --last      pick last  element and exit\n"
+            "    --nth n     pick nth   element and exit\n");
 
 	exit(1);
 }
