@@ -222,7 +222,7 @@ get_choices(void)
 			err(1, NULL);
 		size *= 2;
 	}
-	memset(buf + length, '\0', size - length);
+	buf[length] = '\0';
 
 	choices.size = 16;
 	if ((choices.v = reallocarray(NULL, choices.size,
