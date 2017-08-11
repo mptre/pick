@@ -1,3 +1,7 @@
+# Swap files
+*.swo
+*.swp
+
 *.o
 core*
 pick

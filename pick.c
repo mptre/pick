@@ -84,7 +84,7 @@ static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
-static int			 print_choices(int, int);
+static int			 print_choices(int, int, int);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
@@ -96,7 +96,7 @@ static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
 static __dead void		 usage(void);
-static void                      print_element_at_index(void);
+static const struct choice       *get_choice_at_index(void);
 
 static struct termios	 original_attributes;
 static struct {
@@ -115,7 +115,7 @@ static struct element    pick_element;
 int
 main(int argc, char *argv[])
 {
-	const struct choice	*choice;
+	const struct choice	*choice = NULL;
 	char			*input;
 	int			 c;
         int                      option_index = 0;
@@ -131,9 +131,9 @@ main(int argc, char *argv[])
                 {"",        no_argument, 0, 'X'},
                 {"",        no_argument, 0, 'S'},
                 {"",        no_argument, 0, 'd'},
-                {"output",  no_argument, 0, 'o'},
-                {"query",   no_argument, 0, 'q'},
-                {"version", no_argument, 0, 'v'},
+                {"",        no_argument, 0, 'o'},
+                {"",        no_argument, 0, 'q'},
+                {"",        no_argument, 0, 'v'},
                 {"first",   no_argument, 0, 'e'},
                 {"last",    no_argument, 0, 'E'},
                 {"nth",     required_argument, 0, 'n'},
@@ -212,13 +212,14 @@ main(int argc, char *argv[])
 
 	        choice = selected_choice();
 	        tty_restore();
-	        if (choice != NULL) {
-		        printf("%s\n", choice->string);
-		        if (output_description)
-			        printf("%s\n", choice->description);
-	        }
         } else {
-                print_element_at_index();
+                choice = get_choice_at_index();
+        }
+
+	if (choice != NULL) {
+                printf("%s\n", choice->string);
+		if (output_description)
+		printf("%s\n", choice->description);
         }
 
 	free(input);
@@ -310,9 +311,23 @@ get_choices(void)
 	return buf;
 }
 
-void
-print_element_at_index(void)
+const struct choice *
+get_choice_at_index(void)
 {
+        filter_choices();
+        int choices_count = print_choices(0, 0, 1);
+        if (choices_count > 0) {
+                if (pick_element.type == FIRST)
+                        return &choices.v[0];
+                else if (pick_element.type == LAST)
+                        return &choices.v[choices_count-1];
+                else if (pick_element.type == NTH) {
+                        if (pick_element.index >= 0 && pick_element.index < choices_count)
+                                return &choices.v[pick_element.index];
+                }
+        }
+
+        return NULL;
 }
 
 char *
@@ -351,7 +366,7 @@ selected_choice(void)
 		if (cursor_position < xscroll)
 			xscroll = cursor_position;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
-		choices_count = print_choices(yscroll, selection);
+		choices_count = print_choices(yscroll, selection, 0);
 		if ((size_t)choices_count - yscroll < choices.length
 		    && choices_count - yscroll < choices_lines) {
 			/*
@@ -849,7 +864,7 @@ print_line(const char *str, size_t len, int standout,
  * considered having a positive score.
  */
 int
-print_choices(int offset, int selection)
+print_choices(int offset, int selection, int only_count)
 {
 	struct choice	*choice;
 	int		 i;
@@ -858,10 +873,13 @@ print_choices(int offset, int selection)
 	     (size_t)i < choices.length
 	     && (query_length == 0 || choice->score > 0);
 	     choice++, i++) {
-		if (i - offset < choices_lines)
-			print_line(choice->string, choice->length,
-			    i == selection, choice->match_start,
-			    choice->match_end);
+		if (i - offset < choices_lines) {
+                        if (only_count == 0) {
+			        print_line(choice->string, choice->length,
+			        i == selection, choice->match_start,
+			        choice->match_end);
+                        }
+                }
 	}
 
 	return i;
