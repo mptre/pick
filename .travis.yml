@@ -6,10 +6,7 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
-    - os: linux
-      compiler: clang
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=undefined
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined'
     - os: linux
       compiler: gcc
       env: BUILD_TYPE=default CFLAGS=-fsanitize=address
