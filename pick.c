@@ -53,15 +53,15 @@ enum key {
 };
 
 enum return_index {
-        NONE,
-        FIRST,
-        LAST,
-        NTH
+	NONE,
+	FIRST,
+	LAST,
+	NTH
 };
 
 struct element {
-        enum return_index type;
-        int index;
+	enum return_index type;
+	int index;
 };
 
 struct choice {
@@ -127,16 +127,16 @@ main(int argc, char *argv[])
 
         static struct option long_options[] =
         {
-                {"",        no_argument, 0, 'x'},
-                {"",        no_argument, 0, 'X'},
-                {"",        no_argument, 0, 'S'},
-                {"",        no_argument, 0, 'd'},
-                {"",        no_argument, 0, 'o'},
-                {"",        no_argument, 0, 'q'},
-                {"",        no_argument, 0, 'v'},
-                {"first",   no_argument, 0, 'e'},
-                {"last",    no_argument, 0, 'E'},
-                {"nth",     required_argument, 0, 'n'},
+                {"",	  no_argument, 0, 'x'},
+                {"",	  no_argument, 0, 'X'},
+                {"",	  no_argument, 0, 'S'},
+                {"",	  no_argument, 0, 'd'},
+                {"",	  no_argument, 0, 'o'},
+                {"",	  no_argument, 0, 'q'},
+                {"",	  no_argument, 0, 'v'},
+                {"first", no_argument, 0, 'e'},
+                {"last",  no_argument, 0, 'E'},
+                {"nth",   required_argument, 0, 'n'},
                 {0, 0, 0, 0}
         };
 
@@ -202,8 +202,8 @@ main(int argc, char *argv[])
 	}
 
 	input = get_choices();
-        if (pick_element.type == NONE) {
-	        tty_init();
+	if (pick_element.type == NONE) {
+		tty_init();
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
@@ -213,11 +213,11 @@ main(int argc, char *argv[])
 	        choice = selected_choice();
 	        tty_restore();
         } else {
-                choice = get_choice_at_index();
+		choice = get_choice_at_index();
         }
 
 	if (choice != NULL) {
-                printf("%s\n", choice->string);
+		printf("%s\n", choice->string);
 		if (output_description)
 		printf("%s\n", choice->description);
         }
@@ -241,9 +241,9 @@ usage(void)
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n"
-            "    --first     pick first element and exit\n"
-            "    --last      pick last  element and exit\n"
-            "    --nth n     pick nth   element and exit\n");
+	    "    --first     pick first element and exit\n"
+	    "    --last      pick last  element and exit\n"
+	    "    --nth n     pick nth   element and exit\n");
 
 	exit(1);
 }
@@ -314,20 +314,20 @@ get_choices(void)
 const struct choice *
 get_choice_at_index(void)
 {
-        filter_choices();
-        int choices_count = print_choices(0, 0, 1);
-        if (choices_count > 0) {
-                if (pick_element.type == FIRST)
-                        return &choices.v[0];
-                else if (pick_element.type == LAST)
-                        return &choices.v[choices_count-1];
-                else if (pick_element.type == NTH) {
-                        if (pick_element.index >= 0 && pick_element.index < choices_count)
-                                return &choices.v[pick_element.index];
-                }
-        }
+	filter_choices();
+	int choices_count = print_choices(0, 0, 1);
+	if (choices_count > 0) {
+		if (pick_element.type == FIRST)
+			return &choices.v[0];
+		else if (pick_element.type == LAST)
+			return &choices.v[choices_count-1];
+		else if (pick_element.type == NTH) {
+			if (pick_element.index >= 0 && pick_element.index < choices_count)
+				return &choices.v[pick_element.index];
+		}
+	}
 
-        return NULL;
+	return NULL;
 }
 
 char *

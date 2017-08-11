@@ -1,4 +1,4 @@
-description: get first choice
+description: get nth choice
 args: --nth 2
 stdin:
 1
