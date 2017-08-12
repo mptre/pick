@@ -409,7 +409,8 @@ selected_choice(void)
 				if (word_position < 1)
 					break;
 				if (query[word_position] != ' '
-				    && query[word_position - 1] == ' ')
+				    && (query[word_position - 1] == ' '
+				    ||  query[word_position - 1] == '/'))
 					break;
 			}
 			delete_between(
