@@ -1,5 +1,5 @@
 # Use trusty environment for a up-to-date version of autotools
-sudo: required
+sudo: false
 dist: trusty
 language: c
 env:
