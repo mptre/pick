@@ -21,6 +21,10 @@ matrix:
       env: BUILD_TYPE=coverity
     - os: linux
       env: BUILD_TYPE=cppcheck
+      addons:
+        apt:
+          packages:
+            - cppcheck
     - os: osx
       env: BUILD_TYPE=mandoc
 before_install:
@@ -34,11 +38,6 @@ before_install:
       BUILD_TYPE=unknown
     fi
 install:
-  - |
-    if [ $BUILD_TYPE = cppcheck ]; then
-      sudo apt-get -qq update
-      sudo apt-get install -y cppcheck
-    fi
   - |
     if [ $BUILD_TYPE = mandoc ]; then
       brew install mandoc
