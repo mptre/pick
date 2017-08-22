@@ -1,4 +1,3 @@
-# Use trusty environment for a up-to-date version of autotools
 sudo: false
 dist: trusty
 language: c
