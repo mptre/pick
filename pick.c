@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
-#include <unistd.h>
 #include <wchar.h>
+#include <getopt.h>
 
 #ifdef HAVE_NCURSESW_H
 #include <ncursesw/curses.h>
@@ -52,6 +52,18 @@ enum key {
 	PRINTABLE
 };
 
+enum return_index {
+	NONE,
+	FIRST,
+	LAST,
+	NTH
+};
+
+struct element {
+	enum return_index type;
+	int index;
+};
+
 struct choice {
 	const char	*description;
 	const char	*string;
@@ -72,7 +84,7 @@ static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
-static int			 print_choices(int, int);
+static int			 print_choices(int, int, int);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
@@ -84,6 +96,7 @@ static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(void);
 static __dead void		 usage(void);
+static const struct choice       *get_choice_at_index(void);
 
 static struct termios	 original_attributes;
 static struct {
@@ -97,27 +110,58 @@ static size_t		 query_length, query_size;
 static int		 descriptions, choices_lines;
 static int		 sort = 1;
 static int		 use_alternate_screen = 1;
+static struct element    pick_element;
 
 int
 main(int argc, char *argv[])
 {
-	const struct choice	*choice;
+	const struct choice	*choice = NULL;
 	char			*input;
 	int			 c;
+        int                      option_index = 0;
 	int			 output_description = 0;
 
 	setlocale(LC_CTYPE, "");
+        pick_element.type  = NONE;
+        pick_element.index = -1;
+
+        static struct option long_options[] =
+        {
+                {"",	  no_argument, 0, 'x'},
+                {"",	  no_argument, 0, 'X'},
+                {"",	  no_argument, 0, 'S'},
+                {"",	  no_argument, 0, 'd'},
+                {"",	  no_argument, 0, 'o'},
+                {"",	  no_argument, 0, 'q'},
+                {"",	  no_argument, 0, 'v'},
+                {"first", no_argument, 0, 'e'},
+                {"last",  no_argument, 0, 'E'},
+                {"nth",   required_argument, 0, 'n'},
+                {0, 0, 0, 0}
+        };
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
+	while ((c = getopt_long(argc, argv, "dhoq:SvxXeEn:", long_options, &option_index)) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
 			break;
+                case 'e':
+                        pick_element.type = FIRST;
+                        pick_element.index  = 0;
+                        break;
+                case 'E':
+                        pick_element.type = LAST;
+                        // we do not know what is the last index so far
+                        break;
+                case 'n':
+                        pick_element.type = NTH;
+                        pick_element.index  = atoi(optarg) - 1; // it returns '0' by default, which is fine
+                        break;
 		case 'o':
 			/*
 			 * Only output description if descriptions are read and
@@ -131,10 +175,10 @@ main(int argc, char *argv[])
 			query_length = strlen(query);
 			query_size = query_length + 1;
 			break;
-		case 'S':
+	        case 'S':
 			sort = 0;
 			break;
-		case 'v':
+           	case 'v':
 			puts(PACKAGE_VERSION);
 			exit(0);
 		case 'x':
@@ -158,20 +202,25 @@ main(int argc, char *argv[])
 	}
 
 	input = get_choices();
-	tty_init();
+	if (pick_element.type == NONE) {
+		tty_init();
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
 		err(1, "pledge");
 #endif
 
-	choice = selected_choice();
-	tty_restore();
+	        choice = selected_choice();
+	        tty_restore();
+        } else {
+		choice = get_choice_at_index();
+        }
+
 	if (choice != NULL) {
 		printf("%s\n", choice->string);
 		if (output_description)
-			printf("%s\n", choice->description);
-	}
+		printf("%s\n", choice->description);
+        }
 
 	free(input);
 	free(choices.v);
@@ -183,7 +232,7 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query] [--first] [--last] [--nth n]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -S          disable sorting\n"
@@ -191,7 +240,10 @@ usage(void)
 	    "    -o          output description of selected on exit\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
-	    "    -q query    supply an initial search query\n");
+	    "    -q query    supply an initial search query\n"
+	    "    --first     pick first element and exit\n"
+	    "    --last      pick last  element and exit\n"
+	    "    --nth n     pick nth   element and exit\n");
 
 	exit(1);
 }
@@ -259,6 +311,25 @@ get_choices(void)
 	return buf;
 }
 
+const struct choice *
+get_choice_at_index(void)
+{
+	filter_choices();
+	int choices_count = print_choices(0, 0, 1);
+	if (choices_count > 0) {
+		if (pick_element.type == FIRST)
+			return &choices.v[0];
+		else if (pick_element.type == LAST)
+			return &choices.v[choices_count-1];
+		else if (pick_element.type == NTH) {
+			if (pick_element.index >= 0 && pick_element.index < choices_count)
+				return &choices.v[pick_element.index];
+		}
+	}
+
+	return NULL;
+}
+
 char *
 eager_strpbrk(const char *string, const char *separators)
 {
@@ -294,7 +365,7 @@ selected_choice(void)
 		else
 			xscroll = 0;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
-		choices_count = print_choices(yscroll, selection);
+		choices_count = print_choices(yscroll, selection, 0);
 		if ((size_t)choices_count - yscroll < choices.length
 		    && choices_count - yscroll < choices_lines) {
 			/*
@@ -792,7 +863,7 @@ print_line(const char *str, size_t len, int standout,
  * considered having a positive score.
  */
 int
-print_choices(int offset, int selection)
+print_choices(int offset, int selection, int only_count)
 {
 	struct choice	*choice;
 	int		 i;
@@ -801,10 +872,13 @@ print_choices(int offset, int selection)
 	     (size_t)i < choices.length
 	     && (query_length == 0 || choice->score > 0);
 	     choice++, i++) {
-		if (i - offset < choices_lines)
-			print_line(choice->string, choice->length,
-			    i == selection, choice->match_start,
-			    choice->match_end);
+		if (i - offset < choices_lines) {
+                        if (only_count == 0) {
+			        print_line(choice->string, choice->length,
+			        i == selection, choice->match_start,
+			        choice->match_end);
+                        }
+                }
 	}
 
 	return i;
