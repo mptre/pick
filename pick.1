@@ -74,8 +74,10 @@ Delete one character to the left of the cursor in the search query input field.
 .It Ic Delete | Ctrl-D
 Delete the character under the cursor in the search query input field.
 .It Ic Ctrl-W
-Delete to the beginning of the closest word to the left in the search query
-input field.
+Delete the word to the left of the cursor.
+A word is recognized as a sequence of characters for which either
+.Xr isalnum 3
+is true or the character is an underscore.
 .It Ic Ctrl-U
 Delete to the beginning of the line in the search query input field.
 .It Ic Ctrl-K
