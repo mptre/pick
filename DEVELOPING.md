@@ -45,11 +45,11 @@ you agree to abide by its [Code of Conduct][conduct].
    In the case of discovered defects,
    perform a fix and redo this step until no further defects are detected.
 
-  ```sh
-  $ git checkout coverity_scan
-  $ git rebase master
-  $ git push origin coverity_scan
-  ```
+   ```sh
+   $ git checkout coverity_scan
+   $ git rebase master
+   $ git push origin coverity_scan
+   ```
 
 2. Update the version in `configure.ac`:
 
