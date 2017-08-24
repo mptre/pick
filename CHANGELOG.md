@@ -1,3 +1,79 @@
+# v1.8.0 - YYYY-MM-DD
+
+## New features
+
+- Read arrow keys from the `terminfo(3)` database.
+  (0c3369b, 2d57016, #206)
+  (Jenz Guenther)
+
+- Add support for `SIGWINCH`.
+  (7cdafc8, 5491427, b630f0d, 5969e96, #213)
+  (Anton Lindqvist, Jenz Guenther)
+
+## Bug fixes
+
+- Declare functions as `__dead` when appropriate in `pick-test(1)`.
+  Discovered while compiling using GCC 7.
+  (bf666ed, dd29ca2, #202, #204)
+  (Anton Lindqvist)
+
+- Make sure `$IFS` is not an empty string.
+  (e894dd0)
+  (Anton Lindqvist)
+
+- Disable `IEXTEN` to solve `Ctrl-V` conflict.
+  (8a70fe7)
+  (Anton Lindqvist)
+
+- Declare functions as `__dead` when appropriate.
+  (91d7bba, #210)
+  (Jenz Guenther)
+
+- Always pass 9 parameters to `tparm(3)`.
+  Partial fix to make pick compile on NetBSD.
+  (d3a158d, #216, #218)
+  (Anton Lindqvist, Jenz Guenther)
+
+- Ensure blocking read in non-canonical mode.
+  (98a8779, #219)
+  (Jenz Guenther)
+
+- Prefix `UP` (and `DOWN` for consistency) since it's already defined on NetBSD.
+  Partial fix to make pick compile on NetBSD.
+  (1cdf592, #216)
+  (Anton Lindqvist, Jenz Guenther)
+
+- Use compound-list in `pick-test.sh` for POSIX compatibility.
+  (716fc0a, #224)
+  (Jenz Guenther)
+
+- Fix and simplify horisontal scrolling.
+  (1ef7970, #230)
+  (Anton Lindqvist, Jenz Guenther)
+
+## Changes
+
+- Use `reallocarray(3)` in `pick-test(1)`.
+  (58b17e0, 478e715)
+  (Anton Lindqvist)
+
+- Run `cppcheck(1)` and Coverity Scan on Travis.
+  (1560686, f493b93)
+  (Anton Lindqvist)
+
+- NUL-terminate the input buffer by assignment rather than using `memset(3)`.
+  (3e04320)
+  (Anton Lindqvist)
+
+- Update documentation on development and contributing.
+  (50e2176, #214)
+  (Anton Lindqvist)
+
+- Lower requirements for autoconf and automake.
+  Makes it possible to compile pick on Debian 5.
+  (054b323, #220)
+  (Jenz Guenther)
+
 # v1.7.0 - 2017-06-30
 
 ## New features
