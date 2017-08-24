@@ -41,20 +41,30 @@ you agree to abide by its [Code of Conduct][conduct].
 
 ## Release
 
-1. Update the version in `configure.ac`:
+1. Run Coverity Scan.
+   In the case of discovered defects,
+   perform a fix and redo this step until no further defects are detected.
+
+  ```sh
+  $ git checkout coverity_scan
+  $ git rebase master
+  $ git push origin coverity_scan
+  ```
+
+2. Update the version in `configure.ac`:
 
    ```
    AC_INIT([pick], [0.0.2], [pick-maintainers@calleerlandsson.com])
    ```
 
-2. Verify the tarball:
+3. Verify the tarball:
 
    ```sh
    $ make distcheck
-   $ tar -ztf pick-0.0.2.tar.gz | less
+   $ tar -ztf pick-0.0.2.tar.gz
    ```
 
-3. Tag the repo:
+4. Tag the repo:
 
    ```sh
    $ git checkout master
@@ -65,21 +75,21 @@ you agree to abide by its [Code of Conduct][conduct].
    $ git push origin master --tags
    ```
 
-4. Sign the tarball:
+5. Sign the tarball:
 
    ```sh
    $ gpg -sab pick-0.0.2.tar.gz
    ```
 
-5. Verify the signature:
+6. Verify the signature:
 
    ```sh
    $ gpg --verify pick-0.0.2.tar.gz.asc pick-0.0.2.tar.gz
    ```
 
-6. [Announce the release on GitHub][announce].
+7. [Announce the release on GitHub][announce].
 
-7. Contact package maintainers:
+8. Contact package maintainers:
 
   * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
   * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
