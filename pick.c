@@ -102,6 +102,7 @@ static char			*query;
 static size_t			 query_length, query_size;
 static volatile sig_atomic_t	 gotsigwinch;
 static int			 descriptions, choices_lines, tty_columns, tty_lines;
+static int			 num_lines = 0;
 static int			 sort = 1;
 static int			 use_alternate_screen = 1;
 
@@ -120,7 +121,7 @@ main(int argc, char *argv[])
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhl:oq:SvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -131,6 +132,9 @@ main(int argc, char *argv[])
 			 * displayed in the list of choices.
 			 */
 			output_description = descriptions;
+			break;
+		case 'l':
+			num_lines = strtonum(optarg, 1, INT_MAX, NULL);
 			break;
 		case 'q':
 			if ((query = strdup(optarg)) == NULL)
@@ -190,7 +194,7 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-l lines] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -S          disable sorting\n"
@@ -198,6 +202,7 @@ usage(void)
 	    "    -o          output description of selected on exit\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
+	    "    -l lines    set the number of choices lines to display\n"
 	    "    -q query    supply an initial search query\n");
 
 	exit(1);
@@ -318,7 +323,7 @@ selected_choice(void)
 			if (tty_putc('\n') == EOF)
 				err(1, "tty_putc");
 			tty_putp(clr_eos, 1);
-			tty_putp(tty_parm1(parm_up_cursor, choices_count + 1),
+			tty_putp(tty_parm1(parm_up_cursor, choices_count - yscroll + 1),
 			    1);
 		} else if (choices_count > 0) {
 			/*
@@ -751,7 +756,10 @@ tty_size(void)
 	if (tty_lines == 0)
 		tty_lines = 24;
 
-	choices_lines = tty_lines - 1;	/* available lines, minus query line */
+	if (num_lines > 0 && num_lines < tty_lines)
+		choices_lines = num_lines;
+	else
+		choices_lines = tty_lines - 1;	/* available lines, minus query line */
 }
 
 void
