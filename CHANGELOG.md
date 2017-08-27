@@ -51,6 +51,10 @@
   (1ef7970, #230)
   (Anton Lindqvist, Jenz Guenther)
 
+- Fix scroll up bug.
+  (50e2748, #232)
+  (Anton Lindqvist, Jenz Guenther)
+
 ## Changes
 
 - Use `reallocarray(3)` in `pick-test(1)`.
