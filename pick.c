@@ -596,7 +596,7 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 		*end = e - string;
 	}
 
-	return length;
+	return *end - *start;
 }
 
 /*
