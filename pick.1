@@ -90,6 +90,11 @@ The following environment variables will affect the execution of
 .It Ev IFS
 Determines the separator used between choices and descriptions.
 .El
+.Sh ASYNCHRONOUS EVENTS
+.Bl -tag -width "SIGWINCH"
+.It Dv SIGWINCH
+The screen is resized.
+.El
 .Sh EXAMPLES
 Select a file in the current directory to open using
 .Xr xdg-open 1 :
