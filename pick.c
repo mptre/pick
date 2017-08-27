@@ -27,6 +27,8 @@
 
 #include "compat.h"
 
+#define ISWORD(c)	(isalnum((c)) || (c) == '_')
+
 #define tty_putp(capability, fatal) do {				\
 	if (tputs(capability, 1, tty_putc) == ERR && fatal)		\
 		errx(1, #capability ": unknown terminfo capability");	\
@@ -418,8 +420,8 @@ selected_choice(void)
 					continue;
 				if (word_position < 1)
 					break;
-				if (query[word_position] != ' '
-				    && query[word_position - 1] == ' ')
+				if (ISWORD(query[word_position])
+				    && !ISWORD(query[word_position - 1]))
 					break;
 			}
 			delete_between(
