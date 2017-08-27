@@ -52,6 +52,7 @@ enum key {
 	PAGE_UP,
 	END,
 	HOME,
+	INS,
 	PRINTABLE
 };
 
@@ -62,6 +63,7 @@ struct choice {
 	ssize_t		 match_start;	/* inclusive match start offset */
 	ssize_t		 match_end;	/* exclusive match end offset */
 	double		 score;
+	int		 tagged;
 };
 
 static int			 choicecmp(const void *, const void *);
@@ -77,8 +79,9 @@ static int			 isu8start(unsigned char);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
 static int			 print_choices(int, int);
+static void			 print_elements(int);
 static void			 print_line(const char *, size_t, int, ssize_t,
-				    ssize_t);
+				    ssize_t, int);
 static const struct choice	*selected_choice(void);
 static const char		*strcasechr(const char *, const char *);
 static void			 toggle_sigwinch(int);
@@ -103,6 +106,7 @@ static size_t			 query_length, query_size;
 static volatile sig_atomic_t	 gotsigwinch;
 static int			 descriptions, choices_lines, tty_columns, tty_lines;
 static int			 sort = 1;
+static int			 tagged;
 static int			 use_alternate_screen = 1;
 
 int
@@ -174,7 +178,9 @@ main(int argc, char *argv[])
 
 	choice = selected_choice();
 	tty_restore();
-	if (choice != NULL) {
+	if (tagged)
+		print_elements(output_description);
+	else if (choice != NULL) {
 		printf("%s\n", choice->string);
 		if (output_description)
 			printf("%s\n", choice->description);
@@ -251,6 +257,7 @@ get_choices(void)
 		choices.v[choices.length].match_start = -1;
 		choices.v[choices.length].match_end = -1;
 		choices.v[choices.length].score = 0;
+		choices.v[choices.length].tagged = 0;
 
 		start = stop + 1;
 
@@ -300,7 +307,7 @@ selected_choice(void)
 			xscroll = cursor_position - columns + 1;
 		else
 			xscroll = 0;
-		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
+		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1, 0);
 		choices_count = print_choices(yscroll, selection);
 		if ((size_t)choices_count - yscroll < choices.length
 		    && choices_count - yscroll < choices_lines) {
@@ -487,6 +494,16 @@ selected_choice(void)
 		case HOME:
 			yscroll = selection = 0;
 			break;
+		case INS:
+			if (choices_count > 0) {
+				choices.v[selection].tagged = !choices.v[selection].tagged;
+				if (choices.v[selection].tagged)
+					tagged++;
+				else
+					tagged--;
+				ungetc('\016', tty_in);	/* move to next line */
+			}
+			break;
 		case PRINTABLE:
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
@@ -526,6 +543,7 @@ filter_choices(void)
 
 	for (i = 0; i < choices.length; i++) {
 		c = &choices.v[i];
+		c->tagged = 0;
 		if (min_match(c->string, 0,
 			    &c->match_start, &c->match_end) == INT_MAX) {
 			c->match_start = c->match_end = -1;
@@ -553,6 +571,7 @@ filter_choices(void)
 		}
 	}
 
+	tagged = 0;
 	qsort(choices.v, choices.length, sizeof(struct choice), choicecmp);
 }
 
@@ -756,7 +775,7 @@ tty_size(void)
 
 void
 print_line(const char *str, size_t len, int standout,
-    ssize_t enter_underline, ssize_t exit_underline)
+    ssize_t enter_underline, ssize_t exit_underline, int tagged)
 {
 	size_t	i;
 	wchar_t	wc;
@@ -764,6 +783,8 @@ print_line(const char *str, size_t len, int standout,
 
 	if (standout)
 		tty_putp(enter_standout_mode, 1);
+	if (tagged)
+		tty_putp(enter_bold_mode, 0);
 
 	col = i = in_esc_seq = 0;
 	while (col < tty_columns) {
@@ -867,10 +888,27 @@ print_choices(int offset, int selection)
 		if (i - offset < choices_lines)
 			print_line(choice->string, choice->length,
 			    i == selection, choice->match_start,
-			    choice->match_end);
+			    choice->match_end, choice->tagged);
 	}
 
 	return i;
+}
+
+void
+print_elements(int description)
+{
+	struct choice	*choice;
+	int		 i;
+
+	for (i = 0, choice = &choices.v[i];
+	     (size_t)i < choices.length
+	     && (query_length == 0 || choice->score > 0);
+	     choice++, i++) {
+		if (choice->tagged)
+			printf("%s\n", choice->string);
+			if (description)
+				printf("%s\n", choice->description);
+	}
 }
 
 enum key
@@ -900,6 +938,8 @@ get_key(char *buf, size_t size, size_t *nread)
 		KEY(ENTER,	"\n"),
 		CAP(HOME,	"khome"),
 		KEY(HOME,	"\033<"),
+		CAP(INS,	"kich1"),
+		KEY(INS,	"\000"),
 		CAP(LEFT,	"kcub1"),
 		KEY(LEFT,	"\002"),
 		CAP(LINE_DOWN,	"kcud1"),
