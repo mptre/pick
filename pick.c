@@ -318,8 +318,8 @@ selected_choice(void)
 			if (tty_putc('\n') == EOF)
 				err(1, "tty_putc");
 			tty_putp(clr_eos, 1);
-			tty_putp(tty_parm1(parm_up_cursor, choices_count + 1),
-			    1);
+			tty_putp(tty_parm1(parm_up_cursor,
+				    (choices_count - yscroll) + 1), 1);
 		} else if (choices_count > 0) {
 			/*
 			 * parm_up_cursor interprets 0 as 1, therefore only move
