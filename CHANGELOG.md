@@ -1,4 +1,4 @@
-# v1.8.0 - YYYY-MM-DD
+# v1.8.0 - 2017-08-28
 
 ## New features
 
@@ -7,7 +7,7 @@
   (Jenz Guenther)
 
 - Add support for `SIGWINCH`.
-  (7cdafc8, 5491427, b630f0d, 5969e96, #213)
+  (7cdafc8, 5491427, b630f0d, 5969e96, 50e9645, #213)
   (Anton Lindqvist, Jenz Guenther)
 
 ## Bug fixes
@@ -54,6 +54,12 @@
 - Fix scroll up bug.
   (50e2748, #232)
   (Anton Lindqvist, Jenz Guenther)
+
+- Always favor the shortest match.
+  This bug only occurs when a choice contains multiple instances of the query
+  and the right-most match is the shortest one.
+  (d7d25a8, #233)
+  (Anton Lindqvist)
 
 ## Changes
 
