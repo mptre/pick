@@ -1,7 +1,7 @@
 description: UTF-8 delete word
-keys: aa bå \027 bb \n # CTRL_W ENTER
+keys: aa\\ Åå \027 aa\\ aa \n # CTRL_W ENTER
 stdin:
-aa bb
-aa bå
+aa Åå aa
+aa Åå aa aa
 stdout:
-aa bb
+aa Åå aa aa

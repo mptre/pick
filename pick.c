@@ -16,6 +16,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
 
 #ifdef HAVE_NCURSESW_H
 #include <ncursesw/curses.h>
@@ -74,6 +75,7 @@ static __dead void		 handle_sigint(int);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
+static int			 isword(const char *);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
 static int			 print_choices(int, int);
@@ -285,7 +287,7 @@ selected_choice(void)
 {
 	size_t	cursor_position, i, j, length, xscroll;
 	char	buf[6];
-	int	choices_count, word_position;
+	int	choices_count;
 	int	selection = 0;
 	int	yscroll = 0;
 
@@ -413,22 +415,21 @@ selected_choice(void)
 			if (cursor_position == 0)
 				break;
 
-			for (word_position = cursor_position;;) {
-				while (isu8cont(query[--word_position]))
+			for (i = cursor_position; i > 0;) {
+				while (isu8cont(query[--i]))
 					continue;
-				if (word_position < 1)
-					break;
-				if (query[word_position] != ' '
-				    && query[word_position - 1] == ' ')
+				if (isword(query + i))
 					break;
 			}
-			delete_between(
-			    query,
-			    query_length,
-			    word_position,
-			    cursor_position);
-			query_length -= cursor_position - word_position;
-			cursor_position = word_position;
+			for (j = i; i > 0; i = j) {
+				while (isu8cont(query[--j]))
+					continue;
+				if (!isword(query + j))
+					break;
+			}
+			delete_between(query, query_length, i, cursor_position);
+			query_length -= cursor_position - i;
+			cursor_position = i;
 			filter_choices();
 			selection = yscroll = 0;
 			break;
@@ -1036,4 +1037,20 @@ int
 isu8start(unsigned char c)
 {
 	return MB_CUR_MAX > 1 && (c & (0x80 | 0x40)) == (0x80 | 0x40);
+}
+
+int
+isword(const char *s)
+{
+	wchar_t	wc;
+
+	switch (mbtowc(&wc, s, MB_CUR_MAX)) {
+	case -1:
+		mbtowc(NULL, NULL, MB_CUR_MAX);
+		/* FALLTHROUGH */
+	case 0:
+		return 0;
+	}
+
+	return iswalnum(wc) || wc == L'_';
 }
