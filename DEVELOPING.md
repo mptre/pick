@@ -71,25 +71,19 @@ you agree to abide by its [Code of Conduct][conduct].
    $ git pull --rebase
    $ git push origin master
    $ git status
-   $ git tag --sign -m "v0.0.2" v0.0.2
+   $ git tag -m "v0.0.2" v0.0.2
    $ git push origin master --tags
    ```
 
-5. Sign the tarball:
+5. Generate checksum:
 
    ```sh
-   $ gpg -sab pick-0.0.2.tar.gz
+   $ sha256 pick-0.0.2.tar.gz >pick-0.0.2.sha256
    ```
 
-6. Verify the signature:
+6. [Announce the release on GitHub][announce].
 
-   ```sh
-   $ gpg --verify pick-0.0.2.tar.gz.asc pick-0.0.2.tar.gz
-   ```
-
-7. [Announce the release on GitHub][announce].
-
-8. Contact package maintainers:
+7. Contact package maintainers:
 
   * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
   * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
