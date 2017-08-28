@@ -61,17 +61,13 @@ you agree to abide by its [Code of Conduct][conduct].
 
    ```sh
    $ make distcheck
-   $ tar -ztf pick-0.0.2.tar.gz
+   $ tar tvzf pick-0.0.2.tar.gz
    ```
 
 4. Tag the repo:
 
    ```sh
-   $ git checkout master
-   $ git pull --rebase
-   $ git push origin master
-   $ git status
-   $ git tag -m "v0.0.2" v0.0.2
+   $ git tag v0.0.2
    $ git push origin master --tags
    ```
 
