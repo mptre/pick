@@ -298,8 +298,8 @@ selected_choice(void)
 	for (;;) {
 		tty_putp(cursor_invisible, 0);
 		tty_putp(carriage_return, 1);	/* move cursor to first column */
-		if (cursor_position >= (size_t)columns)
-			xscroll = cursor_position - columns + 1;
+		if (cursor_position >= (size_t)tty_columns)
+			xscroll = cursor_position - tty_columns + 1;
 		else
 			xscroll = 0;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
