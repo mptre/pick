@@ -568,7 +568,18 @@ choicecmp(const void *p1, const void *p2)
 		return 1;
 	if (c1->score > c2->score)
 		return -1;
-	return c1->string - c2->string;
+	/*
+	 * The two choices have an equal score.
+	 * Sort based on the address of string since it reflects the initial
+	 * input order.
+	 * The comparison is inverted since the choice with the lowest address
+	 * must come first.
+	 */
+	if (c1->string < c2->string)
+		return -1;
+	if (c1->string > c2->string)
+		return 1;
+	return 0;
 }
 
 size_t
