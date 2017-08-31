@@ -1,3 +1,63 @@
+# v1.9.0 - 2017-09-19
+
+## New features
+
+- Add `-K` option used to disable toggling of keyboard transmit mode.
+  Fixes a bug causing the arrow keys to stop working after running pick from
+  within Vim.
+  (6fca1c4, #246, #247)
+  (Anton Lindqvist)
+
+## Bug fixes
+
+- Fix a path issue related to `make distcheck`.
+  (9034255, #242)
+  (Anton Lindqvist)
+
+- Do not reset the selection on redraw.
+  (58c5b46, #221)
+  (Anton Lindqvist, Jenz Guenther)
+
+- Explicitly handle `Ctrl-{C,Z}` control characters.
+  The previous `SIGINT` handler was broken since it invokes functions that are
+  not considered asynchronous safe.
+  Instead,
+  do not turn control characters into signal but instead handle the relevant
+  ones.
+  A pleasant side-effect is that suspend/resumes now behaves correctly.
+  (9886750, #240)
+  (Anton Lindqvist)
+
+## Changes
+
+- Make `Ctrl-W` implement the ALTWERASE algorithm,
+  a sequence of alphanumeric and underscore characters are recognized as a word.
+  (c1e0a91, #231, #234)
+  (Anton Lindqvist, Jenz Guenther)
+
+- Add clang 5.0 to the build matrix on Travis.
+  (2092491)
+  (Anton Lindqvist)
+
+- Recognize `Alt-Backspace` as an alias for `Ctrl-W` and `Alt-Space` for
+  `Page-Down`.
+  Borrowed from `less(1)`.
+  (7d0a568, #238)
+  (Jenz Guenther)
+
+- Improve the semantics of the manual and clarify a few things.
+  (6713d37, 964b75b, 78a02b6)
+  (Anton Lindqvist)
+
+- Fallback to pkg-config(1) while looking for ncurses library.
+  Makes pick build on Gentoo where ncurses and libtinfo are split out.
+  (615c536, #241)
+  (Anton Lindqvist, Mike Burns, Tim Harder)
+
+- pick is now available as a package on Gentoo.
+  (99d5a6f, #243, #244)
+  (Tim Harder)
+
 # v1.8.0 - 2017-08-28
 
 ## New features
