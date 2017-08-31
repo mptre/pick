@@ -103,7 +103,8 @@ static FILE			*tty_in, *tty_out;
 static char			*query;
 static size_t			 query_length, query_size;
 static volatile sig_atomic_t	 gotsigwinch;
-static int			 descriptions, choices_lines, tty_columns, tty_lines;
+static unsigned int		 tty_columns, tty_lines;
+static int			 descriptions, choices_lines;
 static int			 sort = 1;
 static int			 use_alternate_screen = 1;
 
@@ -298,7 +299,7 @@ selected_choice(void)
 	for (;;) {
 		tty_putp(cursor_invisible, 0);
 		tty_putp(carriage_return, 1);	/* move cursor to first column */
-		if (cursor_position >= (size_t)tty_columns)
+		if (cursor_position >= tty_columns)
 			xscroll = cursor_position - tty_columns + 1;
 		else
 			xscroll = 0;
@@ -735,10 +736,10 @@ tty_size(void)
 		tty_lines = ws.ws_row;
 	}
 
-	if (tty_columns == 0)
-		tty_columns = tigetnum("cols");
-	if (tty_lines == 0)
-		tty_lines = tigetnum("lines");
+	if (tty_columns == 0 && (sz = tigetnum("cols")) > 0)
+		tty_columns = sz;
+	if (tty_lines == 0 && (sz = tigetnum("lines")) > 0)
+		tty_lines = sz;
 
 	if ((cp = getenv("COLUMNS")) != NULL &&
 	    (sz = strtonum(cp, 1, INT_MAX, NULL)) > 0)
@@ -759,9 +760,10 @@ void
 print_line(const char *str, size_t len, int standout,
     ssize_t enter_underline, ssize_t exit_underline)
 {
-	size_t	i;
-	wchar_t	wc;
-	int	col, in_esc_seq, nbytes, width;
+	size_t		i;
+	wchar_t		wc;
+	unsigned int	col;
+	int		in_esc_seq, nbytes, width;
 
 	if (standout)
 		tty_putp(enter_standout_mode, 1);
