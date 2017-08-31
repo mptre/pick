@@ -536,7 +536,7 @@ filter_choices(void)
 			c->score = 1;
 		} else {
 			match_length = c->match_end - c->match_start;
-			c->score = (float)query_length/match_length/c->length;
+			c->score = (double)query_length/match_length/c->length;
 		}
 
 		/*
