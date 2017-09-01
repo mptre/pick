@@ -92,6 +92,7 @@ static int			 tty_putc(int);
 static void			 tty_restore(void);
 static void			 tty_size(void);
 static __dead void		 usage(void);
+static int			 xmbtowc(wchar_t *, const char *);
 
 static struct termios		 original_attributes;
 static struct {
@@ -625,13 +626,8 @@ strcasechr(const char *s1, const char *s2)
 	size_t	i;
 	int	in_esc_seq, nbytes;
 
-	switch (mbtowc(&wc2, s2, MB_CUR_MAX)) {
-	case -1:
-		mbtowc(NULL, NULL, MB_CUR_MAX);
-		/* FALLTHROUGH */
-	case 0:
+	if (xmbtowc(&wc2, s2) == 0)
 		return NULL;
-	}
 
 	in_esc_seq = 0;
 	for (i = 0; s1[i] != '\0';) {
@@ -642,16 +638,13 @@ strcasechr(const char *s1, const char *s2)
 				in_esc_seq = 0;
 		} else if (i > 0 && s1[i - 1] == '\033' && s1[i] == '[') {
 			in_esc_seq = 1;
-		} else if ((nbytes = mbtowc(&wc1, &s1[i], MB_CUR_MAX)) == -1) {
-			mbtowc(NULL, NULL, MB_CUR_MAX);
+		} else if ((nbytes = xmbtowc(&wc1, &s1[i])) == 0) {
+			nbytes = 1;
 		} else if (wcsncasecmp(&wc1, &wc2, 1) == 0) {
 			return &s1[i];
 		}
 
-		if (nbytes > 0)
-			i += nbytes;
-		else
-			i++;
+		i += nbytes;
 	}
 
 	return NULL;
@@ -816,12 +809,7 @@ print_line(const char *str, size_t len, int standout,
 			continue;
 		}
 
-		/*
-		 * Due to the explicit NUL-check above, the case where
-		 * mbtowc(3) returns 0 is not handled here.
-		 */
-		if ((nbytes = mbtowc(&wc, &str[i], MB_CUR_MAX)) == -1) {
-			mbtowc(NULL, NULL, MB_CUR_MAX);
+		if ((nbytes = xmbtowc(&wc, &str[i])) == 0) {
 			i++;
 			continue;
 		}
@@ -1071,4 +1059,18 @@ isword(const char *s)
 	}
 
 	return iswalnum(wc) || wc == L'_';
+}
+
+int
+xmbtowc(wchar_t *wc, const char *s)
+{
+	int	n;
+
+	n = mbtowc(wc, s, MB_CUR_MAX);
+	if (n == -1) {
+		mbtowc(NULL, NULL, MB_CUR_MAX);
+		return 0;
+	}
+
+	return n;
 }
