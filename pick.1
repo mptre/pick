@@ -54,7 +54,7 @@ Exit with a erroneous status without outputting the selected choice.
 Redraw interface with respect to the current size of the terminal.
 .It Ic Up/Down | Ctrl-P/Ctrl-N
 Select between choices matching the current search query.
-.It Ic Page-Down/Page-Up | Ctrl-V/Alt-V
+.It Ic Page-Down/Page-Up | Ctrl-V/Alt-V | Alt-Space
 Move the selection to the choice located one page down/up from the currently
 selected choice.
 .It Ic Home/End | Alt-</Alt->
@@ -73,7 +73,7 @@ Move the cursor to the end of the line in the search query input field.
 Delete one character to the left of the cursor in the search query input field.
 .It Ic Delete | Ctrl-D
 Delete the character under the cursor in the search query input field.
-.It Ic Ctrl-W
+.It Ic Alt-Backspace | Ctrl-W
 Delete the word to the left of the cursor.
 A word is recognized as a sequence of characters for which either
 .Xr isalnum 3
