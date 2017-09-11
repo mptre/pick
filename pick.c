@@ -78,7 +78,7 @@ static int			 isu8start(unsigned char);
 static int			 isword(const char *);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
-static int			 print_choices(int, int);
+static size_t			 print_choices(size_t, size_t);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
@@ -104,8 +104,8 @@ static FILE			*tty_in, *tty_out;
 static char			*query;
 static size_t			 query_length, query_size;
 static volatile sig_atomic_t	 gotsigwinch;
-static unsigned int		 tty_columns, tty_lines;
-static int			 descriptions, choices_lines;
+static unsigned int		 choices_lines, tty_columns, tty_lines;
+static int			 descriptions;
 static int			 sort = 1;
 static int			 use_alternate_screen = 1;
 
@@ -288,10 +288,9 @@ const struct choice *
 selected_choice(void)
 {
 	const char	*buf;
-	size_t		 cursor_position, i, j, length, xscroll;
-	int		 choices_count;
-	int		 selection = 0;
-	int		 yscroll = 0;
+	size_t		 choices_count, cursor_position, i, j, length, xscroll;
+	size_t		 selection = 0;
+	size_t		 yscroll = 0;
 
 	cursor_position = query_length;
 
@@ -306,7 +305,7 @@ selected_choice(void)
 			xscroll = 0;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
 		choices_count = print_choices(yscroll, selection);
-		if ((size_t)choices_count - yscroll < choices.length
+		if (choices_count - yscroll < choices.length
 		    && choices_count - yscroll < choices_lines) {
 			/*
 			 * Printing the choices did not consume all available
@@ -451,7 +450,7 @@ selected_choice(void)
 		case LINE_UP:
 			if (selection > 0) {
 				selection--;
-				if (selection - yscroll < 0)
+				if (yscroll > selection)
 					yscroll--;
 			}
 			break;
@@ -475,7 +474,7 @@ selected_choice(void)
 			}
 			break;
 		case PAGE_UP:
-			if (selection - choices_lines > 0)
+			if (selection > choices_lines)
 				yscroll = selection -= choices_lines;
 			else
 				yscroll = selection = 0;
@@ -858,16 +857,17 @@ print_line(const char *str, size_t len, int standout,
  * of choices with a positive score. If the query is empty, all choices are
  * considered having a positive score.
  */
-int
-print_choices(int offset, int selection)
+size_t
+print_choices(size_t offset, size_t selection)
 {
-	struct choice	*choice;
-	int		 i;
+	const struct choice	*choice;
+	size_t			 i;
 
-	for (i = offset, choice = &choices.v[i];
-	     (size_t)i < choices.length
-	     && (query_length == 0 || choice->score > 0);
-	     choice++, i++) {
+	for (i = offset; i < choices.length; i++) {
+		choice = choices.v + i;
+		if (choice->score == 0 && query_length > 0)
+			break;
+
 		if (i - offset < choices_lines)
 			print_line(choice->string, choice->length,
 			    i == selection, choice->match_start,
