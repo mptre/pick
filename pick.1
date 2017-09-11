@@ -51,6 +51,11 @@ Disable the use of the alternate screen terminal feature.
 .Bl -tag -width XXXX
 .It Ic Ctrl-C
 Exit with a erroneous status without outputting the selected choice.
+While this command often being defined as Ctrl-C it is determined by the
+.Dv VINTR
+control character,
+see
+.Xr termios 4 .
 .It Ic Ctrl-L
 Redraw interface with respect to the current size of the terminal.
 .It Ic Up Ns / Ns Ic Down | Ic Ctrl-P Ns / Ns Ic Ctrl-N

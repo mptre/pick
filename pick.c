@@ -40,11 +40,13 @@ enum key {
 	DEL,
 	ENTER,
 	CTRL_A,
+	CTRL_C,
 	CTRL_E,
 	CTRL_K,
 	CTRL_L,
 	CTRL_U,
 	CTRL_W,
+	CTRL_Z,
 	RIGHT,
 	LEFT,
 	LINE_DOWN,
@@ -71,7 +73,6 @@ static char			*eager_strpbrk(const char *, const char *);
 static void			 filter_choices(void);
 static char			*get_choices(void);
 static enum key			 get_key(const char **);
-static __dead void		 handle_sigint(int);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
@@ -86,15 +87,15 @@ static const char		*strcasechr(const char *, const char *);
 static void			 toggle_sigwinch(int);
 static int			 tty_getc(void);
 static const char		*tty_getcap(char *);
-static void			 tty_init(void);
+static void			 tty_init(int);
 static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
-static void			 tty_restore(void);
+static void			 tty_restore(int);
 static void			 tty_size(void);
 static __dead void		 usage(void);
 static int			 xmbtowc(wchar_t *, const char *);
 
-static struct termios		 original_attributes;
+static struct termios		 tio;
 static struct {
 	size_t		 size;
 	size_t		 length;
@@ -116,6 +117,7 @@ main(int argc, char *argv[])
 	char			*input;
 	int			 c;
 	int			 output_description = 0;
+	int			 rc = 0;
 
 	setlocale(LC_CTYPE, "");
 
@@ -169,7 +171,7 @@ main(int argc, char *argv[])
 	}
 
 	input = get_choices();
-	tty_init();
+	tty_init(1);
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
@@ -177,18 +179,20 @@ main(int argc, char *argv[])
 #endif
 
 	choice = selected_choice();
-	tty_restore();
+	tty_restore(1);
 	if (choice != NULL) {
 		printf("%s\n", choice->string);
 		if (output_description)
 			printf("%s\n", choice->description);
+	} else {
+		rc = 1;
 	}
 
 	free(input);
 	free(choices.v);
 	free(query);
 
-	return 0;
+	return rc;
 }
 
 __dead void
@@ -355,6 +359,13 @@ selected_choice(void)
 			choices.v[choices.length].string = query;
 			choices.v[choices.length].description = "";
 			return &choices.v[choices.length];
+		case CTRL_C:
+			return NULL;
+		case CTRL_Z:
+			tty_restore(0);
+			kill(getpid(), SIGTSTP);
+			tty_init(0);
+			break;
 		case BACKSPACE:
 			if (cursor_position > 0) {
 				for (length = 1;
@@ -644,25 +655,26 @@ strcasechr(const char *s1, const char *s2)
 }
 
 void
-tty_init(void)
+tty_init(int doinit)
 {
 	struct termios	new_attributes;
 
-	if ((tty_in = fopen("/dev/tty", "r")) == NULL)
+	if (doinit && (tty_in = fopen("/dev/tty", "r")) == NULL)
 		err(1, "fopen");
 
-	tcgetattr(fileno(tty_in), &original_attributes);
-	new_attributes = original_attributes;
+	tcgetattr(fileno(tty_in), &tio);
+	new_attributes = tio;
 	new_attributes.c_iflag |= ICRNL;	/* map CR to NL */
-	new_attributes.c_lflag &= ~(ECHO | ICANON | IEXTEN);
+	new_attributes.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 	new_attributes.c_cc[VMIN] = 1;
 	new_attributes.c_cc[VTIME] = 0;
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
-	if ((tty_out = fopen("/dev/tty", "w")) == NULL)
+	if (doinit && (tty_out = fopen("/dev/tty", "w")) == NULL)
 		err(1, "fopen");
 
-	setupterm((char *)0, fileno(tty_out), (int *)0);
+	if (doinit)
+		setupterm((char *)0, fileno(tty_out), (int *)0);
 
 	tty_size();
 
@@ -671,7 +683,6 @@ tty_init(void)
 
 	tty_putp(keypad_xmit, 0);
 
-	signal(SIGINT, handle_sigint);
 	toggle_sigwinch(0);
 }
 
@@ -682,13 +693,6 @@ tty_putc(int c)
 		err(1, "putc");
 
 	return c;
-}
-
-__dead void
-handle_sigint(int sig __attribute__((unused)))
-{
-	tty_restore();
-	exit(1);
 }
 
 void
@@ -711,10 +715,11 @@ toggle_sigwinch(int enable)
 }
 
 void
-tty_restore(void)
+tty_restore(int doclose)
 {
-	tcsetattr(fileno(tty_in), TCSANOW, &original_attributes);
-	fclose(tty_in);
+	tcsetattr(fileno(tty_in), TCSANOW, &tio);
+	if (doclose)
+		fclose(tty_in);
 
 	tty_putp(keypad_local, 0);
 	tty_putp(carriage_return, 1);	/* move cursor to first column */
@@ -723,7 +728,10 @@ tty_restore(void)
 	if (use_alternate_screen)
 		tty_putp(exit_ca_mode, 0);
 
-	fclose(tty_out);
+	if (doclose)
+		fclose(tty_out);
+	else
+		fflush(tty_out);
 }
 
 void
@@ -873,18 +881,21 @@ print_choices(size_t offset, size_t selection)
 enum key
 get_key(const char **key)
 {
-#define	CAP(k, s)	{ k,	s,	NULL,	0 }
-#define	KEY(k, s)	{ k,	NULL,	s,	sizeof(s) - 1 }
+#define	CAP(k, s)	{ k,	s,	NULL,	0,		-1 }
+#define	KEY(k, s)	{ k,	NULL,	s,	sizeof(s) - 1,	-1 }
+#define	TIO(k, i)	{ k,	NULL,	NULL,	0,		i }
 	static struct {
 		enum key	 key;
 		char		*cap;
 		const char	*str;
 		size_t		 len;
+		int		 tio;
 	}			keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
 		KEY(BACKSPACE,	"\177"),
 		KEY(BACKSPACE,	"\b"),
 		KEY(CTRL_A,	"\001"),
+		TIO(CTRL_C,	VINTR),
 		KEY(CTRL_E,	"\005"),
 		KEY(CTRL_K,	"\013"),
 		KEY(CTRL_L,	"\014"),
@@ -892,6 +903,7 @@ get_key(const char **key)
 		KEY(CTRL_W,	"\027"),
 		KEY(CTRL_W,	"\033\177"),
 		KEY(CTRL_W,	"\033\b"),
+		TIO(CTRL_Z,	VSUSP),
 		CAP(DEL,	"kdch1"),
 		KEY(DEL,	"\004"),
 		CAP(END,	"kend"),
@@ -936,6 +948,13 @@ get_key(const char **key)
 
 	for (;;) {
 		for (i = 0; keys[i].key != UNKNOWN; i++) {
+			if (keys[i].tio >= 0) {
+				if (len == 1 &&
+				    CCEQ(tio.c_cc[keys[i].tio], *buf))
+					return keys[i].key;
+				continue;
+			}
+
 			if (keys[i].str == NULL) {
 				keys[i].str = tty_getcap(keys[i].cap);
 				keys[i].len = strlen(keys[i].str);

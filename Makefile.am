@@ -20,7 +20,7 @@ TESTS=tests/01.t tests/02.t tests/03.t tests/04.t tests/05.t tests/06.t \
       tests/43.t tests/44.t tests/45.t tests/46.t tests/47.t tests/48.t \
       tests/49.t tests/50.t tests/51.t tests/52.t tests/53.t tests/54.t \
       tests/55.t tests/56.t tests/57.t tests/58.t tests/59.t tests/60.t \
-      tests/61.t tests/62.t tests/63.t
+      tests/61.t tests/62.t tests/63.t tests/64.t
 TEST_EXTENSIONS=.t
 T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh
 AM_COLOR_TESTS=no
