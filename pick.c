@@ -29,7 +29,7 @@
 #include "compat.h"
 
 #define tty_putp(capability, fatal) do {				\
-	if (tputs(capability, 1, tty_putc) == ERR && fatal)		\
+	if (tputs((capability), 1, tty_putc) == ERR && (fatal))		\
 		errx(1, #capability ": unknown terminfo capability");	\
 } while (0)
 
