@@ -1053,13 +1053,8 @@ isword(const char *s)
 {
 	wchar_t	wc;
 
-	switch (mbtowc(&wc, s, MB_CUR_MAX)) {
-	case -1:
-		mbtowc(NULL, NULL, MB_CUR_MAX);
-		/* FALLTHROUGH */
-	case 0:
+	if (xmbtowc(&wc, s) == 0)
 		return 0;
-	}
 
 	return iswalnum(wc) || wc == L'_';
 }
