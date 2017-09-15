@@ -29,6 +29,8 @@ tests_pick_test_SOURCES=tests/pick-test.c compat-reallocarray.c
 tests_pick_test_CFLAGS=$(AM_CFLAGS)
 
 EXTRA_DIST=INSTALL.md INSTALL.md.in LICENSE README.md tests/pick-test.sh $(TESTS)
+DISTCLEANFILES=INSTALL.md
 
 INSTALL.md: INSTALL.md.in
-	sed -e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $@.in > $@
+	sed -e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' \
+		$(top_srcdir)/$@.in > $@
