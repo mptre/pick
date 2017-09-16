@@ -15,6 +15,14 @@ A package for Pick is available as of [Debian 9] and [Ubuntu 15.10].
 apt-get install pick
 ```
 
+### Gentoo
+
+A package for pick is available from the [official repo][Gentoo].
+
+```sh
+emerge pick
+```
+
 ### Mac OS X via Homebrew
 
 ```sh
@@ -65,6 +73,7 @@ less INSTALL.md
 
 [Debian 9]: https://packages.debian.org/stretch/pick
 [Ubuntu 15.10]: http://packages.ubuntu.com/wily/pick
+[Gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [the releases page]: https://github.com/calleerlandsson/pick/releases/
 
 ## Usage
