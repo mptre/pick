@@ -318,8 +318,7 @@ selected_choice(void)
 			 * column will be also be cleared. Therefore, move down
 			 * one line before clearing the screen.
 			 */
-			if (tty_putc('\n') == EOF)
-				err(1, "tty_putc");
+			tty_putc('\n');
 			tty_putp(clr_eos, 1);
 			tty_putp(tty_parm1(parm_up_cursor,
 				    (choices_count - yscroll) + 1), 1);
@@ -684,7 +683,10 @@ tty_init(void)
 int
 tty_putc(int c)
 {
-	return putc(c, tty_out);
+	if (putc(c, tty_out) == EOF)
+		err(1, "putc");
+
+	return c;
 }
 
 __dead void
@@ -789,8 +791,7 @@ print_line(const char *str, size_t len, int standout,
 			col += width;
 
 			for (; width > 0; width--)
-				if (tty_putc(' ') == ERR)
-					err(1, "tty_putc");
+				tty_putc(' ');
 
 			i++;
 			continue;
@@ -801,8 +802,7 @@ print_line(const char *str, size_t len, int standout,
 		 * descriptions are enabled.
 		 */
 		if (str[i] == '\0') {
-			if (tty_putc(' ') == ERR)
-				err(1, "tty_putc");
+			tty_putc(' ');
 
 			i++, col++;
 			continue;
@@ -838,12 +838,10 @@ print_line(const char *str, size_t len, int standout,
 		col += width;
 
 		for (; nbytes > 0; nbytes--, i++)
-			if (tty_putc(str[i]) == EOF)
-				err(1, "tty_putc");
+			tty_putc(str[i]);
 	}
 	for (; col < tty_columns; col++)
-		if (tty_putc(' ') == EOF)
-			err(1, "tty_putc");
+		tty_putc(' ');
 
 	/*
 	 * If exit_underline is greater than columns the underline attribute
