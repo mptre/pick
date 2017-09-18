@@ -109,6 +109,7 @@ static unsigned int		 choices_lines, tty_columns, tty_lines;
 static int			 descriptions;
 static int			 sort = 1;
 static int			 use_alternate_screen = 1;
+static int			 use_keypad = 1;
 
 int
 main(int argc, char *argv[])
@@ -126,10 +127,13 @@ main(int argc, char *argv[])
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
+			break;
+		case 'K':
+			use_keypad = 0;
 			break;
 		case 'o':
 			/*
@@ -198,9 +202,10 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
+	    "    -K          disable toggling of keyboard transmit mode\n"
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
@@ -678,10 +683,10 @@ tty_init(int doinit)
 
 	tty_size();
 
+	if (use_keypad)
+		tty_putp(keypad_xmit, 0);
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode, 0);
-
-	tty_putp(keypad_xmit, 0);
 
 	toggle_sigwinch(0);
 }
@@ -721,10 +726,11 @@ tty_restore(int doclose)
 	if (doclose)
 		fclose(tty_in);
 
-	tty_putp(keypad_local, 0);
 	tty_putp(carriage_return, 1);	/* move cursor to first column */
 	tty_putp(clr_eos, 1);
 
+	if (use_keypad)
+		tty_putp(keypad_local, 0);
 	if (use_alternate_screen)
 		tty_putp(exit_ca_mode, 0);
 
