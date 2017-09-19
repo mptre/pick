@@ -57,24 +57,24 @@ you agree to abide by its [Code of Conduct][conduct].
    AC_INIT([pick], [0.0.2], [pick-maintainers@calleerlandsson.com])
    ```
 
-3. Verify the tarball:
+3. Create and verify the tarball:
 
    ```sh
    $ make distcheck
    $ tar tvzf pick-0.0.2.tar.gz
    ```
 
-4. Tag the repo:
+4. Generate checksum:
+
+   ```sh
+   $ sha256 pick-0.0.2.tar.gz >pick-0.0.2.sha256
+   ```
+
+5. Tag the repo:
 
    ```sh
    $ git tag v0.0.2
    $ git push origin master --tags
-   ```
-
-5. Generate checksum:
-
-   ```sh
-   $ sha256 pick-0.0.2.tar.gz >pick-0.0.2.sha256
    ```
 
 6. [Announce the release on GitHub][announce].
