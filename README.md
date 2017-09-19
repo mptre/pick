@@ -54,27 +54,17 @@ Available in ports under `sysutils/pick`.
 
 ### From source
 
-1. Download the latest release from [the releases page], optionally check the
-   signature and extract the archive:
+Download the latest [release] and follow the bundled instructions in
+`INSTALL.md`.
 
-```sh
-wget https://github.com/calleerlandsson/pick/releases/download/vVERSION/pick-VERSION.tar.gz
-wget https://github.com/calleerlandsson/pick/releases/download/vVERSION/pick-VERSION.tar.gz.asc
-gpg --verify pick-VERSION.tar.gz.asc
-tar -xzf pick-VERSION.tar.gz
-```
-
-2. Follow the bundled installation instructions:
-
-```sh
-cd pick-VERSION
-less INSTALL.md
-```
+If you want to try the latest unreleased version,
+follow the instructions in [DEVELOPING.md][current].
 
 [Debian 9]: https://packages.debian.org/stretch/pick
 [Gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [Ubuntu 15.10]: http://packages.ubuntu.com/wily/pick
-[the releases page]: https://github.com/calleerlandsson/pick/releases/
+[current]: https://github.com/calleerlandsson/pick/blob/master/DEVELOPING.md
+[release]: https://github.com/calleerlandsson/pick/releases/
 
 ## Usage
 
