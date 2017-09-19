@@ -57,6 +57,12 @@ you agree to abide by its [Code of Conduct][conduct].
    AC_INIT([pick], [0.0.2], [pick-maintainers@calleerlandsson.com])
    ```
 
+   ... and commit the change:
+
+   ```sh
+   $ git commit -m 'Update version to 0.0.2'
+   ```
+
 3. Create and verify the tarball:
 
    ```sh
@@ -64,27 +70,34 @@ you agree to abide by its [Code of Conduct][conduct].
    $ tar tvzf pick-0.0.2.tar.gz
    ```
 
-4. Generate checksum:
+4. Create and verify checksum:
 
    ```sh
    $ sha256 pick-0.0.2.tar.gz >pick-0.0.2.sha256
+   $ sha256 -c pick-0.0.2.sha256
    ```
 
 5. Tag the repo:
 
    ```sh
    $ git tag v0.0.2
-   $ git push origin master --tags
+   $ git push --tags origin master
    ```
 
 6. [Announce the release on GitHub][announce].
 
 7. Contact package maintainers:
 
-  * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
-  * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
-  * Fredrik Fornwall <fredrik@fornwall.net> (Homebrew)
-  * Neel Chauhan <neel@neelc.org> (FreeBSD)
+   * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
+   * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
+   * Fredrik Fornwall <fredrik@fornwall.net> (Homebrew)
+   * Neel Chauhan <neel@neelc.org> (FreeBSD)
+
+   ```
+   To: pick-maintainers@calleerlandsson.com
+   Bcc: evaggelos.avgerinos@gmail.com, xuchunyang.me@gmail.com,
+        fredrik@fornwall.net, neel@neelc.org
+   ```
 
 [announce]: https://github.com/calleerlandsson/pick/releases/new
 [conduct]: https://github.com/calleerlandsson/pick/blob/master/CODE_OF_CONDUCT.md
