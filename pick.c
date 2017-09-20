@@ -83,6 +83,7 @@ static size_t			 print_choices(size_t, size_t);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
+static size_t			 skipescseq(const char *);
 static const char		*strcasechr(const char *, const char *);
 static void			 toggle_sigwinch(int);
 static int			 tty_getc(void);
@@ -627,37 +628,50 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 
 /*
  * Returns a pointer to first occurrence of the first character in s2 in s1 with
- * respect to Unicode characters, ANSI escape sequences and disregarding case.
+ * respect to Unicode characters disregarding case.
  */
 const char *
 strcasechr(const char *s1, const char *s2)
 {
 	wchar_t	wc1, wc2;
 	size_t	i;
-	int	in_esc_seq, nbytes;
+	int	nbytes;
 
 	if (xmbtowc(&wc2, s2) == 0)
 		return NULL;
 
-	in_esc_seq = 0;
 	for (i = 0; s1[i] != '\0';) {
-		nbytes = 1;
-
-		if (in_esc_seq) {
-			if (s1[i] >= '@' && s1[i] <= '~')
-				in_esc_seq = 0;
-		} else if (i > 0 && s1[i - 1] == '\033' && s1[i] == '[') {
-			in_esc_seq = 1;
-		} else if ((nbytes = xmbtowc(&wc1, &s1[i])) == 0) {
+		if ((nbytes = skipescseq(s1 + i)) > 0)
+			/* A match inside an escape sequence is ignored. */;
+		else if ((nbytes = xmbtowc(&wc1, s1 + i)) == 0)
 			nbytes = 1;
-		} else if (wcsncasecmp(&wc1, &wc2, 1) == 0) {
-			return &s1[i];
-		}
-
+		else if (wcsncasecmp(&wc1, &wc2, 1) == 0)
+			return s1 + i;
 		i += nbytes;
 	}
 
 	return NULL;
+}
+
+/*
+ * Returns the length of an CSI escape sequence located at the beginning of str.
+ */
+size_t
+skipescseq(const char *str)
+{
+	size_t	i = 0;
+	int	csi = 0;
+
+	if (str[i] == '\033' && str[i + 1] == '[')
+		csi = 1;
+	else
+		return 0;
+
+	for (i = 2; str[i] != '\0'; i++)
+		if (csi && str[i] >= '@' && str[i] <= '~')
+			break;
+
+	return i + 1;
 }
 
 void
@@ -780,12 +794,12 @@ print_line(const char *str, size_t len, int standout,
 	size_t		i;
 	wchar_t		wc;
 	unsigned int	col;
-	int		in_esc_seq, nbytes, width;
+	int		nbytes, width;
 
 	if (standout)
 		tty_putp(enter_standout_mode, 1);
 
-	col = i = in_esc_seq = 0;
+	col = i = 0;
 	while (col < tty_columns) {
 		if (enter_underline == (ssize_t)i)
 			tty_putp(enter_underline_mode, 1);
@@ -818,30 +832,18 @@ print_line(const char *str, size_t len, int standout,
 			continue;
 		}
 
-		if ((nbytes = xmbtowc(&wc, &str[i])) == 0) {
-			i++;
-			continue;
-		}
-
-		width = 0;
-		if (i > 0 && str[i - 1] == '\033' && str[i] == '[')
-			/*
-			 * Start of ANSI escape sequence. The previous
-			 * ESC-character already has a zero width but any
-			 * following characters will not consume any columns
-			 * once displayed.
-			 */
-			in_esc_seq = 1;
-		else if (!in_esc_seq && (width = wcwidth(wc)) < 0)
-			/*
-			 * The character is not printable. However, it could be
-			 * an ESC-character marking the the beginning an escape
-			 * sequence so make sure to display every valid
-			 * characters.
-			 */
+		/*
+		 * Output every character, even invalid ones and escape
+		 * sequences. Even tho they don't occupy any columns.
+		 */
+		if ((nbytes = skipescseq(str + i)) > 0) {
 			width = 0;
-		else if (str[i] >= '@' && str[i] <= '~')
-			in_esc_seq = 0;
+		} else if ((nbytes = xmbtowc(&wc, &str[i])) == 0) {
+			nbytes = 1;
+			width = 0;
+		} else if ((width = wcwidth(wc)) < 0) {
+			width = 0;
+		}
 
 		if (col + width > tty_columns)
 			break;
