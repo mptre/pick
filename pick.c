@@ -654,21 +654,26 @@ strcasechr(const char *s1, const char *s2)
 }
 
 /*
- * Returns the length of an CSI escape sequence located at the beginning of str.
+ * Returns the length of a CSI or OSC escape sequence located at the beginning
+ * of str.
  */
 size_t
 skipescseq(const char *str)
 {
-	size_t	i = 0;
+	size_t	i;
 	int	csi = 0;
+	int	osc = 0;
 
-	if (str[i] == '\033' && str[i + 1] == '[')
+	if (str[0] == '\033' && str[1] == '[')
 		csi = 1;
+	else if (str[0] == '\033' && str[1] == ']')
+		osc = 1;
 	else
 		return 0;
 
 	for (i = 2; str[i] != '\0'; i++)
-		if (csi && str[i] >= '@' && str[i] <= '~')
+		if ((csi && str[i] >= '@' && str[i] <= '~') ||
+		    (osc && str[i] == '\a'))
 			break;
 
 	return i + 1;
@@ -838,7 +843,7 @@ print_line(const char *str, size_t len, int standout,
 		 */
 		if ((nbytes = skipescseq(str + i)) > 0) {
 			width = 0;
-		} else if ((nbytes = xmbtowc(&wc, &str[i])) == 0) {
+		} else if ((nbytes = xmbtowc(&wc, str + i)) == 0) {
 			nbytes = 1;
 			width = 0;
 		} else if ((width = wcwidth(wc)) < 0) {
