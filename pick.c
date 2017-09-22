@@ -28,6 +28,10 @@
 
 #include "compat.h"
 
+#ifndef CCEQ
+	#define CCEQ(val, c) ((c) == (val) && (val) != _POSIX_VDISABLE)
+#endif
+
 #define tty_putp(capability, fatal) do {				\
 	if (tputs((capability), 1, tty_putc) == ERR && (fatal))		\
 		errx(1, #capability ": unknown terminfo capability");	\
