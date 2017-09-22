@@ -301,12 +301,15 @@ selected_choice(void)
 	size_t		 choices_count, cursor_position, i, j, length, xscroll;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
+	int		 dofilter = 1;
 
 	cursor_position = query_length;
 
-	filter_choices();
-
 	for (;;) {
+		if (dofilter) {
+			filter_choices(choices_count);
+			dofilter = selection = yscroll = 0;
+		}
 		tty_putp(cursor_invisible, 0);
 		tty_putp(carriage_return, 1);	/* move cursor to first column */
 		if (cursor_position >= tty_columns)
@@ -385,8 +388,7 @@ selected_choice(void)
 				    cursor_position);
 				cursor_position -= length;
 				query_length -= length;
-				filter_choices();
-				selection = yscroll = 0;
+				dofilter = 1;
 			}
 			break;
 		case DEL:
@@ -401,8 +403,7 @@ selected_choice(void)
 				    cursor_position,
 				    cursor_position + length);
 				query_length -= length;
-				filter_choices();
-				selection = yscroll = 0;
+				dofilter = 1;
 			}
 			break;
 		case CTRL_U:
@@ -413,8 +414,7 @@ selected_choice(void)
 			    cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
-			filter_choices();
-			selection = yscroll = 0;
+			dofilter = 1;
 			break;
 		case CTRL_K:
 			delete_between(
@@ -423,8 +423,7 @@ selected_choice(void)
 			    cursor_position,
 			    query_length);
 			query_length = cursor_position;
-			filter_choices();
-			selection = yscroll = 0;
+			dofilter = 1;
 			break;
 		case CTRL_L:
 			tty_size();
@@ -448,8 +447,7 @@ selected_choice(void)
 			delete_between(query, query_length, i, cursor_position);
 			query_length -= cursor_position - i;
 			cursor_position = i;
-			filter_choices();
-			selection = yscroll = 0;
+			dofilter = 1;
 			break;
 		case CTRL_A:
 			cursor_position = 0;
@@ -519,8 +517,7 @@ selected_choice(void)
 			cursor_position += length;
 			query_length += length;
 			query[query_length] = '\0';
-			filter_choices();
-			selection = yscroll = 0;
+			dofilter = 1;
 			break;
 		case UNKNOWN:
 			break;
