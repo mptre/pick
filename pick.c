@@ -520,6 +520,7 @@ selected_choice(void)
 			query[query_length] = '\0';
 			filter_choices();
 			selection = yscroll = 0;
+			break;
 		case UNKNOWN:
 			break;
 		}
