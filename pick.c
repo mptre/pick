@@ -957,7 +957,8 @@ get_key(const char **key)
 		for (i = 0; keys[i].key != UNKNOWN; i++) {
 			if (keys[i].tio >= 0) {
 				if (len == 1 &&
-				    CCEQ(tio.c_cc[keys[i].tio], *buf))
+				    tio.c_cc[keys[i].tio] == *buf &&
+				    tio.c_cc[keys[i].tio] != _POSIX_VDISABLE)
 					return keys[i].key;
 				continue;
 			}
