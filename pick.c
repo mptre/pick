@@ -70,7 +70,7 @@ struct choice {
 static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
-static void			 filter_choices(void);
+static void			 filter_choices(size_t);
 static char			*get_choices(void);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
@@ -302,14 +302,28 @@ selected_choice(void)
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
 	int		 dofilter = 1;
+	int		 query_grew = 0;
 
 	cursor_position = query_length;
 
 	for (;;) {
+		/*
+		 * If the user didn't add more characters to the query all
+		 * choices have to be reconsidered as potential matches.
+		 * In the opposite scenario, there's no point in reconsidered
+		 * all choices again since the ones that didn't match the
+		 * previous query will clearly not match the current one due to
+		 * the fact that previous query is a left-most substring of the
+		 * current one.
+		 */
+		if (!query_grew)
+			choices_count = choices.length;
+		query_grew = 0;
 		if (dofilter) {
 			filter_choices(choices_count);
 			dofilter = selection = yscroll = 0;
 		}
+
 		tty_putp(cursor_invisible, 0);
 		tty_putp(carriage_return, 1);	/* move cursor to first column */
 		if (cursor_position >= tty_columns)
@@ -517,7 +531,7 @@ selected_choice(void)
 			cursor_position += length;
 			query_length += length;
 			query[query_length] = '\0';
-			dofilter = 1;
+			dofilter = query_grew = 1;
 			break;
 		case UNKNOWN:
 			break;
@@ -528,16 +542,17 @@ selected_choice(void)
 /*
  * Filter choices using the current query while there is no new user input
  * available.
+ * The first nchoices number of choices will be filtered.
  */
 void
-filter_choices(void)
+filter_choices(size_t nchoices)
 {
 	struct choice	*c;
 	struct pollfd	 pfd;
 	size_t		 i, match_length;
 	int		 nready;
 
-	for (i = 0; i < choices.length; i++) {
+	for (i = 0; i < nchoices; i++) {
 		c = &choices.v[i];
 		if (min_match(c->string, 0,
 			    &c->match_start, &c->match_end) == INT_MAX) {
@@ -566,7 +581,7 @@ filter_choices(void)
 		}
 	}
 
-	qsort(choices.v, choices.length, sizeof(struct choice), choicecmp);
+	qsort(choices.v, nchoices, sizeof(struct choice), choicecmp);
 }
 
 int
