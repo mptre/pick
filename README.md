@@ -9,7 +9,7 @@ using an interface with fuzzy search functionality.
 
 ### Debian and Ubuntu
 
-A package for Pick is available as of [Debian 9] and [Ubuntu 15.10].
+A package for Pick is available as of [Debian 9] and [Ubuntu 16.04LTS].
 
 ```sh
 apt-get install pick
@@ -62,7 +62,7 @@ follow the instructions in [DEVELOPING.md][current].
 
 [Debian 9]: https://packages.debian.org/stretch/pick
 [Gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
-[Ubuntu 15.10]: http://packages.ubuntu.com/wily/pick
+[Ubuntu 16.04LTS]: https://packages.ubuntu.com/xenial/pick
 [current]: https://github.com/calleerlandsson/pick/blob/master/DEVELOPING.md
 [release]: https://github.com/calleerlandsson/pick/releases/
 
