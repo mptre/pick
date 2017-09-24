@@ -298,7 +298,8 @@ const struct choice *
 selected_choice(void)
 {
 	const char	*buf;
-	size_t		 choices_count, cursor_position, i, j, length, xscroll;
+	size_t		 cursor_position, i, j, length, xscroll;
+	size_t		 choices_count = 0;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
 	int		 dofilter = 1;
