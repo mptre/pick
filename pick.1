@@ -115,10 +115,9 @@ Select a file in the current directory to open using
 .Pp
 .Dl $ find -type f | pick | xargs xdg-open
 .Pp
-Select a man page to display with
-.Xr man 1 :
+Select a command from the history to execute:
 .Pp
-.Dl $ apropos -l . | fltr | pick -do | tac | xargs man
+.Dl $ $(fc -ln 1 | pick)
 .Sh DIAGNOSTICS
 .Ex -std
 .Sh HISTORY
