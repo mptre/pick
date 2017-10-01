@@ -1106,7 +1106,8 @@ xmbtowc(wchar_t *wc, const char *s)
 
 	n = mbtowc(wc, s, MB_CUR_MAX);
 	if (n == -1) {
-		mbtowc(NULL, NULL, MB_CUR_MAX);
+		/* Assign in order to suppress ignored return value warning. */
+		n = mbtowc(NULL, NULL, MB_CUR_MAX);
 		return 0;
 	}
 
