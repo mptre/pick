@@ -75,7 +75,7 @@ follow the instructions in [DEVELOPING.md][current].
 ```sh
 git ls-files | pick | xargs less # Select a file in the current git repository to view in less
 cd "$(find . -type d | pick)"    # Select a directory to cd into
-eval "$(fc -ln 1 | pick)"        # Select a command from the history to execute
+eval $(fc -ln 1 | pick)          # Select a command from the history to execute
 ```
 
 Pick can also easily be used from within Vim both using `system()` and `!`. For
