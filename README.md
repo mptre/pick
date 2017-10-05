@@ -24,6 +24,14 @@ Package is available from the [official repo][Gentoo].
 emerge pick
 ```
 
+### Void Linux
+
+Package is available from the [official repo][Void].
+
+```sh
+xbps-install pick
+```
+
 ### Mac OS X via Homebrew
 
 ```sh
@@ -63,6 +71,7 @@ follow the instructions in [DEVELOPING.md][current].
 
 [Debian]: https://packages.debian.org/stretch/pick
 [Gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
+[Void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template
 [Ubuntu]: https://packages.ubuntu.com/xenial/pick
 [current]: https://github.com/calleerlandsson/pick/blob/master/DEVELOPING.md
 [release]: https://github.com/calleerlandsson/pick/releases/
