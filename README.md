@@ -7,6 +7,10 @@ using an interface with fuzzy search functionality.
 
 ## Installation
 
+### CRUX
+
+Available in [`6c37/crux-ports`][Crux].
+
 ### Debian and Ubuntu
 
 A package for Pick is available as of [Debian 9][Debian]
@@ -69,6 +73,7 @@ Download the latest [release] and follow the bundled instructions in
 If you want to try the latest unreleased version,
 follow the instructions in [DEVELOPING.md][current].
 
+[Crux]: https://github.com/6c37/crux-ports
 [Debian]: https://packages.debian.org/stretch/pick
 [Gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [Void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template

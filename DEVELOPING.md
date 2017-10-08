@@ -92,11 +92,12 @@ you agree to abide by its [Code of Conduct][conduct].
    * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
    * Fredrik Fornwall <fredrik@fornwall.net> (Homebrew)
    * Neel Chauhan <neel@neelc.org> (FreeBSD)
+   * 6c37 team <camille@airmail.cc> (CRUX)
 
    ```
    To: pick-maintainers@calleerlandsson.com
    Bcc: evaggelos.avgerinos@gmail.com, xuchunyang.me@gmail.com,
-        fredrik@fornwall.net, neel@neelc.org
+        fredrik@fornwall.net, neel@neelc.org, camille@airmail.cc
    ```
 
 [announce]: https://github.com/calleerlandsson/pick/releases/new
