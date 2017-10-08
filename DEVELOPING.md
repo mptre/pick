@@ -92,6 +92,7 @@ you agree to abide by its [Code of Conduct][conduct].
    * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
    * Fredrik Fornwall <fredrik@fornwall.net> (Homebrew)
    * Neel Chauhan <neel@neelc.org> (FreeBSD)
+   * 6c37 team <camille@airmail.cc> (CRUX)
 
    ```
    To: pick-maintainers@calleerlandsson.com

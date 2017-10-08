@@ -61,6 +61,10 @@ pkg install pick
 
 Available in ports under `sysutils/pick`.
 
+### CRUX
+
+Avaliable in [`6c37/crux-ports`](https://github.com/6c37/crux-ports).
+
 ### From source
 
 Download the latest [release] and follow the bundled instructions in
