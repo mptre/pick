@@ -9,12 +9,12 @@ using an interface with fuzzy search functionality.
 
 ### CRUX
 
-Available in [`6c37/crux-ports`][Crux].
+Available in [`6c37/crux-ports`][crux].
 
 ### Debian and Ubuntu
 
-A package for Pick is available as of [Debian 9][Debian]
-and [Ubuntu 16.04 LTS][Ubuntu].
+A package for Pick is available As of [Debian 9][debian]
+and [Ubuntu 16.04 LTS][ubuntu].
 
 ```sh
 apt-get install pick
@@ -22,7 +22,7 @@ apt-get install pick
 
 ### Gentoo
 
-Package is available from the [official repo][Gentoo].
+Package is available from the [official repo][gentoo].
 
 ```sh
 emerge pick
@@ -30,7 +30,7 @@ emerge pick
 
 ### Void Linux
 
-Package is available from the [official repo][Void].
+Package is available from the [official repo][void].
 
 ```sh
 xbps-install pick
@@ -73,13 +73,13 @@ Download the latest [release] and follow the bundled instructions in
 If you want to try the latest unreleased version,
 follow the instructions in [DEVELOPING.md][current].
 
-[Crux]: https://github.com/6c37/crux-ports
-[Debian]: https://packages.debian.org/stretch/pick
-[Gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
-[Void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template
-[Ubuntu]: https://packages.ubuntu.com/xenial/pick
+[crux]: https://github.com/6c37/crux-ports
 [current]: https://github.com/calleerlandsson/pick/blob/master/DEVELOPING.md
+[debian]: https://packages.debian.org/stretch/pick
+[gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [release]: https://github.com/calleerlandsson/pick/releases/
+[ubuntu]: https://packages.ubuntu.com/xenial/pick
+[void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template
 
 ## Usage
 
