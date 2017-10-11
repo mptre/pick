@@ -27,7 +27,7 @@ static char		**pickargv;
  */
 static const char	 *pickenv[] = {
 	"LC_CTYPE",		"en_US.UTF-8",
-	"MALLOC_OPTIONS",	"S",		/* malloc.conf(5) options on OpenBSD */
+	"MALLOC_OPTIONS",	"RS",		/* malloc.conf(5) options on OpenBSD */
 	"TERM",			"xterm",
 	NULL,
 };
