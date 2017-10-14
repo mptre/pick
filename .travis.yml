@@ -48,6 +48,7 @@ before_install:
 install:
   - |
     if [ $BUILD_TYPE = mandoc ]; then
+      brew update
       brew install mandoc
     fi
 script:
