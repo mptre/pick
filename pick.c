@@ -6,6 +6,7 @@
 
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
 #include <limits.h>
 #include <locale.h>
 #include <poll.h>
@@ -73,6 +74,7 @@ static char			*eager_strpbrk(const char *, const char *);
 static void			 filter_choices(size_t);
 static char			*get_choices(void);
 static enum key			 get_key(const char **);
+static enum key			 get_vi_key(unsigned char);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
@@ -111,6 +113,7 @@ static int			 descriptions;
 static int			 sort = 1;
 static int			 use_alternate_screen = 1;
 static int			 use_keypad = 1;
+static int			 vi_mode;
 
 int
 main(int argc, char *argv[])
@@ -128,7 +131,7 @@ main(int argc, char *argv[])
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhoq:KSvxXy")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -160,6 +163,9 @@ main(int argc, char *argv[])
 			break;
 		case 'X':
 			use_alternate_screen = 0;
+			break;
+		case 'y':
+			vi_mode = 1;
 			break;
 		default:
 			usage();
@@ -203,7 +209,7 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-y] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -K          disable toggling of keyboard transmit mode\n"
@@ -212,6 +218,7 @@ usage(void)
 	    "    -o          output description of selected on exit\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
+	    "    -y          start in vi command mode\n"
 	    "    -q query    supply an initial search query\n");
 
 	exit(1);
@@ -298,6 +305,7 @@ const struct choice *
 selected_choice(void)
 {
 	const char	*buf;
+	enum key	 key;
 	size_t		 cursor_position, i, j, length, xscroll;
 	size_t		 choices_count = 0;
 	size_t		 selection = 0;
@@ -371,10 +379,16 @@ selected_choice(void)
 			 * move the cursor if the position is non zero.
 			 */
 			tty_putp(tty_parm1(parm_right_cursor, j), 1);
-		tty_putp(cursor_normal, 0);
+		if (vi_mode)
+			tty_putp(cursor_visible, 0);
+		else
+			tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
-		switch (get_key(&buf)) {
+		key = get_key(&buf);
+		if (vi_mode && key == PRINTABLE)
+			key = get_vi_key(buf[0]);
+		switch (key) {
 		case ENTER:
 			if (choices_count > 0)
 				return &choices.v[selection];
@@ -704,8 +718,8 @@ tty_init(int doinit)
 	new_attributes = tio;
 	new_attributes.c_iflag |= ICRNL;	/* map CR to NL */
 	new_attributes.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-	new_attributes.c_cc[VMIN] = 1;
-	new_attributes.c_cc[VTIME] = 0;
+	new_attributes.c_cc[VMIN] = 0;
+	new_attributes.c_cc[VTIME] = 1;
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if (doinit && (tty_out = fopen("/dev/tty", "w")) == NULL)
@@ -761,6 +775,7 @@ tty_restore(int doclose)
 
 	tty_putp(carriage_return, 1);	/* move cursor to first column */
 	tty_putp(clr_eos, 1);
+	tty_putp(cursor_normal, 0);
 
 	if (use_keypad)
 		tty_putp(keypad_local, 0);
@@ -955,7 +970,8 @@ get_key(const char **key)
 	};
 	static unsigned char	buf[8];
 	size_t			len;
-	int			c, i;
+	int			i;
+	unsigned char		c;
 
 	memset(buf, 0, sizeof(buf));
 	*key = (const char *)buf;
@@ -971,6 +987,17 @@ get_key(const char **key)
 	if (gotsigwinch) {
 		gotsigwinch = 0;
 		return CTRL_L;
+	}
+
+	if (buf[0] == '\033') {
+		struct pollfd	pfd;
+
+		pfd.fd = fileno(tty_in);
+		pfd.events = POLLIN;
+		if (poll(&pfd, 1, 200) == 0) {
+			vi_mode = !vi_mode;
+			return UNKNOWN;
+		}
 	}
 
 	for (;;) {
@@ -1011,7 +1038,8 @@ get_key(const char **key)
 		 */
 		c = buf[len - 1];
 		while (c < '@' || c > '~')
-			c = tty_getc();
+			if (read(fileno(tty_in), &c, 1) == -1)
+				err(1, "read");
 
 		return UNKNOWN;
 	}
@@ -1041,13 +1069,64 @@ get_key(const char **key)
 	return PRINTABLE;
 }
 
+enum key
+get_vi_key(unsigned char key)
+{
+	static struct {
+		unsigned char	c;
+		enum key	key;
+		int		vi_mode;
+	}			keys[] = {
+		{ ' ',		RIGHT,		1 },
+		{ '$',		CTRL_E,		1 },
+		{ '/',		UNKNOWN,	0 },
+		{ '0',		CTRL_A,		1 },
+		{ 'A',		CTRL_E,		0 },
+		{ 'a',		RIGHT,		0 },
+		{ 'D',		CTRL_K,		1 },
+		{ 'd',		CTRL_U,		1 },
+		{ 'G',		END,		1 },
+		{ 'H',		HOME,		1 },
+		{ 'h',		LEFT,		1 },
+		{ 'I',		CTRL_A,		0 },
+		{ 'i',		UNKNOWN,	0 },
+		{ 'j',		LINE_DOWN,	1 },
+		{ 'k',		LINE_UP,	1 },
+		{ 'l',		RIGHT,		1 },
+		{ 'Q',		CTRL_C,		0 },
+		{ 'x',		DEL,		1 },
+		{ 'Z',		ALT_ENTER,	0 },
+		{  0 ,		UNKNOWN,	0 },
+	};
+	int			i;
+
+	for (i = 0; keys[i].c != 0; i++) {
+		if (keys[i].c == key) {
+			vi_mode = keys[i].vi_mode;
+			return keys[i].key;
+		}
+	}
+
+	return UNKNOWN;
+}
+
 int
 tty_getc(void)
 {
-	int	c;
+	int		n;
+	unsigned char	c;
 
-	if ((c = getc(tty_in)) == ERR && !gotsigwinch)
-		err(1, "getc");
+	for (;;) {
+		if ((n = read(fileno(tty_in), &c, 1)) > 0)
+			break;
+		if (n == -1) {
+			if (gotsigwinch)
+				break;
+			if (errno == EINTR)
+				continue;
+			err(1, "read");
+		}
+	}
 
 	return c;
 }

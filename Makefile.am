@@ -22,6 +22,7 @@ TESTS=tests/key-alt-enter.t \
       tests/key-del.t \
       tests/key-end.t \
       tests/key-enter.t \
+      tests/key-esc.t \
       tests/key-home.t \
       tests/key-left.t \
       tests/key-line-down.t \
@@ -40,7 +41,8 @@ TESTS=tests/key-alt-enter.t \
       tests/opt-s.t \
       tests/opt-unknown.t \
       tests/opt-v.t \
-      tests/opt-x.t
+      tests/opt-x.t \
+      tests/opt-y.t
 TEST_EXTENSIONS=.t
 T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh
 AM_COLOR_TESTS=no

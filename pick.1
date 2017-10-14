@@ -9,6 +9,7 @@
 .Op Fl hvKS
 .Op Fl d Op Fl o
 .Op Fl x | Fl X
+.Op Fl y
 .Op Fl q Ar query
 .Sh DESCRIPTION
 The
@@ -52,6 +53,10 @@ Enable the use of the alternate screen terminal feature.
 This is the default.
 .It Fl X
 Disable the use of the alternate screen terminal feature.
+.It Fl y
+Start in
+.Xr vi 1
+command mode
 .El
 .Sh COMMANDS
 .Bl -tag -width XXXX
@@ -96,6 +101,12 @@ Delete to the beginning of the line in the search query input field.
 Delete to the end of the line in the search query input field.
 .It Ic Printable characters
 Added to the search query and will refine the current search.
+.It Ic Escape
+Toggle between the default
+.Xr emacs 1
+and
+.Xr vi 1
+command mode.
 .El
 .Sh ENVIRONMENT
 The following environment variables will affect the execution of
