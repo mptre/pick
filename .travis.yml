@@ -65,7 +65,7 @@ script:
     fi
   - |
     if [ $BUILD_TYPE = mandoc ]; then
-      mandoc -Tlint pick.1
+      mandoc -Tlint -Wstyle pick.1
     fi
 addons:
   coverity_scan:
