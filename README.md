@@ -71,10 +71,10 @@ Download the latest [release] and follow the bundled instructions in
 `INSTALL.md`.
 
 If you want to try the latest unreleased version,
-follow the instructions in [DEVELOPING.md][current].
+follow the instructions in [CONTRIBUTING.md][current].
 
 [crux]: https://github.com/6c37/crux-ports
-[current]: https://github.com/calleerlandsson/pick/blob/master/DEVELOPING.md
+[current]: https://github.com/calleerlandsson/pick/blob/master/CONTRIBUTING.md
 [debian]: https://packages.debian.org/stretch/pick
 [gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [release]: https://github.com/calleerlandsson/pick/releases/

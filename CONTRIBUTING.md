@@ -1,6 +1,6 @@
-# Developing
+# Contributing
 
-## Contributing
+## Pull Requests
 
 We love pull requests from everyone.
 By participating in this project,
@@ -40,6 +40,8 @@ you agree to abide by its [Code of Conduct][conduct].
 7. At this point you're waiting on us.
 
 ## Release
+
+Internal documentation on crafting a release.
 
 1. Run Coverity Scan.
    In the case of discovered defects,
