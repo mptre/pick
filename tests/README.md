@@ -26,7 +26,9 @@ $ env TESTS=tests/01.t make -e check || cat test-suite.log
 
 ## Format of test files
 
-A test file consist of fields where field names are terminated with `:` and the
+A test file consist of one or many tests,
+separated by a blank line.
+Each test consist of fields where field names are terminated with `:` and the
 rest of line is recognized as the corresponding field value.
 Some fields allow multi-line values.
 Everything after `#` and up to the next newline is treated as a comment.

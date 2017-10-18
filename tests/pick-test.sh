@@ -1,46 +1,69 @@
 #!/bin/sh
 
+set -e
+
+# Strip leading spaces and trailing comment from $1.
+strip() {
+	echo "$1" | sed -e 's/^ *//' -e 's/ *#.*$//'
+}
+
+run_test() {
+	local _cause= _diff=$stdout
+
+	env $env tests/pick-test -k $input -- $args <$stdin >$out 2>&1; e=$?
+
+	if [ -s "$stdout" ] && ! cmp -s "$stdout" "$out"; then
+		_cause="wrong output"
+	fi
+	if [ "${exit:-0}" -ne "$e" ]; then
+		_cause="want exit code ${exit}, got ${e}"
+		_diff="/dev/null"
+	fi
+
+	if [ -n "$_cause" ]; then
+		printf 'FAIL:\t%s\n' "$description" 1>&2
+		printf 'CAUSE:\t%s\n' "$_cause" 1>&2
+		diff -u -L stdout-want -L stdout-got "$_diff" "$out"
+	fi
+
+	return 0
+}
+
 usage() {
-  echo "usage: sh tests/pick-test.sh file ..." 1>&2
-  exit 1
+	echo "usage: sh tests/pick-test.sh file ..." 1>&2
+	exit 1
 }
 
 [ $# -eq 0 ] && usage
 
-fail=
+nerr=0
 
-stdin=$(mktemp -t pick.XXXXXX)
-stdout=$(mktemp -t pick.exp.XXXXXX)
-out=$(mktemp -t pick.act.XXXXXX)
-keys=$(mktemp -t pick.keys.XXXXXX)
-trap 'rm $stdin $stdout $out $keys' EXIT
+out=$(mktemp -t pick-test.XXXXXX)
+stdin=$(mktemp -t pick-test.XXXXXX)
+stdout=$(mktemp -t pick-test.XXXXXX)
+input=$(mktemp -t pick-test.XXXXXX)
+trap "rm -f $out $stdin $stdout $input" EXIT
 
-for testcase; do
-  exit=0
+for f; do
+	(cat "$f"; echo) | while IFS=: read -r key val; do
+		if [ -z "$key" ]; then
+			run_test || nerr=$((nerr + 1))
 
-  while IFS=: read -r key val; do
-    if [ "$key" = "keys" ]; then
-      printf "${val%%#*}" >$keys
-    elif [ -n "$val" ]; then
-      eval "${key}='${val%%#*}'"
-    else
-      case "$key" in
-      stdin)  { tmpfile=$stdin; >$tmpfile; } ;;
-      stdout) { tmpfile=$stdout; >$tmpfile; } ;;
-      *)      printf "${key}\n" >>$tmpfile ;;
-      esac
-    fi
-  done <$testcase
-
-  env $env tests/pick-test -k $keys -- $args <$stdin >$out 2>&1; e=$?
-  if [ "$exit" -ne "$e" ]; then
-    echo "${testcase}: expected exit code ${exit}, got ${e}" 1>&2
-    cat "$out" 1>&2
-    fail=1
-  fi
-  if [ -s "$stdout" ] && ! diff -u "$stdout" "$out"; then
-    fail=1
-  fi
+			# Reset environment.
+			args= description= env= exit= keys=
+			>$out; >$stdin; >$stdout; >$input
+		elif [ "$key" = "keys" ]; then
+			printf "${val%%#*}" >$input
+		elif [ -n "$val" ]; then
+			eval "${key}='$(strip "$val")'"
+		else
+			case "$key" in
+			stdin)	tmpfile=$stdin;;
+			stdout)	tmpfile=$stdout;;
+			*)	printf "${key}\n" >>$tmpfile;;
+			esac
+		fi
+	done
 done
 
-exit $fail
+exit $((nerr > 0))
