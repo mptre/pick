@@ -63,7 +63,9 @@ pkg install pick
 
 ### OpenBSD
 
-Available in ports under `sysutils/pick`.
+```sh
+pkg_add pick
+```
 
 ### From source
 
