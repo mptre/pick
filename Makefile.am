@@ -20,16 +20,16 @@ TESTS=tests/key-alt-enter.t \
       tests/key-ctrl-u.t \
       tests/key-ctrl-w.t \
       tests/key-del.t \
-      tests/key-down.t \
       tests/key-end.t \
       tests/key-enter.t \
       tests/key-home.t \
       tests/key-left.t \
+      tests/key-line-down.t \
+      tests/key-line-up.t \
       tests/key-page-down.t \
       tests/key-page-up.t \
       tests/key-printable.t \
       tests/key-unknown.t \
-      tests/key-up.t \
       tests/misc-match.t \
       tests/misc-realloc.t \
       tests/opt-d.t \
