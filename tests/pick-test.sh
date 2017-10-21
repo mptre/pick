@@ -14,8 +14,7 @@ run_test() {
 
 	if [ -s "$stdout" ] && ! cmp -s "$stdout" "$out"; then
 		_cause="wrong output"
-	fi
-	if [ "${exit:-0}" -ne "$e" ]; then
+	elif [ "${exit:-0}" -ne "$e" ]; then
 		_cause="want exit code ${exit}, got ${e}"
 		_diff="/dev/null"
 	fi
