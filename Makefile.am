@@ -33,6 +33,8 @@ TESTS=tests/key-alt-enter.t \
       tests/misc-match.t \
       tests/misc-realloc.t \
       tests/opt-d.t \
+      tests/opt-h.t \
+      tests/opt-k.t \
       tests/opt-o.t \
       tests/opt-q.t \
       tests/opt-s.t \
