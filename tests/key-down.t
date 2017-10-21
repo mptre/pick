@@ -1,4 +1,4 @@
-description: down selects the last choice
+description: down moves the selection downwards
 keys: \016 \016 \016 \016 \n # DOWN ENTER
 stdin:
 1
@@ -13,16 +13,6 @@ keys: \016 \016 \016 \n # DOWN ENTER
 stdin:
 1
 2
-stdout:
-2
-
-description: down arrow is an alias for down
-keys: \033OB \n # DOWN ENTER
-stdin:
-1
-2
-3
-4
 stdout:
 2
 
@@ -49,3 +39,13 @@ stdin:
 05
 stdout:
 05
+
+description: down arrow is an alias for down
+keys: \033OB \n # DOWN ENTER
+stdin:
+1
+2
+3
+4
+stdout:
+2

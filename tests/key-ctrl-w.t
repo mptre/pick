@@ -1,4 +1,4 @@
-description: delete words
+description: Ctrl-W deletes the ASCII word behind the cursor
 keys: \027 ab\\ cd \027 \027 \n # CTRL_W ENTER
 stdin:
 ab
@@ -6,7 +6,7 @@ ab cd
 stdout:
 ab
 
-description: UTF-8 delete word
+description: Ctrl-W deletes the UTF-8 word behind the cursor
 keys: aa\\ Åå \027 aa\\ aa \n # CTRL_W ENTER
 stdin:
 aa Åå aa
