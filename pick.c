@@ -177,22 +177,23 @@ main(int argc, char *argv[])
 			err(1, NULL);
 	}
 
-	input = get_choices();
-	tty_init(1);
+	if ((input = get_choices()) != NULL) {
 
 #ifdef HAVE_PLEDGE
-	if (pledge("stdio tty", NULL) == -1)
-		err(1, "pledge");
+		if (pledge("stdio tty", NULL) == -1)
+			err(1, "pledge");
 #endif
 
-	choice = selected_choice();
-	tty_restore(1);
-	if (choice != NULL) {
-		printf("%s\n", choice->string);
-		if (output_description)
-			printf("%s\n", choice->description);
-	} else {
-		rc = 1;
+		tty_init(1);
+		choice = selected_choice();
+		tty_restore(1);
+		if (choice != NULL) {
+			printf("%s\n", choice->string);
+			if (output_description)
+				printf("%s\n", choice->description);
+		} else {
+			rc = 1;
+		}
 	}
 
 	free(input);
@@ -245,6 +246,8 @@ get_choices(void)
 			err(1, NULL);
 		size *= 2;
 	}
+	if (length == 0)
+		return NULL;
 	buf[length] = '\0';
 
 	choices.size = 16;
