@@ -93,7 +93,7 @@ static const char		*tty_parm1(const char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(int);
 static void			 tty_size(void);
-static __dead void		 usage(void);
+static __dead void		 usage(int);
 static int			 xmbtowc(wchar_t *, const char *);
 
 static struct termios		 tio;
@@ -133,6 +133,8 @@ main(int argc, char *argv[])
 		case 'd':
 			descriptions = 1;
 			break;
+		case 'h':
+			usage(0);
 		case 'K':
 			use_keypad = 0;
 			break;
@@ -162,12 +164,12 @@ main(int argc, char *argv[])
 			use_alternate_screen = 0;
 			break;
 		default:
-			usage();
+			usage(1);
 		}
 	argc -= optind;
 	argv += optind;
 	if (argc > 0)
-		usage();
+		usage(1);
 
 	if (query == NULL) {
 		query_size = 64;
@@ -201,7 +203,7 @@ main(int argc, char *argv[])
 }
 
 __dead void
-usage(void)
+usage(int status)
 {
 	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
@@ -214,7 +216,7 @@ usage(void)
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
 
-	exit(1);
+	exit(status);
 }
 
 char *
