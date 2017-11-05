@@ -23,6 +23,7 @@ run_test() {
 		printf 'FAIL:\t%s\n' "$description" 1>&2
 		printf 'CAUSE:\t%s\n' "$_cause" 1>&2
 		diff -u -L stdout-want -L stdout-got "$_diff" "$out"
+		return 1
 	fi
 
 	return 0
@@ -37,20 +38,22 @@ usage() {
 
 nerr=0
 
+in=$(mktemp -t pick-test.XXXXXX)
 out=$(mktemp -t pick-test.XXXXXX)
 stdin=$(mktemp -t pick-test.XXXXXX)
 stdout=$(mktemp -t pick-test.XXXXXX)
 input=$(mktemp -t pick-test.XXXXXX)
-trap "rm -f $out $stdin $stdout $input" EXIT
+trap "rm -f $in $out $stdin $stdout $input" EXIT
 
 for f; do
-	(cat "$f"; echo) | while IFS=: read -r key val; do
+	(cat "$f"; echo) >$in
+	while IFS=: read -r key val; do
 		if [ -z "$key" ]; then
 			run_test || nerr=$((nerr + 1))
 
 			# Reset environment.
 			args= description= env= exit= keys=
-			>$out; >$stdin; >$stdout; >$input
+			>$in; >$out; >$stdin; >$stdout; >$input
 		elif [ "$key" = "keys" ]; then
 			printf "${val%%#*}" >$input
 		elif [ -n "$val" ]; then
@@ -62,7 +65,7 @@ for f; do
 			*)	printf "${key}\n" >>$tmpfile;;
 			esac
 		fi
-	done
+	done <$in
 done
 
 exit $((nerr > 0))
