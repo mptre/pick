@@ -44,6 +44,7 @@ enum key {
 	CTRL_E,
 	CTRL_K,
 	CTRL_L,
+	CTRL_O,
 	CTRL_U,
 	CTRL_W,
 	CTRL_Z,
@@ -445,6 +446,10 @@ selected_choice(void)
 		case CTRL_L:
 			tty_size();
 			break;
+		case CTRL_O:
+			sort = !sort;
+			dofilter = 1;
+			break;
 		case CTRL_W:
 			if (cursor_position == 0)
 				break;
@@ -708,6 +713,7 @@ tty_init(int doinit)
 	new_attributes.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 	new_attributes.c_cc[VMIN] = 1;
 	new_attributes.c_cc[VTIME] = 0;
+	new_attributes.c_cc[VDISCARD] = _POSIX_VDISABLE;
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if (doinit && (tty_out = fopen("/dev/tty", "w")) == NULL)
@@ -928,6 +934,7 @@ get_key(const char **key)
 		KEY(CTRL_E,	"\005"),
 		KEY(CTRL_K,	"\013"),
 		KEY(CTRL_L,	"\014"),
+		KEY(CTRL_O,	"\017"),
 		KEY(CTRL_U,	"\025"),
 		KEY(CTRL_W,	"\027"),
 		KEY(CTRL_W,	"\033\177"),

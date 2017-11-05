@@ -17,6 +17,7 @@ TESTS=tests/key-alt-enter.t \
       tests/key-ctrl-e.t \
       tests/key-ctrl-k.t \
       tests/key-ctrl-l.t \
+      tests/key-ctrl-o.t \
       tests/key-ctrl-u.t \
       tests/key-ctrl-w.t \
       tests/key-del.t \

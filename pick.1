@@ -45,6 +45,9 @@ Supply an initial search query.
 .It Fl S
 Disable sorting.
 Only filter the choices instead of additionally sorting by score.
+This option can be toggled from within the interface,
+see
+.Sx COMMANDS .
 .It Fl v
 Output the version and exit.
 .It Fl x
@@ -64,6 +67,8 @@ see
 .Xr termios 4 .
 .It Ic Ctrl-L
 Redraw interface with respect to the current size of the terminal.
+.It Ic Ctrl-O
+Toggle sorting.
 .It Ic Up Ns / Ns Ic Down | Ic Ctrl-P Ns / Ns Ic Ctrl-N
 Select between choices matching the current search query.
 .It Ic Page-Down Ns / Ns Ic Page-Up | Ic Ctrl-V Ns / Ns Ic Alt-V | Ic Alt-Space
