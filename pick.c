@@ -305,6 +305,7 @@ selected_choice(void)
 	size_t		 choices_count = 0;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
+	int		 dochoices = 1;
 	int		 dofilter = 1;
 	int		 query_grew = 0;
 
@@ -334,35 +335,11 @@ selected_choice(void)
 			xscroll = cursor_position - tty_columns + 1;
 		else
 			xscroll = 0;
-		if (selection - yscroll >= choices_lines)
-			yscroll = selection - choices_lines + 1;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
-		choices_count = print_choices(yscroll, selection);
-		if (choices_count - yscroll < choices.length
-		    && choices_count - yscroll < choices_lines) {
-			/*
-			 * Printing the choices did not consume all available
-			 * lines and there could still be choices left from the
-			 * last print in the lines not yet consumed.
-			 *
-			 * The clr_eos capability clears the screen from the
-			 * current column to the end. If the last visible choice
-			 * is selected, the standout in the last and current
-			 * column will be also be cleared. Therefore, move down
-			 * one line before clearing the screen.
-			 */
-			tty_putc('\n');
-			tty_putp(clr_eos, 1);
-			tty_putp(tty_parm1(parm_up_cursor,
-				    (choices_count - yscroll) + 1), 1);
-		} else if (choices_count > 0) {
-			/*
-			 * parm_up_cursor interprets 0 as 1, therefore only move
-			 * upwards if any choices where printed.
-			 */
-			tty_putp(tty_parm1(parm_up_cursor,
-				    choices_count < choices_lines
-				    ? choices_count : choices_lines), 1);
+		if (dochoices) {
+			if (selection - yscroll >= choices_lines)
+				yscroll = selection - choices_lines + 1;
+			choices_count = print_choices(yscroll, selection);
 		}
 		tty_putp(carriage_return, 1);	/* move cursor to first column */
 		for (i = j = 0; i < cursor_position; j++)
@@ -377,6 +354,7 @@ selected_choice(void)
 		tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
+		dochoices = 1;
 		switch (get_key(&buf)) {
 		case ENTER:
 			if (choices_count > 0)
@@ -473,9 +451,11 @@ selected_choice(void)
 			break;
 		case CTRL_A:
 			cursor_position = 0;
+			dochoices = 0;
 			break;
 		case CTRL_E:
 			cursor_position = query_length;
+			dochoices = 0;
 			break;
 		case LINE_DOWN:
 			if (selection < choices_count - 1) {
@@ -495,11 +475,13 @@ selected_choice(void)
 			while (cursor_position > 0
 			    && isu8cont(query[--cursor_position]))
 				continue;
+			dochoices = 0;
 			break;
 		case RIGHT:
 			while (cursor_position < query_length
 			    && isu8cont(query[++cursor_position]))
 				continue;
+			dochoices = 0;
 			break;
 		case PAGE_DOWN:
 			if (selection + choices_lines < choices_count)
@@ -908,6 +890,30 @@ print_choices(size_t offset, size_t selection)
 			print_line(choice->string, choice->length,
 			    i == selection, choice->match_start,
 			    choice->match_end);
+	}
+
+	if (i - offset < choices.length && i - offset < choices_lines) {
+		/*
+		 * Printing the choices did not consume all available
+		 * lines and there could still be choices left from the
+		 * last print in the lines not yet consumed.
+		 *
+		 * The clr_eos capability clears the screen from the
+		 * current column to the end. If the last visible choice
+		 * is selected, the standout in the last and current
+		 * column will be also be cleared. Therefore, move down
+		 * one line before clearing the screen.
+		 */
+		tty_putc('\n');
+		tty_putp(clr_eos, 1);
+		tty_putp(tty_parm1(parm_up_cursor, (i - offset) + 1), 1);
+	} else if (i > 0) {
+		/*
+		 * parm_up_cursor interprets 0 as 1, therefore only move
+		 * upwards if any choices where printed.
+		 */
+		tty_putp(tty_parm1(parm_up_cursor,
+			    i < choices_lines ? i : choices_lines), 1);
 	}
 
 	return i;
