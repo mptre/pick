@@ -1,3 +1,53 @@
+# v2.0.0 - 2017-11-07
+
+## New features
+
+- Add `Ctrl-O` key binding used to toggle sorting.
+  (d36423b)
+  (Anton Lindqvist)
+
+## Bug fixes
+
+- Inline `CCEQ` macro since it's missing in musl libc.
+  (21f16d0, #249, #250)
+  (Anton Lindqvist, Michael Gehring)
+
+- Ignore OSC escape sequences while calculating the line width and filtering.
+  (e821307, a380b41, #248)
+  (Anton Lindqvist)
+
+- Do not ignore return value from `mbtowc(3)`.
+  Fixes an issue discovered while compiling using GCC 4.7 on Debian 7.
+  (274969a, #255)
+  (Jenz Guenther)
+
+- Fix exit code for `-h` option.
+  (f833b3a)
+  (Anton Lindqvist)
+
+## Changes
+
+- Optimize filtering by safely reducing the number of choices to reconsider
+  when the query grew longer.
+  (c0c18ef, #251)
+  (Anton Lindqvist)
+
+- Replace example in manual with a more portable but equally useful one.
+  (ad57355, 031817f, 871ddd9, #253)
+  (Jenz Guenther)
+
+- pick is now available as a package on Void Linux.
+  (dce2ddf, #257)
+  (Michael Gehring)
+
+- pick is now available as a package on CRUX.
+  (26eea32, #258)
+  (rtlanceroad)
+
+- Only redraw the choices when necessary.
+  (1e8fb53, #254, #264)
+  (Anton Lindqvist, Jenz Guenther)
+
 # v1.9.0 - 2017-09-19
 
 ## New features
