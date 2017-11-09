@@ -28,9 +28,9 @@
 
 #include "compat.h"
 
-#define tty_putp(capability, fatal) do {				\
-	if (tputs((capability), 1, tty_putc) == ERR && (fatal))		\
-		errx(1, #capability ": unknown terminfo capability");	\
+#define tty_putp(capability, fatal) do {					\
+	if (tputs((capability), 1, tty_putc) == ERR && (fatal))			\
+		errx(EXIT_FAILURE, #capability ": unknown terminfo capability");\
 } while (0)
 
 enum key {
@@ -120,13 +120,13 @@ main(int argc, char *argv[])
 	char			*input;
 	int			 c;
 	int			 output_description = 0;
-	int			 rc = 0;
+	int			 rc = EXIT_SUCCESS;
 
 	setlocale(LC_CTYPE, "");
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
-		err(1, "pledge");
+		err(EXIT_FAILURE, "pledge");
 #endif
 
 	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
@@ -135,7 +135,7 @@ main(int argc, char *argv[])
 			descriptions = 1;
 			break;
 		case 'h':
-			usage(0);
+			usage(EXIT_SUCCESS);
 		case 'K':
 			use_keypad = 0;
 			break;
@@ -148,7 +148,7 @@ main(int argc, char *argv[])
 			break;
 		case 'q':
 			if ((query = strdup(optarg)) == NULL)
-				err(1, "strdup");
+				err(EXIT_FAILURE, "strdup");
 			query_length = strlen(query);
 			query_size = query_length + 1;
 			break;
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
 			break;
 		case 'v':
 			puts(PACKAGE_VERSION);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		case 'x':
 			use_alternate_screen = 1;
 			break;
@@ -165,17 +165,17 @@ main(int argc, char *argv[])
 			use_alternate_screen = 0;
 			break;
 		default:
-			usage(1);
+			usage(EXIT_FAILURE);
 		}
 	argc -= optind;
 	argv += optind;
 	if (argc > 0)
-		usage(1);
+		usage(EXIT_FAILURE);
 
 	if (query == NULL) {
 		query_size = 64;
 		if ((query = calloc(query_size, sizeof(char))) == NULL)
-			err(1, NULL);
+			err(EXIT_FAILURE, NULL);
 	}
 
 	input = get_choices();
@@ -183,7 +183,7 @@ main(int argc, char *argv[])
 
 #ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
-		err(1, "pledge");
+		err(EXIT_FAILURE, "pledge");
 #endif
 
 	choice = selected_choice();
@@ -193,7 +193,7 @@ main(int argc, char *argv[])
 		if (output_description)
 			printf("%s\n", choice->description);
 	} else {
-		rc = 1;
+		rc = EXIT_FAILURE;
 	}
 
 	free(input);
@@ -232,10 +232,10 @@ get_choices(void)
 		ifs = " ";
 
 	if ((buf = malloc(size)) == NULL)
-		err(1, NULL);
+		err(EXIT_FAILURE, NULL);
 	for (;;) {
 		if ((n = read(STDIN_FILENO, buf + length, size - length)) == -1)
-			err(1, "read");
+			err(EXIT_FAILURE, "read");
 		else if (n == 0)
 			break;
 
@@ -243,7 +243,7 @@ get_choices(void)
 		if (length + 1 < size)
 			continue;
 		if ((buf = reallocarray(buf, 2, size)) == NULL)
-			err(1, NULL);
+			err(EXIT_FAILURE, NULL);
 		size *= 2;
 	}
 	buf[length] = '\0';
@@ -251,7 +251,7 @@ get_choices(void)
 	choices.size = 16;
 	if ((choices.v = reallocarray(NULL, choices.size,
 			    sizeof(struct choice))) == NULL)
-		err(1, NULL);
+		err(EXIT_FAILURE, NULL);
 
 	start = buf;
 	while ((stop = strchr(start, '\n')) != NULL) {
@@ -277,7 +277,7 @@ get_choices(void)
 		choices.size *= 2;
 		if ((choices.v = reallocarray(choices.v, choices.size,
 				    sizeof(struct choice))) == NULL)
-			err(1, NULL);
+			err(EXIT_FAILURE, NULL);
 	}
 
 	return buf;
@@ -509,7 +509,7 @@ selected_choice(void)
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
 					    sizeof(char))) == NULL)
-					err(1, NULL);
+					err(EXIT_FAILURE, NULL);
 			}
 
 			if (cursor_position < query_length)
@@ -565,7 +565,7 @@ filter_choices(size_t nchoices)
 			pfd.fd = fileno(tty_in);
 			pfd.events = POLLIN;
 			if ((nready = poll(&pfd, 1, 0)) == -1)
-				err(1, "poll");
+				err(EXIT_FAILURE, "poll");
 			if (nready == 1 && pfd.revents & (POLLIN | POLLHUP))
 				break;
 		}
@@ -687,7 +687,7 @@ tty_init(int doinit)
 	struct termios	new_attributes;
 
 	if (doinit && (tty_in = fopen("/dev/tty", "r")) == NULL)
-		err(1, "fopen");
+		err(EXIT_FAILURE, "fopen");
 
 	tcgetattr(fileno(tty_in), &tio);
 	new_attributes = tio;
@@ -699,7 +699,7 @@ tty_init(int doinit)
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if (doinit && (tty_out = fopen("/dev/tty", "w")) == NULL)
-		err(1, "fopen");
+		err(EXIT_FAILURE, "fopen");
 
 	if (doinit)
 		setupterm((char *)0, fileno(tty_out), (int *)0);
@@ -718,7 +718,7 @@ int
 tty_putc(int c)
 {
 	if (putc(c, tty_out) == EOF)
-		err(1, "putc");
+		err(EXIT_FAILURE, "putc");
 
 	return c;
 }
@@ -739,7 +739,7 @@ toggle_sigwinch(int enable)
 	sigemptyset(&sa.sa_mask);
 
 	if (sigaction(SIGWINCH, &sa, NULL) == -1)
-		err(1, "sigaction: SIGWINCH");
+		err(EXIT_FAILURE, "sigaction: SIGWINCH");
 }
 
 void
@@ -1062,7 +1062,7 @@ tty_getc(void)
 	int	c;
 
 	if ((c = getc(tty_in)) == ERR && !gotsigwinch)
-		err(1, "getc");
+		err(EXIT_FAILURE, "getc");
 
 	return c;
 }
