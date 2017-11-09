@@ -23,7 +23,7 @@ stdout:
 01
 
 description: up arrow is an alias for up
-keys: \016 \016 \016 \016 \020 \eOA \eOA \eOA \n # DOWN UP ENTER
+keys: \016 \016 \016 \016 \020 \033OA \033OA \033OA \n # DOWN UP ENTER
 env: LINES=5
 stdin:
 01

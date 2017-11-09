@@ -13,7 +13,7 @@ stdout:
 öåaå
 
 description: left arrow is an alias for left
-keys: a \eOD b \n # LEFT ENTER
+keys: a \033OD b \n # LEFT ENTER
 stdin:
 ba
 stdout:
