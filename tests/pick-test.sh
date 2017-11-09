@@ -53,7 +53,7 @@ for f; do
 
 			# Reset environment.
 			args= description= env= exit= keys=
-			>$in; >$out; >$stdin; >$stdout; >$input
+			>$out; >$stdin; >$stdout; >$input
 		elif [ "$key" = "keys" ]; then
 			printf "${val%%#*}" >$input
 		elif [ -n "$val" ]; then
