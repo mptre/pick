@@ -101,10 +101,12 @@ call `pick(1)` from within Vim, see [the pick.vim source code].
 ***Please note:*** pick requires a fully functional terminal to run and
 therefore cannot be run from within gvim or MacVim.
 
-See the `pick(1)` man page for detailed usage instructions and more examples.
+See the `pick(1)` man page for detailed usage instructions.
+More examples can be found in the [examples][examples] directory.
 
 [the pick.vim Vim plugin]: https://github.com/calleerlandsson/pick.vim/
 [the pick.vim source code]: https://github.com/calleerlandsson/pick.vim/blob/master/plugin/pick.vim
+[examples]: https://github.com/calleerlandsson/pick/blob/master/examples/
 
 ## Copyright
 

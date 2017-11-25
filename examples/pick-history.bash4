@@ -1,0 +1,12 @@
+#
+# pick command from history with Ctrl-R (for Bash >= 4.x)
+#
+
+TAC=$( which tac || echo 'tail -r' )
+
+pick-history () {
+	local BUFFER=$( history | cut -c 8- | eval $TAC | env LINES=10 pick -q "${READLINE_LINE:0:READLINE_POINT}" -X )
+	READLINE_LINE=${BUFFER:-$READLINE_LINE}
+	READLINE_POINT=${#READLINE_LINE}
+}
+	bind -x '"\C-r" : pick-history'
