@@ -13,6 +13,7 @@ $ find . -type f | pick | xargs xdg-open
 # Select a command from the history to execute:
 $ eval $(fc -ln 1 | pick)
 ```
+More examples can be found in the [examples][examples] directory.
 
 [pick(1)][pick] can also be used from within Vim,
 see the
@@ -101,6 +102,7 @@ Copyright (c) 2019 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 [crux]: https://github.com/6c37/crux-ports
 [current]: https://github.com/mptre/pick/blob/master/CONTRIBUTING.md
 [debian]: https://packages.debian.org/stable/misc/pick
+[examples]: https://github.com/mptre/pick/blob/master/examples/
 [gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [pick-vim]: https://github.com/calleerlandsson/pick.vim
 [pick]: https://www.basename.se/pick/
