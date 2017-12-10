@@ -53,20 +53,20 @@ install:
     fi
 script:
   - |
-    if [ $BUILD_TYPE = default ]; then
+    case $BUILD_TYPE in
+    default)
       ./autogen.sh
       ./configure || (cat config.log; exit 1)
       make || exit 1
       make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
-    fi
-  - |
-    if [ $BUILD_TYPE = cppcheck ]; then
+      ;;
+    cppcheck)
       git ls-files | grep '\.c$' | cppcheck --quiet --error-exitcode=1 --file-list=-
-    fi
-  - |
-    if [ $BUILD_TYPE = mandoc ]; then
+      ;;
+    mandoc)
       mandoc -Tlint -Wstyle pick.1
-    fi
+      ;;
+    esac
 addons:
   coverity_scan:
     project:
