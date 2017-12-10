@@ -30,6 +30,7 @@ TESTS=tests/key-alt-enter.t \
       tests/key-page-down.t \
       tests/key-page-up.t \
       tests/key-printable.t \
+      tests/key-right.t \
       tests/key-unknown.t \
       tests/misc-match.t \
       tests/misc-realloc.t \
