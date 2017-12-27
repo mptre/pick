@@ -1,10 +1,16 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
 /* Define if ncursesw is available */
 #undef HAVE_NCURSESW_H
 
 /* Define to 1 if you have the `pledge' function. */
 #undef HAVE_PLEDGE
+
+/* Define to 1 if you have the `posix_fadvise' function. */
+#undef HAVE_POSIX_FADVISE
 
 /* Define to 1 if you have the `reallocarray' function. */
 #undef HAVE_REALLOCARRAY

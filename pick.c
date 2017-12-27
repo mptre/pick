@@ -18,6 +18,10 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+
 #ifdef HAVE_NCURSESW_H
 #include <ncursesw/curses.h>
 #include <ncursesw/term.h>
@@ -233,6 +237,11 @@ get_choices(void)
 
 	if ((buf = malloc(size)) == NULL)
 		err(1, NULL);
+
+#if HAVE_POSIX_FADVISE
+	posix_fadvise(STDIN_FILENO, 0, 0, POSIX_FADV_SEQUENTIAL);
+#endif
+
 	for (;;) {
 		if ((n = read(STDIN_FILENO, buf + length, size - length)) == -1)
 			err(1, "read");
