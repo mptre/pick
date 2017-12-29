@@ -71,7 +71,7 @@ struct choice {
 static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
-static void			 filter_choices(size_t);
+static int			 filter_choices(size_t);
 static char			*get_choices(void);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
@@ -325,8 +325,10 @@ selected_choice(void)
 			choices_count = choices.length;
 		query_grew = 0;
 		if (dofilter) {
-			filter_choices(choices_count);
-			dofilter = selection = yscroll = 0;
+			if (filter_choices(choices_count))
+				dofilter = selection = yscroll = 0;
+			else
+				dochoices = 0;
 		}
 
 		tty_putp(cursor_invisible, 0);
@@ -451,11 +453,13 @@ selected_choice(void)
 			break;
 		case CTRL_A:
 			cursor_position = 0;
-			dochoices = 0;
+			if (!dofilter)
+				dochoices = 0;
 			break;
 		case CTRL_E:
 			cursor_position = query_length;
-			dochoices = 0;
+			if (!dofilter)
+				dochoices = 0;
 			break;
 		case LINE_DOWN:
 			if (selection < choices_count - 1) {
@@ -475,13 +479,15 @@ selected_choice(void)
 			while (cursor_position > 0
 			    && isu8cont(query[--cursor_position]))
 				continue;
-			dochoices = 0;
+			if (!dofilter)
+				dochoices = 0;
 			break;
 		case RIGHT:
 			while (cursor_position < query_length
 			    && isu8cont(query[++cursor_position]))
 				continue;
-			dochoices = 0;
+			if (!dofilter)
+				dochoices = 0;
 			break;
 		case PAGE_DOWN:
 			if (selection + choices_lines < choices_count)
@@ -534,7 +540,7 @@ selected_choice(void)
  * available.
  * The first nchoices number of choices will be filtered.
  */
-void
+int
 filter_choices(size_t nchoices)
 {
 	struct choice	*c;
@@ -567,11 +573,12 @@ filter_choices(size_t nchoices)
 			if ((nready = poll(&pfd, 1, 0)) == -1)
 				err(1, "poll");
 			if (nready == 1 && pfd.revents & (POLLIN | POLLHUP))
-				break;
+				return 0;
 		}
 	}
 
 	qsort(choices.v, nchoices, sizeof(struct choice), choicecmp);
+	return 1;
 }
 
 int
