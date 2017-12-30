@@ -90,7 +90,7 @@ static void			 toggle_sigwinch(int);
 static int			 tty_getc(void);
 static const char		*tty_getcap(char *);
 static void			 tty_init(int);
-static const char		*tty_parm1(const char *, int);
+static const char		*tty_parm1(char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(int);
 static void			 tty_size(void);
@@ -1075,9 +1075,9 @@ tty_getcap(char *cap)
 }
 
 const char *
-tty_parm1(const char *cap, int a)
+tty_parm1(char *cap, int a)
 {
-	return tparm((char *)cap, a, 0, 0, 0, 0, 0, 0, 0, 0);
+	return tparm(cap, a, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void
