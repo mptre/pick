@@ -71,7 +71,7 @@ struct choice {
 static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
-static void			 filter_choices(size_t);
+static int			 filter_choices(size_t);
 static char			*get_choices(void);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
@@ -325,8 +325,12 @@ selected_choice(void)
 			choices_count = choices.length;
 		query_grew = 0;
 		if (dofilter) {
-			filter_choices(choices_count);
-			dofilter = selection = yscroll = 0;
+			if (filter_choices(choices_count)) {
+				dofilter = selection = yscroll = 0;
+				dochoices = 1;
+			} else {
+				dochoices = 0;
+			}
 		}
 
 		tty_putp(cursor_invisible, 0);
@@ -530,11 +534,12 @@ selected_choice(void)
 }
 
 /*
- * Filter choices using the current query while there is no new user input
- * available.
- * The first nchoices number of choices will be filtered.
+ * Filter the first nchoices number of choices using the current query and
+ * regularly check for new user input in order to abort filtering. This
+ * improves the performance when the cardinality of the choices is large.
+ * Returns non-zero if the filtering was not aborted.
  */
-void
+int
 filter_choices(size_t nchoices)
 {
 	struct choice	*c;
@@ -555,23 +560,18 @@ filter_choices(size_t nchoices)
 			c->score = (double)query_length/match_length/c->length;
 		}
 
-		/*
-		 * Regularly check if there is any new user input available. If
-		 * true, abort filtering since the currently used query is
-		 * outdated. This improves the performance when the cardinality
-		 * of the choices is large.
-		 */
 		if (i > 0 && i % 50 == 0) {
 			pfd.fd = fileno(tty_in);
 			pfd.events = POLLIN;
 			if ((nready = poll(&pfd, 1, 0)) == -1)
 				err(1, "poll");
 			if (nready == 1 && pfd.revents & (POLLIN | POLLHUP))
-				break;
+				return 0;
 		}
 	}
-
 	qsort(choices.v, nchoices, sizeof(struct choice), choicecmp);
+
+	return 1;
 }
 
 int
