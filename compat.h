@@ -31,4 +31,10 @@ long long	strtonum(const char *, long long, long long, const char **);
 
 #endif /* !HAVE_STRTONUM */
 
+void	sandbox(int);
+
+#define SANDBOX_ENTER		0
+#define SANDBOX_MAIN_LOOP_ENTER	1
+#define SANDBOX_MAIN_LOOP_EXIT	2
+
 #endif /* COMPAT_H */
