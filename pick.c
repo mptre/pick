@@ -305,7 +305,7 @@ selected_choice(void)
 	size_t		 choices_count = 0;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
-	int		 dochoices = 1;
+	int		 dochoices = 0;
 	int		 dofilter = 1;
 	int		 query_grew = 0;
 
@@ -358,7 +358,6 @@ selected_choice(void)
 		tty_putp(cursor_normal, 0);
 		fflush(tty_out);
 
-		dochoices = 1;
 		switch (get_key(&buf)) {
 		case ENTER:
 			if (choices_count > 0)
@@ -455,11 +454,9 @@ selected_choice(void)
 			break;
 		case CTRL_A:
 			cursor_position = 0;
-			dochoices = 0;
 			break;
 		case CTRL_E:
 			cursor_position = query_length;
-			dochoices = 0;
 			break;
 		case LINE_DOWN:
 			if (selection < choices_count - 1) {
@@ -479,13 +476,11 @@ selected_choice(void)
 			while (cursor_position > 0
 			    && isu8cont(query[--cursor_position]))
 				continue;
-			dochoices = 0;
 			break;
 		case RIGHT:
 			while (cursor_position < query_length
 			    && isu8cont(query[++cursor_position]))
 				continue;
-			dochoices = 0;
 			break;
 		case PAGE_DOWN:
 			if (selection + choices_lines < choices_count)
