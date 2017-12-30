@@ -56,19 +56,21 @@ install:
     fi
 script:
   - |
+    (
+    set -ex
     case $BUILD_TYPE in
     default)
       ./autogen.sh
       ./configure || (cat config.log; exit 1)
-      make || exit 1
+      make
       make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
       ;;
     coverage)
       ./autogen.sh
       ./configure || (cat config.log; exit 1)
-      make || exit 1
+      make
       make check || (find . -name test-suite.log | xargs -t cat; exit 1)
-      llvm-cov gcov pick-pick.c || exit 1
+      llvm-cov gcov pick-pick.c
       bash <(curl -s https://codecov.io/bash)
       ;;
     cppcheck)
@@ -78,6 +80,7 @@ script:
       mandoc -Tlint -Wstyle pick.1
       ;;
     esac
+    )
 addons:
   coverity_scan:
     project:
