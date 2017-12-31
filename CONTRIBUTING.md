@@ -53,7 +53,9 @@ Internal documentation on crafting a release.
    $ git push origin coverity_scan
    ```
 
-2. Update the version in `configure.ac`:
+2. Update `CHANGELOG.md`.
+
+3. Update the version in `configure.ac`:
 
    ```
    AC_INIT([pick], [0.0.2], [pick-maintainers@calleerlandsson.com])
@@ -65,30 +67,30 @@ Internal documentation on crafting a release.
    $ git commit -m 'Update version to 0.0.2'
    ```
 
-3. Create and verify the tarball:
+4. Create and verify the tarball:
 
    ```sh
    $ make distcheck
    $ tar tvzf pick-0.0.2.tar.gz
    ```
 
-4. Create and verify checksum:
+5. Create and verify checksum:
 
    ```sh
    $ sha256 pick-0.0.2.tar.gz >pick-0.0.2.sha256
    $ sha256 -c pick-0.0.2.sha256
    ```
 
-5. Tag the repo:
+6. Tag the repo:
 
    ```sh
    $ git tag v0.0.2
    $ git push --tags origin master
    ```
 
-6. [Announce the release on GitHub][announce].
+7. [Announce the release on GitHub][announce].
 
-7. Contact package maintainers:
+8. Contact package maintainers:
 
    * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
    * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
