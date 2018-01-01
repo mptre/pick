@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([pick], [2.0.0], [pick-maintainers@calleerlandsson.com])
+AC_INIT([pick], [2.0.1], [pick-maintainers@calleerlandsson.com])
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
