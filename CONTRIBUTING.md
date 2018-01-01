@@ -81,7 +81,7 @@ Internal documentation on crafting a release.
    $ sha256 -c pick-0.0.2.sha256
    ```
 
-6. Tag the repo:
+6. Tag and push:
 
    ```sh
    $ git tag v0.0.2
@@ -102,6 +102,7 @@ Internal documentation on crafting a release.
    To: pick-maintainers@calleerlandsson.com
    Bcc: evaggelos.avgerinos@gmail.com, xuchunyang.me@gmail.com,
         fredrik@fornwall.net, neel@neelc.org, camille@airmail.cc
+   Subject: pick 0.0.2
    ```
 
 [announce]: https://github.com/calleerlandsson/pick/releases/new
