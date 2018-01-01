@@ -1,3 +1,11 @@
+# v2.0.1 - 2018-01-01
+
+## Bug fixes
+
+- Typing a query fast could yield incorrect results.
+  (494ce29, #268, #270)
+  (Anton Lindqvist, Jenz Guenther)
+
 # v2.0.0 - 2017-11-07
 
 ## New features
