@@ -19,6 +19,15 @@
 #endif
 #endif /* __linux__ || __CYGWIN__ */
 
+#ifndef HAVE_PLEDGE
+#ifdef HAVE_SECCOMP
+
+#define HAVE_PLEDGE	1
+int	pledge(const char *promises, const char *);
+
+#endif /* HAVE_SECCOMP */
+#endif /* !HAVE_PLEDGE */
+
 #ifndef HAVE_REALLOCARRAY
 
 void	*reallocarray(void *, size_t, size_t);
