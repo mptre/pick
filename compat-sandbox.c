@@ -55,26 +55,26 @@ sandbox(int stage)
 		if ((ctx = seccomp_init(SCMP_ACT_TRAP)) == NULL)
 			err(1, "seccomp_init");
 
-		if (ALLOW(access)		||
-		    ALLOW(close)		||
-		    ALLOW(exit_group)		||
-		    ALLOW(fstat)		||
-		    ALLOW(fstat64)		||
-		    ALLOW(mmap)			||
-		    ALLOW(mmap2)		||
-		    ALLOW(munmap)		||
-		    ALLOW(open)			||
-		    ALLOW(poll)			||
-		    ALLOW(read)			||
-		    ALLOW(rt_sigaction)		||
-		    ALLOW(sigaction)		||
-		    ALLOW(sigreturn)		||
-		    ALLOW(stat)			||
-		    ALLOW(stat64)		||
-		    ALLOW(time)			||
-		    ALLOW(write)		||
-		    ALLOW_IOCTL(TCGETS, 1)	||
-		    ALLOW_IOCTL(TCSETS, 1)	||
+		if (ALLOW(access) ||
+		    ALLOW(close) ||
+		    ALLOW(exit_group) ||
+		    ALLOW(fstat) ||
+		    ALLOW(fstat64) ||
+		    ALLOW(mmap) ||
+		    ALLOW(mmap2) ||
+		    ALLOW(munmap) ||
+		    ALLOW(open) ||
+		    ALLOW(poll) ||
+		    ALLOW(read) ||
+		    ALLOW(rt_sigaction) ||
+		    ALLOW(sigaction) ||
+		    ALLOW(sigreturn) ||
+		    ALLOW(stat) ||
+		    ALLOW(stat64) ||
+		    ALLOW(time) ||
+		    ALLOW(write) ||
+		    ALLOW_IOCTL(TCGETS, 1) ||
+		    ALLOW_IOCTL(TCSETS, 1) ||
 		    ALLOW_IOCTL(TIOCGWINSZ, 1))
 			err(1, "seccomp_rule_add");
 
