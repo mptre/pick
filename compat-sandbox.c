@@ -38,6 +38,7 @@ sandbox(int stage)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "compat.h"
 
@@ -56,7 +57,9 @@ void
 handle_sigsys(int signum __attribute__((unused)), siginfo_t *info,
     void *ctx __attribute__((unused)))
 {
-	errx(1, "disallowed syscall #%d", info->si_syscall);
+	warnx("disallowed syscall #%d", info->si_syscall);
+	fflush(stderr);
+	exit(1);
 }
 
 void
