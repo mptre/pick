@@ -12,6 +12,9 @@
 /* Define if seccomp is available */
 #undef HAVE_SECCOMP
 
+/* Define to debug seccomp */
+#undef HAVE_SECCOMP_DEBUG
+
 /* Define to 1 if you have the `strtonum' function. */
 #undef HAVE_STRTONUM
 

@@ -4,6 +4,10 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AM_PROG_CC_C_O
+AC_ARG_ENABLE([seccomp-debug],
+  [AS_HELP_STRING([--enable-seccomp-debug], [enable seccomp debugging])],
+  [AC_DEFINE([HAVE_SECCOMP_DEBUG], [1], [Define to debug seccomp])],
+  [])
 AC_CHECK_FUNCS([pledge reallocarray strtonum])
 AC_SEARCH_LIBS([seccomp_init], [seccomp],
   [AC_DEFINE([HAVE_SECCOMP], [1], [Define if seccomp is available])])

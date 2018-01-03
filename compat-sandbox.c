@@ -34,7 +34,10 @@ sandbox(int stage)
 
 #include <err.h>
 #include <seccomp.h>
+#include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "compat.h"
 
@@ -45,6 +48,34 @@ sandbox(int stage)
 	(seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ioctl), x,	\
 	 SCMP_A1(SCMP_CMP_EQ, syscall, 0)) < 0)
 
+/*
+ * Print out the offending syscall and exit.
+ * Not thread-safe and shall only be used for debugging purposes.
+ */
+void
+handle_sigsys(int signum __attribute__((unused)), siginfo_t *info,
+    void *ctx __attribute__((unused)))
+{
+	errx(1, "disallowed syscall #%d", info->si_syscall);
+}
+
+void
+sandbox_sighandler(void)
+{
+	struct sigaction	act;
+	sigset_t		mask;
+
+	memset(&act, 0, sizeof(act));
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGSYS);
+	act.sa_sigaction = &handle_sigsys;
+	act.sa_flags = SA_SIGINFO;
+	if (sigaction(SIGSYS, &act, NULL) == -1)
+		err(1, "sigaction");
+	if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == -1)
+		err(1, "sigprocmask");
+}
+
 void
 sandbox(int stage)
 {
@@ -52,6 +83,10 @@ sandbox(int stage)
 
 	switch (stage) {
 	case SANDBOX_ENTER:
+#ifdef HAVE_SECCOMP_DEBUG
+		sandbox_sighandler();
+#endif
+
 		if ((ctx = seccomp_init(SCMP_ACT_TRAP)) == NULL)
 			err(1, "seccomp_init");
 
