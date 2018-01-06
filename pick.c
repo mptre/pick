@@ -124,10 +124,7 @@ main(int argc, char *argv[])
 
 	setlocale(LC_CTYPE, "");
 
-#ifdef HAVE_PLEDGE
-	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
-		err(1, "pledge");
-#endif
+	sandbox(SANDBOX_ENTER);
 
 	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
 		switch (c) {
@@ -181,13 +178,10 @@ main(int argc, char *argv[])
 	input = get_choices();
 	tty_init(1);
 
-#ifdef HAVE_PLEDGE
-	if (pledge("stdio tty", NULL) == -1)
-		err(1, "pledge");
-#endif
-
+	sandbox(SANDBOX_MAIN_LOOP_ENTER);
 	choice = selected_choice();
 	tty_restore(1);
+	sandbox(SANDBOX_MAIN_LOOP_EXIT);
 	if (choice != NULL) {
 		printf("%s\n", choice->string);
 		if (output_description)

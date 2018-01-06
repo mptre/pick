@@ -8,19 +8,28 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined'
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined' CONFFLAGS=--enable-seccomp-debug
+      addons:
+        apt:
+          packages:
+           - libseccomp-dev
     - os: linux
       compiler: clang-5.0
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined'
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined' CONFFLAGS=--enable-seccomp-debug
       addons:
         apt:
           sources:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
+            - libseccomp-dev
     - os: linux
       compiler: gcc
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
+      env: BUILD_TYPE=default CFLAGS=-fsanitize=address CONFFLAGS=--enable-seccomp-debug
+      addons:
+        apt:
+          packages:
+           - libseccomp-dev
     - os: osx
       compiler: clang
       env: BUILD_TYPE=default CFLAGS=-fsanitize=address
@@ -61,7 +70,7 @@ script:
     case $BUILD_TYPE in
     default)
       ./autogen.sh
-      ./configure || (cat config.log; exit 1)
+      ./configure ${CONFFLAGS} || (cat config.log; exit 1)
       make
       make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
       ;;
