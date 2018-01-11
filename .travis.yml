@@ -9,10 +9,10 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined'
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined -Werror'
     - os: linux
       compiler: clang-5.0
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined'
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined -Werror'
       addons:
         apt:
           sources:
@@ -21,13 +21,13 @@ matrix:
             - clang-5.0
     - os: linux
       compiler: gcc
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -Werror'
     - os: osx
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS=-fsanitize=address
+      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -Werror'
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=coverage CFLAGS='-coverage -O0'
+      env: BUILD_TYPE=coverage CFLAGS='-coverage -O0 -Werror'
     - os: linux
       compiler: clang
       env: BUILD_TYPE=coverity
