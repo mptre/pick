@@ -1,4 +1,5 @@
-sudo: false
+# TODO: temporary work-around permission issue with Clang sanitizers.
+sudo: true
 dist: trusty
 language: c
 env:
