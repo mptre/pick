@@ -950,10 +950,13 @@ get_key(const char **key)
 		KEY(HOME,	"\033<"),
 		CAP(LEFT,	"kcub1"),
 		KEY(LEFT,	"\002"),
+		KEY(LEFT,	"\033OD"),
 		CAP(LINE_DOWN,	"kcud1"),
 		KEY(LINE_DOWN,	"\016"),
+		KEY(LINE_DOWN,	"\033OB"),
 		CAP(LINE_UP,	"kcuu1"),
 		KEY(LINE_UP,	"\020"),
+		KEY(LINE_UP,	"\033OA"),
 		CAP(PAGE_DOWN,	"knp"),
 		KEY(PAGE_DOWN,	"\026"),
 		KEY(PAGE_DOWN,	"\033 "),
@@ -961,6 +964,7 @@ get_key(const char **key)
 		KEY(PAGE_UP,	"\033v"),
 		CAP(RIGHT,	"kcuf1"),
 		KEY(RIGHT,	"\006"),
+		KEY(RIGHT,	"\033OC"),
 		KEY(UNKNOWN,	NULL),
 	};
 	static unsigned char	buf[8];
