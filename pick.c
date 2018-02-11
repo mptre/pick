@@ -380,11 +380,8 @@ selected_choice(void)
 				    isu8cont(query[cursor_position - length]);
 				    length++)
 					continue;
-				delete_between(
-				    query,
-				    query_length,
-				    cursor_position - length,
-				    cursor_position);
+				delete_between(query, query_length,
+				    cursor_position - length, cursor_position);
 				cursor_position -= length;
 				query_length -= length;
 				dofilter = 1;
@@ -396,30 +393,20 @@ selected_choice(void)
 				    isu8cont(query[cursor_position + length]);
 				    length++)
 					continue;
-				delete_between(
-				    query,
-				    query_length,
-				    cursor_position,
-				    cursor_position + length);
+				delete_between(query, query_length,
+				    cursor_position, cursor_position + length);
 				query_length -= length;
 				dofilter = 1;
 			}
 			break;
 		case CTRL_U:
-			delete_between(
-			    query,
-			    query_length,
-			    0,
-			    cursor_position);
+			delete_between(query, query_length, 0, cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
 			dofilter = 1;
 			break;
 		case CTRL_K:
-			delete_between(
-			    query,
-			    query_length,
-			    cursor_position,
+			delete_between(query, query_length, cursor_position,
 			    query_length);
 			query_length = cursor_position;
 			dofilter = 1;
