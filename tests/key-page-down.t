@@ -46,7 +46,7 @@ stdin:
 stdout:
 05
 
-description: Alt-Space alias for PAGE_DOWN
+description: Alt-Space is an alias for page down
 keys: \033\\  \n # PAGE_DOWN ENTER
 env: LINES=5
 stdin:
