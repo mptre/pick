@@ -561,7 +561,8 @@ choicecmp(const void *p1, const void *p2)
 {
 	const struct choice	*c1, *c2;
 
-	c1 = p1, c2 = p2;
+	c1 = p1;
+	c2 = p2;
 	if (c1->score < c2->score)
 		return 1;
 	if (c1->score > c2->score)
@@ -817,8 +818,8 @@ print_line(const char *str, size_t len, int standout,
 		 */
 		if (str[i] == '\0') {
 			tty_putc(' ');
-
-			i++, col++;
+			i++;
+			col++;
 			continue;
 		}
 
