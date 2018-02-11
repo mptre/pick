@@ -6,7 +6,7 @@
 .Nd fuzzy select anything
 .Sh SYNOPSIS
 .Nm
-.Op Fl hvKS
+.Op Fl hvS
 .Op Fl d Op Fl o
 .Op Fl x | Fl X
 .Op Fl q Ar query
@@ -32,12 +32,6 @@ Both parts will be displayed but only the first part will be used when
 searching.
 .It Fl h
 Output a help message and exit.
-.It Fl K
-Disable toggling of keyboard transmit mode.
-Useful when running
-.Nm
-from within another interactive program which already has set the correct
-transmit mode.
 .It Fl o
 Output description of selected choice on exit.
 .It Fl q Ar query

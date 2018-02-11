@@ -111,7 +111,6 @@ static unsigned int		 choices_lines, tty_columns, tty_lines;
 static int			 descriptions;
 static int			 sort = 1;
 static int			 use_alternate_screen = 1;
-static int			 use_keypad = 1;
 
 int
 main(int argc, char *argv[])
@@ -129,16 +128,13 @@ main(int argc, char *argv[])
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhoq:SvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
 			break;
 		case 'h':
 			usage(0);
-		case 'K':
-			use_keypad = 0;
-			break;
 		case 'o':
 			/*
 			 * Only output description if descriptions are read and
@@ -206,10 +202,9 @@ main(int argc, char *argv[])
 __dead void
 usage(int status)
 {
-	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
-	    "    -K          disable toggling of keyboard transmit mode\n"
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
@@ -701,8 +696,6 @@ tty_init(int doinit)
 
 	tty_size();
 
-	if (use_keypad)
-		tty_putp(keypad_xmit, 0);
 	if (use_alternate_screen)
 		tty_putp(enter_ca_mode, 0);
 
@@ -747,8 +740,6 @@ tty_restore(int doclose)
 	tty_putp(carriage_return, 1);	/* move cursor to first column */
 	tty_putp(clr_eos, 1);
 
-	if (use_keypad)
-		tty_putp(keypad_local, 0);
 	if (use_alternate_screen)
 		tty_putp(exit_ca_mode, 0);
 
@@ -950,10 +941,13 @@ get_key(const char **key)
 		KEY(HOME,	"\033<"),
 		CAP(LEFT,	"kcub1"),
 		KEY(LEFT,	"\002"),
+		KEY(LEFT,	"\033OD"),
 		CAP(LINE_DOWN,	"kcud1"),
 		KEY(LINE_DOWN,	"\016"),
+		KEY(LINE_DOWN,	"\033OB"),
 		CAP(LINE_UP,	"kcuu1"),
 		KEY(LINE_UP,	"\020"),
+		KEY(LINE_UP,	"\033OA"),
 		CAP(PAGE_DOWN,	"knp"),
 		KEY(PAGE_DOWN,	"\026"),
 		KEY(PAGE_DOWN,	"\033 "),
@@ -961,6 +955,7 @@ get_key(const char **key)
 		KEY(PAGE_UP,	"\033v"),
 		CAP(RIGHT,	"kcuf1"),
 		KEY(RIGHT,	"\006"),
+		KEY(RIGHT,	"\033OC"),
 		KEY(UNKNOWN,	NULL),
 	};
 	static unsigned char	buf[8];
