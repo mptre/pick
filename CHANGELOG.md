@@ -60,7 +60,7 @@
 
 ## New features
 
-- Add `-K` option used to disable toggling of keyboard transmit mode.
+- Add `-K` option used to disable toggling of keypad transmit mode.
   Fixes a bug causing the arrow keys to stop working after running pick from
   within Vim.
   (6fca1c4, #246, #247)

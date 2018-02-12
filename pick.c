@@ -209,7 +209,7 @@ usage(int status)
 	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
-	    "    -K          disable toggling of keyboard transmit mode\n"
+	    "    -K          disable toggling of keypad transmit mode\n"
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
