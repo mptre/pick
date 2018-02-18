@@ -588,7 +588,7 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 	size_t		 length;
 
 	q = query;
-	if ((s = e = strcasechr(&string[offset], q)) == NULL)
+	if (*q == '\0' || (s = e = strcasechr(&string[offset], q)) == NULL)
 		return INT_MAX;
 
 	for (;;) {
