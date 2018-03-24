@@ -2,8 +2,10 @@
 
 ![pick(1) usage](screencast.gif)
 
-The `pick(1)` utility allows users to choose one option from a set of choices
-using an interface with fuzzy search functionality.
+The
+[pick(1)][pick]
+utility allows users to choose one option from a set of choices using an
+interface with fuzzy search functionality.
 
 ## Installation
 
@@ -85,8 +87,9 @@ follow the instructions in [CONTRIBUTING.md][current].
 
 ## Usage
 
-`pick(1)` reads a list of choices on `stdin` and outputs the selected choice on
-`stdout`. Therefore it is easily used both in pipelines and subshells:
+[pick(1)][pick]
+reads a list of choices on `stdin` and outputs the selected choice on `stdout`.
+Therefore it is easily used both in pipelines and subshells:
 
 ```sh
 git ls-files | pick | xargs less # Select a file in the current git repository to view in less
@@ -101,7 +104,9 @@ call `pick(1)` from within Vim, see [the pick.vim source code].
 ***Please note:*** pick requires a fully functional terminal to run and
 therefore cannot be run from within gvim or MacVim.
 
-See the `pick(1)` man page for detailed usage instructions and more examples.
+See the
+[pick(1)][pick]
+man page for detailed usage instructions and more examples.
 
 [the pick.vim Vim plugin]: https://github.com/calleerlandsson/pick.vim/
 [the pick.vim source code]: https://github.com/calleerlandsson/pick.vim/blob/master/plugin/pick.vim
@@ -109,3 +114,5 @@ See the `pick(1)` man page for detailed usage instructions and more examples.
 ## Copyright
 
 Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
+
+[pick]: https://mptre.github.io/pick.1
