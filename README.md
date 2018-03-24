@@ -77,14 +77,6 @@ Download the latest [release] and follow the bundled instructions in
 If you want to try the latest unreleased version,
 follow the instructions in [CONTRIBUTING.md][current].
 
-[crux]: https://github.com/6c37/crux-ports
-[current]: https://github.com/calleerlandsson/pick/blob/master/CONTRIBUTING.md
-[debian]: https://packages.debian.org/stretch/pick
-[gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
-[release]: https://github.com/calleerlandsson/pick/releases/
-[ubuntu]: https://packages.ubuntu.com/xenial/pick
-[void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template
-
 ## Usage
 
 [pick(1)][pick]
@@ -115,4 +107,11 @@ man page for detailed usage instructions and more examples.
 
 Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 
+[crux]: https://github.com/6c37/crux-ports
+[current]: https://github.com/calleerlandsson/pick/blob/master/CONTRIBUTING.md
+[debian]: https://packages.debian.org/stretch/pick
+[gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [pick]: https://mptre.github.io/pick.1
+[release]: https://github.com/calleerlandsson/pick/releases/
+[ubuntu]: https://packages.ubuntu.com/xenial/pick
+[void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template
