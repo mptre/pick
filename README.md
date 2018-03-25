@@ -95,7 +95,7 @@ Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 
 [crux]: https://github.com/6c37/crux-ports
 [current]: https://github.com/calleerlandsson/pick/blob/master/CONTRIBUTING.md
-[debian]: https://packages.debian.org/stretch/pick
+[debian]: https://packages.debian.org/stable/misc/pick
 [gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [pick-vim]: https://github.com/calleerlandsson/pick.vim
 [pick]: https://calleerlandsson.github.io/pick/
