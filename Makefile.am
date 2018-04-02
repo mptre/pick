@@ -44,7 +44,8 @@ TESTS=tests/key-alt-enter.t \
       tests/opt-v.t \
       tests/opt-x.t
 TEST_EXTENSIONS=.t
-T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh
+T_LOG_COMPILER=$(top_srcdir)/tests/pick-test.sh \
+	-e MALLOC_OPTIONS=@MALLOC_OPTIONS@
 AM_COLOR_TESTS=no
 check_PROGRAMS=tests/pick-test
 tests_pick_test_SOURCES=tests/pick-test.c compat-reallocarray.c

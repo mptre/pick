@@ -15,5 +15,20 @@ AC_SEARCH_LIBS([setupterm], [curses], [], [
     )]
   )
 ])
+AC_DEFUN([AC_MALLOC_OPTIONS], [
+  AC_CANONICAL_HOST
+  AC_MSG_CHECKING([for $host_os malloc hardening options])
+  case "$host_os" in
+  openbsd*) malloc_options="RS";;
+  *)        malloc_options="";;
+  esac
+  if test -n "$malloc_options"; then
+    AC_MSG_RESULT([$malloc_options])
+  else
+    AC_MSG_RESULT([no])
+  fi
+  AC_SUBST([MALLOC_OPTIONS], [$malloc_options])
+])
+AC_MALLOC_OPTIONS
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

@@ -30,10 +30,20 @@ run_test() {
 }
 
 usage() {
-	echo "usage: sh tests/pick-test.sh file ..." 1>&2
+	echo "usage: sh tests/pick-test.sh [-e env] file ..." 1>&2
 	exit 1
 }
 
+# Default environment applied to all test cases.
+defenv=
+
+while getopts "e:" opt; do
+	case "$opt" in
+	e)	defenv="${defenv} ${OPTARG}";;
+	*)	usage;;
+	esac
+done
+shift $((OPTIND - 1))
 [ $# -eq 0 ] && usage
 
 nerr=0
@@ -49,6 +59,7 @@ for f; do
 	(cat "$f"; echo) >$in
 	while IFS=: read -r key val; do
 		if [ -z "$key" ]; then
+			env="${defenv} ${env}"
 			run_test || nerr=$((nerr + 1))
 
 			# Reset environment.

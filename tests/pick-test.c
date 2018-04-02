@@ -26,9 +26,8 @@ static char		**pickargv;
  * Any existing value will be overwritten.
  */
 static const char	 *pickenv[] = {
-	"LC_ALL",		"en_US.UTF-8",
-	"MALLOC_OPTIONS",	"RS",		/* malloc.conf(5) options on OpenBSD */
-	"TERM",			"xterm",
+	"LC_ALL",	"en_US.UTF-8",
+	"TERM",		"xterm",
 	NULL,
 };
 static int		  gotsig;
