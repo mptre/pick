@@ -53,7 +53,11 @@ Internal documentation on crafting a release.
    $ git push origin coverity_scan
    ```
 
-2. Update `CHANGELOG.md`.
+2. Update `CHANGELOG.md` and commit the change:
+
+   ```sh
+   $ git commit -m 'Update CHANGELOG'
+   ```
 
 3. Update the version in `configure.ac`:
 
