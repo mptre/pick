@@ -95,7 +95,7 @@ script:
 addons:
   coverity_scan:
     project:
-      name: calleerlandsson/pick
+      name: mptre/pick
       description: a fuzzy search tool for the command-line
     notification_email: pick-maintainers@calleerlandsson.com
     build_command_prepend: ./autogen.sh; ./configure

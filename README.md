@@ -94,11 +94,11 @@ follow the instructions in [CONTRIBUTING.md][current].
 Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 
 [crux]: https://github.com/6c37/crux-ports
-[current]: https://github.com/calleerlandsson/pick/blob/master/CONTRIBUTING.md
+[current]: https://github.com/mptre/pick/blob/master/CONTRIBUTING.md
 [debian]: https://packages.debian.org/stable/misc/pick
 [gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [pick-vim]: https://github.com/calleerlandsson/pick.vim
-[pick]: https://calleerlandsson.github.io/pick/
-[release]: https://github.com/calleerlandsson/pick/releases/
+[pick]: https://mptre.github.io/pick/
+[release]: https://github.com/mptre/pick/releases/
 [ubuntu]: https://packages.ubuntu.com/xenial/pick
 [void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template

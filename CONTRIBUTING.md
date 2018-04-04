@@ -109,8 +109,8 @@ Internal documentation on crafting a release.
    Subject: pick 0.0.2
    ```
 
-[announce]: https://github.com/calleerlandsson/pick/releases/new
-[conduct]: https://github.com/calleerlandsson/pick/blob/master/CODE_OF_CONDUCT.md
-[manual]: https://github.com/calleerlandsson/pick/tree/master/pick.1
+[announce]: https://github.com/mptre/pick/releases/new
+[conduct]: https://github.com/mptre/pick/blob/master/CODE_OF_CONDUCT.md
+[manual]: https://github.com/mptre/pick/tree/master/pick.1
 [style]: https://man.openbsd.org/style
-[test]: https://github.com/calleerlandsson/pick/tree/master/tests#test-suite
+[test]: https://github.com/mptre/pick/tree/master/tests#test-suite
