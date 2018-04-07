@@ -325,12 +325,8 @@ selected_choice(void)
 			choices_count = choices.length;
 		query_grew = 0;
 		if (dofilter) {
-			if (filter_choices(choices_count)) {
+			if ((dochoices = filter_choices(choices_count)))
 				dofilter = selection = yscroll = 0;
-				dochoices = 1;
-			} else {
-				dochoices = 0;
-			}
 		}
 
 		tty_putp(cursor_invisible, 0);
