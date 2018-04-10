@@ -6,7 +6,7 @@ foo
 stdout:
 foo bar
 
-description: it works in conjuction with the -S option
+description: it works in conjunction with the -S option
 args: -S
 keys: foo \017 \n # CTRL_O ENTER
 stdin:
