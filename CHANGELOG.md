@@ -1,3 +1,36 @@
+# v2.0.2 - 2018-04-10
+
+## Changes
+
+- The repository has been moved to
+  [github.com/mptre/pick](https://github.com/mptre/pick)
+  (432611c)
+  (Anton Lindqvist, Calle Erlandsson)
+
+## Bug fixes
+
+- Remove Werror compiler flag.
+  It's generally considered bad practice to ship software with this flag.
+  Issue revealed while updating the port on OpenBSD.
+  (8008d1e, #272)
+  (Anton Lindqvist)
+
+- Make the cursor keys work in the rxvt terminal emulator.
+  (70e9a92, #275, #277)
+  (Jenz Guenther)
+
+- Limit usage of malloc.conf options to OpenBSD since the options used have a
+  different meaning on both FreeBSD and NetBSD.
+  (6e91e29, #282)
+  (Anton Lindqvist, Jenz Guenther, Mike Burns)
+
+- Define the `LC_ALL` environment variable instead of `LC_CTYPE` when running
+  the tests.
+  Makes a couple of failing tests pass when running in an environment with a non
+  UTF-8 locale.
+  (43a9f02, #281, #283)
+  (Anton Lindqvist, Jenz Guenther, giappi)
+
 # v2.0.1 - 2018-01-01
 
 ## Bug fixes
