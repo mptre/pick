@@ -16,7 +16,7 @@
   (Anton Lindqvist)
 
 - Make the cursor keys work in the rxvt terminal emulator.
-  (70e9a92, #275, #277)
+  (4fec5f6, #275, #277)
   (Jenz Guenther)
 
 - Limit usage of malloc.conf options to OpenBSD since the options used have a
