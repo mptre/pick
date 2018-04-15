@@ -6,6 +6,7 @@
 
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
 #include <limits.h>
 #include <locale.h>
 #include <poll.h>
@@ -60,19 +61,22 @@ enum key {
 };
 
 struct choice {
-	const char	*description;
-	const char	*string;
+	char *const	*string;
+	size_t		 offset;
 	size_t		 length;
+	size_t		 description;
 	ssize_t		 match_start;	/* inclusive match start offset */
 	ssize_t		 match_end;	/* exclusive match end offset */
 	double		 score;
 };
 
 static int			 choicecmp(const void *, const void *);
+static const char		*choice_description(const struct choice *);
+static const char		*choice_string(const struct choice *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
 static int			 filter_choices(size_t);
-static char			*get_choices(void);
+static size_t			 get_choices(int);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
@@ -117,7 +121,6 @@ int
 main(int argc, char *argv[])
 {
 	const struct choice	*choice;
-	char			*input;
 	int			 c;
 	int			 output_description = 0;
 	int			 rc = 0;
@@ -178,7 +181,6 @@ main(int argc, char *argv[])
 			err(1, NULL);
 	}
 
-	input = get_choices();
 	tty_init(1);
 
 #ifdef HAVE_PLEDGE
@@ -189,14 +191,15 @@ main(int argc, char *argv[])
 	choice = selected_choice();
 	tty_restore(1);
 	if (choice != NULL) {
-		printf("%s\n", choice->string);
+		printf("%s\n", choice_string(choice));
 		if (output_description)
-			printf("%s\n", choice->description);
+			printf("%s\n", choice_description(choice));
 	} else {
 		rc = 1;
 	}
 
-	free(input);
+	if (choices.length > 0)
+		free(*choices.v[0].string);
 	free(choices.v);
 	free(query);
 
@@ -220,67 +223,72 @@ usage(int status)
 	exit(status);
 }
 
-char *
-get_choices(void)
+size_t
+get_choices(int fd)
 {
-	char		*buf, *description, *ifs, *start, *stop;
-	ssize_t		 n;
-	size_t		 length = 0;
-	size_t		 size = BUFSIZ;
+	static const char	*ifs;
+	static char		*buf;
+	static size_t		 length, offset;
+	static size_t		 size = BUFSIZ;
+	char		 	*desc, *start, *stop;
+	ssize_t		 	 n;
 
-	if ((ifs = getenv("IFS")) == NULL || *ifs == '\0')
+	if (ifs == NULL && ((ifs = getenv("IFS")) == NULL || *ifs == '\0'))
 		ifs = " ";
 
-	if ((buf = malloc(size)) == NULL)
-		err(1, NULL);
-	for (;;) {
-		if ((n = read(STDIN_FILENO, buf + length, size - length)) == -1)
-			err(1, "read");
-		else if (n == 0)
-			break;
-
-		length += n;
-		if (length + 1 < size)
-			continue;
-		if ((buf = reallocarray(buf, 2, size)) == NULL)
+	if (buf == NULL || length + 1 == size) {
+		buf = reallocarray(buf, 2, size);
+		if (buf == NULL)
 			err(1, NULL);
 		size *= 2;
 	}
+
+	n = read(fd, buf + length, size - length - 1);
+	if (n == -1)
+		err(1, "read");
+	length += n;
 	buf[length] = '\0';
 
-	choices.size = 16;
-	if ((choices.v = reallocarray(NULL, choices.size,
-			    sizeof(struct choice))) == NULL)
-		err(1, NULL);
+	if (choices.v == NULL) {
+		choices.v = reallocarray(NULL, 16, sizeof(struct choice));
+		if (choices.v == NULL)
+			err(1, NULL);
+		choices.size = 16;
+	}
 
-	start = buf;
+	start = buf + offset;
 	while ((stop = strchr(start, '\n')) != NULL) {
 		*stop = '\0';
 
-		if (descriptions && (description = eager_strpbrk(start, ifs)))
-			*description++ = '\0';
-		else
-			description = "";
+		/* Ensure room for a extra choice when ALT_ENTER is invoked. */
+		if (choices.length + 2 >= choices.size) {
+			choices.v = reallocarray(choices.v, 2 * choices.size,
+			    sizeof(struct choice));
+			if (choices.v == NULL)
+				err(1, NULL);
+			choices.size *= 2;
+		}
 
+		choices.v[choices.length].string = &buf;
+		choices.v[choices.length].offset = start - buf;
 		choices.v[choices.length].length = stop - start;
-		choices.v[choices.length].string = start;
-		choices.v[choices.length].description = description;
 		choices.v[choices.length].match_start = -1;
 		choices.v[choices.length].match_end = -1;
 		choices.v[choices.length].score = 0;
+		if (descriptions && (desc = eager_strpbrk(start, ifs))) {
+			*desc++ = '\0';
+			choices.v[choices.length].description = desc - buf;
+		} else {
+			choices.v[choices.length].description = -1;
+		}
+
+		choices.length++;
 
 		start = stop + 1;
-
-		/* Ensure room for a extra choice when ALT_ENTER is invoked. */
-		if (++choices.length + 1 < choices.size)
-			continue;
-		choices.size *= 2;
-		if ((choices.v = reallocarray(choices.v, choices.size,
-				    sizeof(struct choice))) == NULL)
-			err(1, NULL);
 	}
+	offset = start - buf;
 
-	return buf;
+	return n;
 }
 
 char *
@@ -300,59 +308,62 @@ eager_strpbrk(const char *string, const char *separators)
 const struct choice *
 selected_choice(void)
 {
+	struct pollfd	 fds[2];
 	const char	*buf;
-	size_t		 cursor_position, i, j, length, xscroll;
+	size_t		 cursor_position, i, j, length, nfds, xscroll;
 	size_t		 choices_count = 0;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
+	int		 dokey, doread, timo;
 	int		 dochoices = 0;
 	int		 dofilter = 1;
 	int		 query_grew = 0;
 
 	cursor_position = query_length;
 
+	fds[0].fd = fileno(tty_in);
+	fds[0].events = POLLIN;
+	fds[1].fd = STDIN_FILENO;
+	fds[1].events = POLLIN;
+	nfds = 2;
+	/* No timeout on first call to poll in order to render the UI fast. */
+	timo = 0;
 	for (;;) {
-		/*
-		 * If the user didn't add more characters to the query all
-		 * choices have to be reconsidered as potential matches.
-		 * In the opposite scenario, there's no point in reconsidered
-		 * all choices again since the ones that didn't match the
-		 * previous query will clearly not match the current one due to
-		 * the fact that previous query is a left-most substring of the
-		 * current one.
-		 */
-		if (!query_grew)
-			choices_count = choices.length;
-		query_grew = 0;
-		if (dofilter) {
-			if ((dochoices = filter_choices(choices_count)))
-				dofilter = selection = yscroll = 0;
+		dokey = doread = 0;
+		toggle_sigwinch(1);
+		if (poll(fds, nfds, timo) == -1 && errno != EINTR)
+			err(1, "poll");
+		toggle_sigwinch(0);
+		if (gotsigwinch) {
+			gotsigwinch = 0;
+			goto resize;
+		}
+		timo = -1;
+		for (i = 0; i < nfds; i++) {
+			if (fds[i].revents & (POLLERR | POLLNVAL))
+				errx(1, "%d: bad file descriptor", fds[i].fd);
+			if ((fds[i].revents & (POLLIN | POLLHUP)) == 0)
+				continue;
+
+			if (fds[i].fd == fds[0].fd)
+				dokey = 1;
+			else if (fds[i].fd == fds[1].fd)
+				doread = 1;
 		}
 
-		tty_putp(cursor_invisible, 0);
-		tty_putp(carriage_return, 1);	/* move cursor to first column */
-		if (cursor_position >= tty_columns)
-			xscroll = cursor_position - tty_columns + 1;
-		else
-			xscroll = 0;
-		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
-		if (dochoices) {
-			if (selection - yscroll >= choices_lines)
-				yscroll = selection - choices_lines + 1;
-			choices_count = print_choices(yscroll, selection);
+		length = choices.length;
+		if (doread) {
+			if (get_choices(STDIN_FILENO)) {
+				if (query_length > 0)
+					dofilter = 1;
+			} else {
+				nfds = 1; /* EOF */
+			}
 		}
-		tty_putp(carriage_return, 1);	/* move cursor to first column */
-		for (i = j = 0; i < cursor_position; j++)
-			while (isu8cont(query[++i]))
-				continue;
-		if (j > 0)
-			/*
-			 * parm_right_cursor interprets 0 as 1, therefore only
-			 * move the cursor if the position is non zero.
-			 */
-			tty_putp(tty_parm1(parm_right_cursor, j), 1);
-		tty_putp(cursor_normal, 0);
-		fflush(tty_out);
+		if (!dokey && query_length == 0 && length >= choices_lines)
+			continue; /* prevent redundant rendering */
+		if (!dokey)
+			goto render;
 
 		switch (get_key(&buf)) {
 		case ENTER:
@@ -360,8 +371,9 @@ selected_choice(void)
 				return &choices.v[selection];
 			break;
 		case ALT_ENTER:
-			choices.v[choices.length].string = query;
-			choices.v[choices.length].description = "";
+			choices.v[choices.length].string = &query;
+			choices.v[choices.length].offset = 0;
+			choices.v[choices.length].description = -1;
 			return &choices.v[choices.length];
 		case CTRL_C:
 			return NULL;
@@ -408,6 +420,7 @@ selected_choice(void)
 			dofilter = 1;
 			break;
 		case CTRL_L:
+		resize:
 			tty_size();
 			break;
 		case CTRL_O:
@@ -508,6 +521,49 @@ selected_choice(void)
 		case UNKNOWN:
 			break;
 		}
+
+render:
+		/*
+		 * If the user didn't add more characters to the query all
+		 * choices have to be reconsidered as potential matches.
+		 * In the opposite scenario, there's no point in reconsidered
+		 * all choices again since the ones that didn't match the
+		 * previous query will clearly not match the current one due to
+		 * the fact that previous query is a left-most substring of the
+		 * current one.
+		 */
+		if (!query_grew)
+			choices_count = choices.length;
+		query_grew = 0;
+		if (dofilter) {
+			if ((dochoices = filter_choices(choices_count)))
+				dofilter = selection = yscroll = 0;
+		}
+
+		tty_putp(cursor_invisible, 0);
+		tty_putp(carriage_return, 1);	/* move cursor to first column */
+		if (cursor_position >= tty_columns)
+			xscroll = cursor_position - tty_columns + 1;
+		else
+			xscroll = 0;
+		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
+		if (dochoices) {
+			if (selection - yscroll >= choices_lines)
+				yscroll = selection - choices_lines + 1;
+			choices_count = print_choices(yscroll, selection);
+		}
+		tty_putp(carriage_return, 1);	/* move cursor to first column */
+		for (i = j = 0; i < cursor_position; j++)
+			while (isu8cont(query[++i]))
+				continue;
+		if (j > 0)
+			/*
+			 * parm_right_cursor interprets 0 as 1, therefore only
+			 * move the cursor if the position is non zero.
+			 */
+			tty_putp(tty_parm1(parm_right_cursor, j), 1);
+		tty_putp(cursor_normal, 0);
+		fflush(tty_out);
 	}
 }
 
@@ -527,7 +583,7 @@ filter_choices(size_t nchoices)
 
 	for (i = 0; i < nchoices; i++) {
 		c = &choices.v[i];
-		if (min_match(c->string, 0,
+		if (min_match(choice_string(c), 0,
 			    &c->match_start, &c->match_end) == INT_MAX) {
 			c->match_start = c->match_end = -1;
 			c->score = 0;
@@ -565,16 +621,29 @@ choicecmp(const void *p1, const void *p2)
 		return -1;
 	/*
 	 * The two choices have an equal score.
-	 * Sort based on the address of string since it reflects the initial
-	 * input order.
+	 * Sort based on the offset since it reflects the initial input order.
 	 * The comparison is inverted since the choice with the lowest address
 	 * must come first.
 	 */
-	if (c1->string < c2->string)
+	if (c1->offset < c2->offset)
 		return -1;
-	if (c1->string > c2->string)
+	if (c1->offset > c2->offset)
 		return 1;
 	return 0;
+}
+
+const char *
+choice_description(const struct choice *c)
+{
+	if (c->description == (size_t)-1)
+		return "";
+	return *c->string + c->description;
+}
+
+const char *
+choice_string(const struct choice *c)
+{
+	return *c->string + c->offset;
 }
 
 size_t
@@ -866,7 +935,7 @@ print_choices(size_t offset, size_t selection)
 			break;
 
 		if (i - offset < choices_lines)
-			print_line(choice->string, choice->length,
+			print_line(choice_string(choice), choice->length,
 			    i == selection, choice->match_start,
 			    choice->match_end);
 	}
@@ -959,18 +1028,7 @@ get_key(const char **key)
 	*key = (const char *)buf;
 	len = 0;
 
-	/*
-	 * Allow SIGWINCH on the first read. If the signal is received, return
-	 * CTRL_L which will trigger a resize.
-	 */
-	toggle_sigwinch(1);
 	buf[len++] = tty_getc();
-	toggle_sigwinch(0);
-	if (gotsigwinch) {
-		gotsigwinch = 0;
-		return CTRL_L;
-	}
-
 	for (;;) {
 		for (i = 0; keys[i].key != UNKNOWN; i++) {
 			if (keys[i].tio >= 0) {
@@ -1042,11 +1100,14 @@ get_key(const char **key)
 int
 tty_getc(void)
 {
-	int	c;
+	ssize_t		n;
+	unsigned char	c;
 
-	if ((c = getc(tty_in)) == ERR && !gotsigwinch)
-		err(1, "getc");
-
+	n = read(fileno(tty_in), &c, sizeof(c));
+	if (n == -1)
+		err(1, "read");
+	if (n == 0)
+		return EOF;
 	return c;
 }
 
