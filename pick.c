@@ -76,7 +76,7 @@ static const char		*choice_string(const struct choice *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
 static int			 filter_choices(size_t);
-static size_t			 get_choices(int);
+static size_t			 get_choices(int, size_t);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
@@ -224,14 +224,16 @@ usage(int status)
 }
 
 size_t
-get_choices(int fd)
+get_choices(int fd, size_t insert)
 {
 	static const char	*ifs;
 	static char		*buf;
 	static size_t		 length, offset;
 	static size_t		 size = BUFSIZ;
+	struct choice		*new, *old, tmp;
 	char		 	*desc, *start, *stop;
 	ssize_t		 	 n;
+	size_t			 dchoices, i, nchoices;
 
 	if (ifs == NULL && ((ifs = getenv("IFS")) == NULL || *ifs == '\0'))
 		ifs = " ";
@@ -256,6 +258,7 @@ get_choices(int fd)
 		choices.size = 16;
 	}
 
+	nchoices = choices.length;
 	start = buf + offset;
 	while ((stop = strchr(start, '\n')) != NULL) {
 		*stop = '\0';
@@ -287,6 +290,18 @@ get_choices(int fd)
 		start = stop + 1;
 	}
 	offset = start - buf;
+	dchoices = choices.length - nchoices;
+	if (dchoices == 0 || nchoices == 0)
+		return n;
+
+	/* Move new choices after the given insert index. */
+	for (i = 0; i < dchoices; i++) {
+		old = choices.v + insert + i;
+		new = choices.v + nchoices + i;
+		tmp = *new;
+		*new = *old;
+		*old = tmp;
+	}
 
 	return n;
 }
@@ -315,9 +330,9 @@ selected_choice(void)
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
 	int		 dokey, doread, timo;
+	int		 choices_reset = 1;
 	int		 dochoices = 0;
 	int		 dofilter = 1;
-	int		 query_grew = 0;
 
 	cursor_position = query_length;
 
@@ -353,9 +368,14 @@ selected_choice(void)
 
 		length = choices.length;
 		if (doread) {
-			if (get_choices(STDIN_FILENO)) {
-				if (query_length > 0)
+			if (get_choices(STDIN_FILENO, query_length > 0 ?
+				    choices_count : 0)) {
+				if (query_length > 0) {
 					dofilter = 1;
+					choices_reset = 0;
+					choices_count += choices.length -
+					    length;
+				}
 			} else {
 				nfds = 1; /* EOF */
 			}
@@ -392,7 +412,7 @@ selected_choice(void)
 				    cursor_position - length, cursor_position);
 				cursor_position -= length;
 				query_length -= length;
-				dofilter = 1;
+				dofilter = choices_reset = 1;
 			}
 			break;
 		case DEL:
@@ -404,20 +424,20 @@ selected_choice(void)
 				delete_between(query, query_length,
 				    cursor_position, cursor_position + length);
 				query_length -= length;
-				dofilter = 1;
+				dofilter = choices_reset = 1;
 			}
 			break;
 		case CTRL_U:
 			delete_between(query, query_length, 0, cursor_position);
 			query_length -= cursor_position;
 			cursor_position = 0;
-			dofilter = 1;
+			dofilter = choices_reset = 1;
 			break;
 		case CTRL_K:
 			delete_between(query, query_length, cursor_position,
 			    query_length);
 			query_length = cursor_position;
-			dofilter = 1;
+			dofilter = choices_reset = 1;
 			break;
 		case CTRL_L:
 		resize:
@@ -425,7 +445,7 @@ selected_choice(void)
 			break;
 		case CTRL_O:
 			sort = !sort;
-			dofilter = 1;
+			dofilter = choices_reset = 1;
 			break;
 		case CTRL_W:
 			if (cursor_position == 0)
@@ -446,7 +466,7 @@ selected_choice(void)
 			delete_between(query, query_length, i, cursor_position);
 			query_length -= cursor_position - i;
 			cursor_position = i;
-			dofilter = 1;
+			dofilter = choices_reset = 1;
 			break;
 		case CTRL_A:
 			cursor_position = 0;
@@ -498,8 +518,10 @@ selected_choice(void)
 			yscroll = selection = 0;
 			break;
 		case PRINTABLE:
-			length = strlen(buf);
+			if (query_length == 0)
+				choices_reset = 1;
 
+			length = strlen(buf);
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
@@ -516,25 +538,16 @@ selected_choice(void)
 			cursor_position += length;
 			query_length += length;
 			query[query_length] = '\0';
-			dofilter = query_grew = 1;
+			dofilter = 1;
 			break;
 		case UNKNOWN:
 			break;
 		}
 
 render:
-		/*
-		 * If the user didn't add more characters to the query all
-		 * choices have to be reconsidered as potential matches.
-		 * In the opposite scenario, there's no point in reconsidered
-		 * all choices again since the ones that didn't match the
-		 * previous query will clearly not match the current one due to
-		 * the fact that previous query is a left-most substring of the
-		 * current one.
-		 */
-		if (!query_grew)
+		if (choices_reset)
 			choices_count = choices.length;
-		query_grew = 0;
+		choices_reset = 0;
 		if (dofilter) {
 			if ((dochoices = filter_choices(choices_count)))
 				dofilter = selection = yscroll = 0;
