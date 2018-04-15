@@ -70,7 +70,7 @@ struct choice {
 	double		 score;
 };
 
-static int			 choicecmp(const void *, const void *);
+static int			 choice_cmp(const void *, const void *);
 static const char		*choice_description(const struct choice *);
 static const char		*choice_string(const struct choice *);
 static void			 delete_between(char *, size_t, size_t, size_t);
@@ -603,13 +603,13 @@ filter_choices(size_t nchoices)
 				return 0;
 		}
 	}
-	qsort(choices.v, nchoices, sizeof(struct choice), choicecmp);
+	qsort(choices.v, nchoices, sizeof(struct choice), choice_cmp);
 
 	return 1;
 }
 
 int
-choicecmp(const void *p1, const void *p2)
+choice_cmp(const void *p1, const void *p2)
 {
 	const struct choice	*c1, *c2;
 
