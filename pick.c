@@ -70,13 +70,15 @@ struct choice {
 	double		 score;
 };
 
+int tty_getc_peek = -1;
+
 static int			 choice_cmp(const void *, const void *);
 static const char		*choice_description(const struct choice *);
 static const char		*choice_string(const struct choice *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
 static int			 filter_choices(size_t);
-static size_t			 get_choices(int, size_t);
+static size_t			 get_choices(int, ssize_t);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
 static int			 isu8cont(unsigned char);
@@ -224,7 +226,7 @@ usage(int status)
 }
 
 size_t
-get_choices(int fd, size_t insert)
+get_choices(int fd, ssize_t insert)
 {
 	static const char	*ifs;
 	static char		*buf;
@@ -291,7 +293,7 @@ get_choices(int fd, size_t insert)
 	}
 	offset = start - buf;
 	dchoices = choices.length - nchoices;
-	if (dchoices == 0 || nchoices == 0)
+	if (dchoices == 0 || nchoices == 0 || insert == -1)
 		return n;
 
 	/* Move new choices after the given insert index. */
@@ -325,11 +327,12 @@ selected_choice(void)
 {
 	struct pollfd	 fds[2];
 	const char	*buf;
+	ssize_t		 insert;
 	size_t		 cursor_position, i, j, length, nfds, xscroll;
 	size_t		 choices_count = 0;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
-	int		 dokey, doread, timo;
+	int		 dokey, doread, nready, timo;
 	int		 choices_reset = 1;
 	int		 dochoices = 0;
 	int		 dofilter = 1;
@@ -346,7 +349,8 @@ selected_choice(void)
 	for (;;) {
 		dokey = doread = 0;
 		toggle_sigwinch(1);
-		if (poll(fds, nfds, timo) == -1 && errno != EINTR)
+		nready = xpoll(fds, nfds, timo);
+		if (nready == -1 && errno != EINTR)
 			err(1, "poll");
 		toggle_sigwinch(0);
 		if (gotsigwinch) {
@@ -355,21 +359,23 @@ selected_choice(void)
 		}
 		timo = -1;
 		for (i = 0; i < nfds; i++) {
-			if (fds[i].revents & (POLLERR | POLLNVAL))
-				errx(1, "%d: bad file descriptor", fds[i].fd);
+			if (fds[i].revents & (POLLERR | POLLNVAL)) {
+				errno = EBADF;
+				err(1, "poll");
+			}
 			if ((fds[i].revents & (POLLIN | POLLHUP)) == 0)
 				continue;
 
-			if (fds[i].fd == fds[0].fd)
-				dokey = 1;
-			else if (fds[i].fd == fds[1].fd)
+			if (fds[i].fd == STDIN_FILENO)
 				doread = 1;
+			else if (fds[i].fd == fileno(tty_in))
+				dokey = 1;
 		}
 
 		length = choices.length;
 		if (doread) {
-			if (get_choices(STDIN_FILENO, query_length > 0 ?
-				    choices_count : 0)) {
+			insert = query_length > 0 ? (ssize_t)choices_count : -1;
+			if (get_choices(fds[1].fd, insert)) {
 				if (query_length > 0) {
 					dofilter = 1;
 					choices_reset = 0;
@@ -377,11 +383,9 @@ selected_choice(void)
 					    length;
 				}
 			} else {
-				nfds = 1; /* EOF */
+				nfds--; /* EOF */
 			}
 		}
-		if (!dokey && query_length == 0 && length >= choices_lines)
-			continue; /* prevent redundant rendering */
 		if (!dokey)
 			goto render;
 
@@ -589,8 +593,8 @@ render:
 int
 filter_choices(size_t nchoices)
 {
-	struct choice	*c;
 	struct pollfd	 pfd;
+	struct choice	*c;
 	size_t		 i, match_length;
 	int		 nready;
 
@@ -610,7 +614,7 @@ filter_choices(size_t nchoices)
 		if (i > 0 && i % 50 == 0) {
 			pfd.fd = fileno(tty_in);
 			pfd.events = POLLIN;
-			if ((nready = poll(&pfd, 1, 0)) == -1)
+			if ((nready = xpoll(&pfd, 1, 0)) == -1)
 				err(1, "poll");
 			if (nready == 1 && pfd.revents & (POLLIN | POLLHUP))
 				return 0;
@@ -1115,6 +1119,12 @@ tty_getc(void)
 {
 	ssize_t		n;
 	unsigned char	c;
+
+	if (tty_getc_peek != -1) {
+		c = tty_getc_peek;
+		tty_getc_peek = -1;
+		return c;
+	}
 
 	n = read(fileno(tty_in), &c, sizeof(c));
 	if (n == -1)

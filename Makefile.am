@@ -4,7 +4,11 @@ AM_CFLAGS=-Wall -Wextra
 AM_CPPFLAGS=-D_GNU_SOURCE
 
 bin_PROGRAMS=pick
-pick_SOURCES=pick.c compat-reallocarray.c compat-strtonum.c compat.h
+pick_SOURCES=compat-reallocarray.c \
+             compat-strtonum.c \
+             compat-xpoll.c \
+             compat.h \
+             pick.c
 pick_CPPFLAGS=$(AM_CPPFLAGS) $(NCURSES_CFLAGS)
 pick_LDADD=$(NCURSES_LIBS)
 

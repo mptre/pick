@@ -32,3 +32,5 @@ long long	strtonum(const char *, long long, long long, const char **);
 #endif /* !HAVE_STRTONUM */
 
 #endif /* COMPAT_H */
+
+int xpoll(struct pollfd *fds, nfds_t nfds, int timeout);
