@@ -77,7 +77,7 @@ static const char		*choice_description(const struct choice *);
 static const char		*choice_string(const struct choice *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
-static int			 filter_choices(size_t);
+static int			 filter_choices(size_t, size_t);
 static size_t			 get_choices(int, ssize_t);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
@@ -328,7 +328,8 @@ selected_choice(void)
 	struct pollfd	 fds[2];
 	const char	*buf;
 	ssize_t		 insert;
-	size_t		 cursor_position, i, j, length, nfds, xscroll;
+	size_t		 choices_offset, cursor_position, i, j, length, nfds,
+			 xscroll;
 	size_t		 choices_count = 0;
 	size_t		 selection = 0;
 	size_t		 yscroll = 0;
@@ -347,7 +348,7 @@ selected_choice(void)
 	/* No timeout on first call to poll in order to render the UI fast. */
 	timo = 0;
 	for (;;) {
-		dokey = doread = 0;
+		choices_offset = dokey = doread = 0;
 		toggle_sigwinch(1);
 		nready = xpoll(fds, nfds, timo);
 		if (nready == -1 && errno != EINTR)
@@ -379,8 +380,9 @@ selected_choice(void)
 				if (query_length > 0) {
 					dofilter = 1;
 					choices_reset = 0;
-					choices_count += choices.length -
-					    length;
+					choices_offset = choices_count;
+					choices_count +=
+					    choices.length - length;
 				}
 			} else {
 				nfds--; /* EOF */
@@ -553,7 +555,9 @@ render:
 			choices_count = choices.length;
 		choices_reset = 0;
 		if (dofilter) {
-			if ((dochoices = filter_choices(choices_count)))
+			dochoices = filter_choices(choices_offset,
+			    choices_count);
+			if (dochoices)
 				dofilter = selection = yscroll = 0;
 		}
 
@@ -585,20 +589,21 @@ render:
 }
 
 /*
- * Filter the first nchoices number of choices using the current query and
- * regularly check for new user input in order to abort filtering. This
- * improves the performance when the cardinality of the choices is large.
+ * Filter nchoices - offset number of choices starting at offset using the
+ * current query.
+ * In addition, regularly check for new user input and abort filtering since any
+ * previous matches could be invalidated by the new query.
  * Returns non-zero if the filtering was not aborted.
  */
 int
-filter_choices(size_t nchoices)
+filter_choices(size_t offset, size_t nchoices)
 {
 	struct pollfd	 pfd;
 	struct choice	*c;
 	size_t		 i, match_length;
 	int		 nready;
 
-	for (i = 0; i < nchoices; i++) {
+	for (i = offset; i < nchoices; i++) {
 		c = &choices.v[i];
 		if (min_match(choice_string(c), 0,
 			    &c->match_start, &c->match_end) == INT_MAX) {
