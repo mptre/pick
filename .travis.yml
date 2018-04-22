@@ -37,9 +37,6 @@ matrix:
       env: BUILD_TYPE=default CFLAGS='-fsanitize=address -Werror'
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=coverage CFLAGS='-coverage -O0 -Werror'
-    - os: linux
-      compiler: clang
       env: BUILD_TYPE=coverity
     - os: linux
       env: BUILD_TYPE=cppcheck
@@ -75,14 +72,6 @@ script:
       ./configure || (cat config.log; exit 1)
       make
       make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
-      ;;
-    coverage)
-      ./autogen.sh
-      ./configure || (cat config.log; exit 1)
-      make
-      make check || (find . -name test-suite.log | xargs -t cat; exit 1)
-      llvm-cov gcov pick-pick.c
-      bash <(curl -s https://codecov.io/bash)
       ;;
     cppcheck)
       git ls-files | grep '\.c$' | cppcheck --quiet --error-exitcode=1 --file-list=-
