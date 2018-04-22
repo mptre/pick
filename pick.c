@@ -77,7 +77,7 @@ static const char		*choice_description(const struct choice *);
 static const char		*choice_string(const struct choice *);
 static void			 delete_between(char *, size_t, size_t, size_t);
 static char			*eager_strpbrk(const char *, const char *);
-static int			 filter_choices(size_t, size_t);
+static int			 filter_choices(size_t, size_t *);
 static size_t			 get_choices(int, ssize_t);
 static enum key			 get_key(const char **);
 static void			 handle_sigwinch(int);
@@ -86,7 +86,7 @@ static int			 isu8start(unsigned char);
 static int			 isword(const char *);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
-static size_t			 print_choices(size_t, size_t);
+static void			 print_choices(size_t, size_t, size_t);
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
 static const struct choice	*selected_choice(void);
@@ -383,6 +383,8 @@ selected_choice(void)
 					choices_offset = choices_count;
 					choices_count +=
 					    choices.length - length;
+				} else {
+					choices_reset = 1;
 				}
 			} else {
 				nfds--; /* EOF */
@@ -556,9 +558,9 @@ render:
 		choices_reset = 0;
 		if (dofilter) {
 			dochoices = filter_choices(choices_offset,
-			    choices_count);
+			    &choices_count);
 			if (dochoices)
-				dofilter = selection = yscroll = 0;
+				dofilter = 0;
 		}
 
 		tty_putp(cursor_invisible, 0);
@@ -569,9 +571,11 @@ render:
 			xscroll = 0;
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
 		if (dochoices) {
+			if (selection >= choices_count)
+				selection = yscroll = 0;
 			if (selection - yscroll >= choices_lines)
 				yscroll = selection - choices_lines + 1;
-			choices_count = print_choices(yscroll, selection);
+			print_choices(yscroll, choices_count, selection);
 		}
 		tty_putp(carriage_return, 1);	/* move cursor to first column */
 		for (i = j = 0; i < cursor_position; j++)
@@ -596,14 +600,15 @@ render:
  * Returns non-zero if the filtering was not aborted.
  */
 int
-filter_choices(size_t offset, size_t nchoices)
+filter_choices(size_t offset, size_t *nchoices)
 {
 	struct pollfd	 pfd;
 	struct choice	*c;
 	size_t		 i, match_length;
+	size_t		 n = 0;
 	int		 nready;
 
-	for (i = offset; i < nchoices; i++) {
+	for (i = offset; i < *nchoices; i++) {
 		c = &choices.v[i];
 		if (min_match(choice_string(c), 0,
 			    &c->match_start, &c->match_end) == INT_MAX) {
@@ -615,6 +620,8 @@ filter_choices(size_t offset, size_t nchoices)
 			match_length = c->match_end - c->match_start;
 			c->score = (double)query_length/match_length/c->length;
 		}
+		if (c->score > 0 || query_length == 0)
+			n++;
 
 		if (i > 0 && i % 50 == 0) {
 			pfd.fd = fileno(tty_in);
@@ -625,7 +632,8 @@ filter_choices(size_t offset, size_t nchoices)
 				return 0;
 		}
 	}
-	qsort(choices.v, nchoices, sizeof(struct choice), choice_cmp);
+	qsort(choices.v, *nchoices, sizeof(struct choice), choice_cmp);
+	*nchoices = offset + n;
 
 	return 1;
 }
@@ -941,25 +949,21 @@ print_line(const char *str, size_t len, int standout,
 }
 
 /*
- * Output as many choices as possible starting from offset and return the number
- * of choices with a positive score. If the query is empty, all choices are
- * considered having a positive score.
+ * Print length - offset number of choices.
  */
-size_t
-print_choices(size_t offset, size_t selection)
+void
+print_choices(size_t offset, size_t length, size_t selection)
 {
-	const struct choice	*choice;
+	const struct choice	*c;
 	size_t			 i;
 
-	for (i = offset; i < choices.length; i++) {
-		choice = choices.v + i;
-		if (choice->score == 0 && query_length > 0)
+	for (i = offset; i < length; i++) {
+		if (i - offset >= choices_lines)
 			break;
 
-		if (i - offset < choices_lines)
-			print_line(choice_string(choice), choice->length,
-			    i == selection, choice->match_start,
-			    choice->match_end);
+		c = choices.v + i;
+		print_line(choice_string(c), c->length, i == selection,
+		    c->match_start, c->match_end);
 	}
 
 	if (i - offset < choices.length && i - offset < choices_lines) {
@@ -985,8 +989,6 @@ print_choices(size_t offset, size_t selection)
 		tty_putp(tty_parm1(parm_up_cursor,
 			    i < choices_lines ? i : choices_lines), 1);
 	}
-
-	return i;
 }
 
 enum key
