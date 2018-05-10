@@ -99,13 +99,15 @@ Internal documentation on crafting a release.
    * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
    * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)
    * Fredrik Fornwall <fredrik@fornwall.net> (Homebrew)
+   * Jenz Guenther <dbotw@gmx.net> (NetBSD)
    * Neel Chauhan <neel@neelc.org> (FreeBSD)
    * 6c37 team <camille@airmail.cc> (CRUX)
 
    ```
    To: pick-maintainers@calleerlandsson.com
    Bcc: evaggelos.avgerinos@gmail.com, xuchunyang.me@gmail.com,
-        fredrik@fornwall.net, neel@neelc.org, camille@airmail.cc
+        fredrik@fornwall.net, dbotw@gmx.net, neel@neelc.org,
+        camille@airmail.cc
    Subject: pick 0.0.2
    ```
 

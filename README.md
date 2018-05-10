@@ -74,6 +74,11 @@ make install clean
 ```sh
 pkg install pick
 ```
+### NetBSD via pkgsrc
+
+```sh
+pkg_add pick
+```
 
 ### OpenBSD
 
