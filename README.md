@@ -107,4 +107,4 @@ Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 [pick]: https://mptre.github.io/pick/
 [release]: https://github.com/mptre/pick/releases/
 [ubuntu]: https://packages.ubuntu.com/xenial/pick
-[void]: https://github.com/voidlinux/void-packages/blob/master/srcpkgs/pick/template
+[void]: https://github.com/void-linux/void-packages/blob/master/srcpkgs/pick/template
