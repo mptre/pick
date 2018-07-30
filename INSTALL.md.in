@@ -3,15 +3,15 @@ pick installation
 
 1. Download and extract the latest release:
 
-        curl -L -O https://github.com/mptre/pick/releases/download/v@PACKAGE_VERSION@/pick-@PACKAGE_VERSION@.tar.gz
-        tar -zxvf pick-@PACKAGE_VERSION@.tar.gz
-        cd pick-@PACKAGE_VERSION@
+   curl -LO https://github.com/mptre/pick/releases/download/v@PACKAGE_VERSION@/pick-@PACKAGE_VERSION@.tar.gz
+   tar -zxvf pick-@PACKAGE_VERSION@.tar.gz
+   cd pick-@PACKAGE_VERSION@
 
-2. Configure the distribution.
+2. Configure the distribution:
 
-        ./configure
+   ./configure
 
 3. Build and install pick:
 
-        make
-        sudo make install
+   make
+   sudo make install
