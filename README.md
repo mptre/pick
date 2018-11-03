@@ -104,7 +104,7 @@ Copyright (c) 2017 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 [debian]: https://packages.debian.org/stable/misc/pick
 [gentoo]: https://packages.gentoo.org/packages/sys-apps/pick
 [pick-vim]: https://github.com/calleerlandsson/pick.vim
-[pick]: https://mptre.github.io/pick/
+[pick]: https://www.basename.se/pick/
 [release]: https://github.com/mptre/pick/releases/
 [ubuntu]: https://packages.ubuntu.com/xenial/pick
 [void]: https://github.com/void-linux/void-packages/blob/master/srcpkgs/pick/template
