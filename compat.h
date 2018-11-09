@@ -9,7 +9,7 @@
 #define __dead __dead2
 #endif /* __FreeBSD__ */
 
-#if defined(__linux__) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__sun__) || defined(__CYGWIN__)
 #ifndef __dead
 #ifdef __GNUC__
 #define __dead		__attribute__((__noreturn__))
@@ -17,7 +17,7 @@
 #define __dead
 #endif
 #endif
-#endif /* __linux__ || __CYGWIN__ */
+#endif /* __linux__ || __sun__ || __CYGWIN__ */
 
 #ifndef HAVE_REALLOCARRAY
 
