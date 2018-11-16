@@ -33,8 +33,20 @@ stdin:
 stdout:
 💩
 
-description: changing the query resets vertical scroll
+description: changing the query does not reset the selection if it is still in bounds
 keys: \016 \016 \016 \016 \016 0 \n #DOWN ENTER
+env: LINES=5
+stdin:
+01
+02
+03
+04
+05
+stdout:
+05
+
+description: changing the query does reset the selection if it is out of bounds
+keys: \016 \016 \016 \016 \016 1 \n #DOWN ENTER
 env: LINES=5
 stdin:
 01

@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define if poll does not support character devices */
+#undef HAVE_BROKEN_POLL
+
 /* Define if ncursesw is available */
 #undef HAVE_NCURSESW_H
 
