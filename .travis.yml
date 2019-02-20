@@ -1,92 +1,51 @@
-# TODO: temporary work-around permission issue with Clang sanitizers.
-sudo: true
-dist: trusty
+sudo: false
+dist: xenial
 language: c
-env:
-  global:
-    - secure: "QI0qw+0hitEfPcGNrX8pjw7peRBlO204z7bmHWNsvg/pCkzFVsGPsMm2nijn0Ey8gn8HyRR6wD6F4i4n3NTh2D4E03TWZmNtfxWjKqmalXQmQswdkByJeC+H211MQMrcQg8MaXPNbFzFeDWWn+YIkNbYySJO8IjYNfpGwxQ51kU="
 matrix:
   include:
     - os: linux
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined -Werror'
+      env:
+        - T=linux-clang-asan
+        - CFLAGS=-Werror
+        - DEBUG='-g -fsanitize=address -fno-sanitize-recover=all'
+
     - os: linux
-      compiler: clang-5.0
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined -Werror'
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-5.0
-          packages:
-            - clang-5.0
-    - os: linux
-      compiler: clang-6.0
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -fsanitize=undefined -Werror'
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-6.0
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-6.0
+      compiler: clang
+      env:
+        - T=linux-clang-ubsan
+        - CFLAGS=-Werror
+        - DEBUG='-g -fsanitize=undefined -fno-sanitize-recover=all'
+
     - os: linux
       compiler: gcc
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -Werror'
+      env:
+        - T=linux-gcc-asan
+        - CFLAGS=-Werror
+        - DEBUG='-g -fsanitize=address -fno-sanitize-recover=all'
+
+    - os: linux
+      compiler: gcc
+      env:
+        - T=linux-gcc-ubsan
+        - CFLAGS=-Werror
+        - DEBUG='-g -fsanitize=undefined -fno-sanitize-recover=all'
+
     - os: osx
       compiler: clang
-      env: BUILD_TYPE=default CFLAGS='-fsanitize=address -Werror'
-    - os: linux
-      compiler: clang
-      env: BUILD_TYPE=coverity
-    - os: linux
-      env: BUILD_TYPE=cppcheck
-      addons:
-        apt:
-          packages:
-            - cppcheck
-    - os: osx
-      env: BUILD_TYPE=mandoc
-before_install:
-  - |
-    # Don't trigger Coverity unless it's a coverity build.
-    if [ $BUILD_TYPE != coverity ]; then
-      COVERITY_SCAN_BRANCH_PATTERN='^$'
-    fi
-    # Disable all builds while submitting to Coverity.
-    if [ $TRAVIS_BRANCH = coverity_scan ]; then
-      BUILD_TYPE=unknown
-    fi
-install:
-  - |
-    if [ $BUILD_TYPE = mandoc ]; then
-      brew update
-      brew install mandoc
-    fi
+      env:
+        - T=macos-clang
+        - CFLAGS=-Werror
+
 script:
   - |
     (
     set -ex
-    case $BUILD_TYPE in
-    default)
-      ./autogen.sh
-      ./configure || (cat config.log; exit 1)
-      make
-      make distcheck || (find . -name test-suite.log | xargs -t cat; exit 1)
-      ;;
-    cppcheck)
-      git ls-files | grep '\.c$' | cppcheck --quiet --error-exitcode=1 --file-list=-
-      ;;
-    mandoc)
-      mandoc -Tlint -Wstyle pick.1
+    case $T in
+    *)
+      ./configure || true
+      cat config.log
+      make test
       ;;
     esac
     )
-addons:
-  coverity_scan:
-    project:
-      name: mptre/pick
-      description: a fuzzy search tool for the command-line
-    notification_email: pick-maintainers@calleerlandsson.com
-    build_command_prepend: ./autogen.sh; ./configure
-    build_command: make
-    branch_pattern: coverity_scan
