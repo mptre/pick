@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS=foreign
 
-AM_CFLAGS=-Wall -Wextra
-AM_CPPFLAGS=-D_GNU_SOURCE
+AM_CFLAGS=-Wall
+AM_CPPFLAGS=-D_GNU_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE
 
 bin_PROGRAMS=pick
 pick_SOURCES=pick.c compat-reallocarray.c compat-strtonum.c compat.h

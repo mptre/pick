@@ -5,6 +5,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_CHECK_FUNCS([pledge reallocarray strtonum])
+AC_SEARCH_LIBS([err], [bsd])
 AC_SEARCH_LIBS([setupterm], [curses], [], [
   AC_SEARCH_LIBS([setupterm], [ncursesw],
     [AC_DEFINE([HAVE_NCURSESW_H], [1], [Define if ncursesw is available])],

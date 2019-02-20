@@ -674,7 +674,9 @@ tty_init(int doinit)
 	new_attributes.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 	new_attributes.c_cc[VMIN] = 1;
 	new_attributes.c_cc[VTIME] = 0;
+#ifdef VDISCARD
 	new_attributes.c_cc[VDISCARD] = _POSIX_VDISABLE;
+#endif
 	tcsetattr(fileno(tty_in), TCSANOW, &new_attributes);
 
 	if (doinit && (tty_out = fopen("/dev/tty", "w")) == NULL)
