@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/wait.h>
@@ -12,8 +14,6 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-
-#include "compat.h"
 
 __dead static void	 child(int, int);
 static void		 parent(int, int, const char *);
@@ -36,12 +36,16 @@ static int		  gotsig;
 int
 main(int argc, char *argv[])
 {
+	char	*pick = NULL;
 	char	*keys = "";
 	pid_t	 pid;
 	int	 c, i, master, slave, status;
 
-	while ((c = getopt(argc, argv, "k:")) != -1)
+	while ((c = getopt(argc, argv, "b:k:")) != -1)
 		switch (c) {
+		case 'b':
+			pick = optarg;
+			break;
 		case 'k':
 			keys = parsekeys(optarg);
 			break;
@@ -50,11 +54,13 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
+	if (pick == NULL)
+		usage();
 
 	/* Ensure room for program and null terminator. */
 	if ((pickargv = calloc(argc + 2, sizeof(const char **))) == NULL)
 		err(1, NULL);
-	pickargv[0] = "./pick";
+	pickargv[0] = pick;
 	for (i = 0; i < argc; i++)
 		pickargv[i + 1] = argv[i];
 
@@ -92,7 +98,7 @@ main(int argc, char *argv[])
 __dead static void
 usage(void)
 {
-	fprintf(stderr, "usage: pick-test [-k path] [-- argument ...]\n");
+        fprintf(stderr, "usage: pick-test -b binary [-k path] [-- arg ...]\n");
 	exit(1);
 }
 

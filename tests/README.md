@@ -8,20 +8,20 @@ This allows sending keyboard input sequences and reading the output on exit.
 The recommended way to run the test suite is using `make(1)`:
 
 ```sh
-$ make check || cat test-suite.log
+$ make test
 ```
 
 Use the `-j` option with a value matching the number of cores on your machine to
 speed-up the process:
 
 ```sh
-$ make -jN check || cat test-suite.log
+$ make -jN test
 ```
 
 To run one or more specific tests:
 
 ```sh
-$ env TESTS=tests/01.t make -e check || cat test-suite.log
+$ env TESTS=01.t make -e test
 ```
 
 ## Format of test files

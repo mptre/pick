@@ -89,11 +89,10 @@ pkg_add pick
 
 ### From source
 
-Download the latest [release] and follow the bundled instructions in
-`INSTALL.md`.
-
-If you want to try the latest unreleased version,
-follow the instructions in [CONTRIBUTING.md][current].
+```sh
+./configure
+make install
+```
 
 ## Copyright
 

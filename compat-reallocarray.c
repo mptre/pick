@@ -1,12 +1,5 @@
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
-/*
- * This file needs a "translation unit" - it needs anything for the compiler to
- * compile. Since the point of this file is to not exist, declare an unused
- * variable here.
- */
 int unused;
 
 #ifndef HAVE_REALLOCARRAY

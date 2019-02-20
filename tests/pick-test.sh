@@ -10,7 +10,7 @@ strip() {
 run_test() {
 	local _cause= _diff=$stdout
 
-	env $env tests/pick-test -k $input -- $args <$stdin >$out 2>&1; e=$?
+	env $env "$1" -b "$PICK" -k $input -- $args <$stdin >$out 2>&1; e=$?
 
 	if [ -s "$stdout" ] && ! cmp -s "$stdout" "$out"; then
 		_cause="wrong output"
@@ -30,21 +30,20 @@ run_test() {
 }
 
 usage() {
-	echo "usage: sh tests/pick-test.sh [-e env] file ..." 1>&2
+	echo "usage: sh pick-test.sh -b binary file ..." 1>&2
 	exit 1
 }
 
-# Default environment applied to all test cases.
-defenv=
+picktest=""
 
-while getopts "e:" opt; do
+while getopts "b:" opt; do
 	case "$opt" in
-	e)	defenv="${defenv} ${OPTARG}";;
+	b)	picktest="$OPTARG";;
 	*)	usage;;
 	esac
 done
 shift $((OPTIND - 1))
-[ $# -eq 0 ] && usage
+{ [ $# -eq 0 ] || [ -z "$picktest" ]; } && usage
 
 nerr=0
 
@@ -60,7 +59,7 @@ for f; do
 	while IFS=: read -r key val; do
 		if [ -z "$key" ]; then
 			env="${defenv} ${env}"
-			run_test || nerr=$((nerr + 1))
+			run_test "$picktest" || nerr=$((nerr + 1))
 
 			# Reset environment.
 			args= description= env= exit= keys=

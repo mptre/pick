@@ -11,9 +11,8 @@ you agree to abide by its [Code of Conduct][conduct].
 2. Build and make sure all tests pass:
 
    ```sh
-   $ ./autogen.sh
    $ ./configure
-   $ make check
+   $ make test
    ```
 
 3. Make your changes.
@@ -56,45 +55,31 @@ Internal documentation on crafting a release.
 2. Update `CHANGELOG.md` and commit the change:
 
    ```sh
-   $ git commit -m 'Update CHANGELOG'
+   $ git commit -m 'update changelog'
    ```
 
-3. Update the version in `configure.ac`:
-
-   ```
-   AC_INIT([pick], [0.0.2], [pick-maintainers@calleerlandsson.com])
-   ```
-
-   ... and commit the change:
+3. Update the version in `Makefile` and commit the change:
 
    ```sh
-   $ git commit -m 'Update version to 0.0.2'
+   $ git commit -m 'update version to 0.0.2'
    ```
 
 4. Create and verify the tarball:
 
    ```sh
-   $ make distcheck
-   $ tar tvzf pick-0.0.2.tar.gz
+   $ make dist
    ```
 
-5. Create and verify checksum:
-
-   ```sh
-   $ sha256 pick-0.0.2.tar.gz >pick-0.0.2.sha256
-   $ sha256 -c pick-0.0.2.sha256
-   ```
-
-6. Tag and push:
+5. Tag and push:
 
    ```sh
    $ git tag v0.0.2
    $ git push --tags origin master
    ```
 
-7. [Announce the release on GitHub][announce].
+6. [Announce the release on GitHub][announce].
 
-8. Contact package maintainers:
+7. Contact package maintainers:
 
    * Aggelos Avgerinos <evaggelos.avgerinos@gmail.com> (Debian & Ubuntu)
    * Chunyang Xu <xuchunyang.me@gmail.com> (MacPorts)

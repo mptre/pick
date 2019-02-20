@@ -1,0 +1,227 @@
+#!/bin/sh
+
+set -e
+
+atexit() {
+	err=$?
+
+	# Dump contents of generated files to config.log.
+	set -x
+	cat config.h
+	cat Makefile.inc
+	rm -f "$@"
+	[ $err -ne 0 ] && fatal
+	exit 0
+}
+
+compile() {
+	$CC -Werror -o /dev/null -x c - $LDFLAGS
+}
+
+fatal() {
+	[ $# -gt 0 ] && echo "fatal: ${*}"
+	exec 1>&3 2>&4
+	cat config.log
+	return 1
+}
+
+headers() {
+	cat >"$TMP"
+	[ -s "$TMP" ] || return 0
+
+	xargs printf '#include <%s>\n' <"$TMP"
+}
+
+makevar() {
+	make -sf - <<EOF
+all:
+	@echo \${${1}}
+EOF
+}
+
+check_curses() {
+	compile <<-EOF
+	#include <curses.h>
+	#include <term.h>
+
+	int main(void) {
+		return !(setupterm(NULL, 1, NULL) != ERR);
+	}
+	EOF
+}
+
+check_dead() {
+	compile <<-EOF
+	#include <stdlib.h>
+
+	${1} int dead(void);
+
+	int main(void) {
+		return 0;
+	}
+	EOF
+}
+
+# Check if wcwidth(3) is hidden behind _GNU_SOURCE.
+check_gnu_source() {
+	compile <<-EOF && return 1
+	#include <wchar.h>
+
+	int main(void) {
+		wchar_t c = 0;
+		return !(wcwidth(c) == 0);
+	}
+	EOF
+
+	compile <<-EOF
+	#define _GNU_SOURCE
+	#include <wchar.h>
+
+	int main(void) {
+		wchar_t c = 0;
+		return !(wcwidth(c) == 0);
+	}
+	EOF
+}
+
+
+check_malloc_options() {
+	case "$(uname -s)" in
+	OpenBSD)	echo "RS";;
+	esac
+}
+
+check_pledge() {
+	compile <<-EOF
+	#include <unistd.h>
+
+	int main(void) {
+		return !(pledge("stdio", NULL) == 0);
+	}
+	EOF
+}
+
+check_reallocarray() {
+	compile <<-EOF
+	#include <stdlib.h>
+
+	int main(void) {
+		return !(reallocarray(NULL, 1, 1) != NULL);
+	}
+	EOF
+}
+
+check_strtonum() {
+	compile <<-EOF
+	#include <stdlib.h>
+
+	int main(void) {
+		return !(strtonum("1", 1, 2, NULL) != 0);
+	}
+	EOF
+}
+
+HAVE_CURSES=0
+HAVE_DEAD2=0
+HAVE_DEAD=0
+HAVE_GNU_SOURCE=0
+HAVE_NCURSESW=0
+HAVE_NORETURN=0
+HAVE_PLEDGE=0
+HAVE_REALLOCARRAY=0
+HAVE_STRTONUM=0
+
+CC=$(makevar CC)
+CFLAGS=$(makevar CFLAGS)
+CFLAGS="${CFLAGS} ${DEBUG} -Wall -Wextra -MD -MP"
+INSTALL=$(makevar INSTALL)
+
+: "${CPPFLAGS:=}"
+: "${DEBUG:=}"
+: "${INSTALL:=install}"
+: "${LDFLAGS:=}"
+
+exec 3>&1 4>&2
+exec 1>config.log 2>&1
+
+TMP=$(mktemp -t configure.XXXXXX)
+trap "atexit $TMP" EXIT
+
+# At this point, all variables used must be defined.
+set -u
+# Enable tracing, will end up in config.log.
+set -x
+
+if (LDFLAGS=-lcurses check_curses); then
+	HAVE_CURSES=1
+	LDFLAGS="${LDFLAGS} -lcurses"
+elif (LDFLAGS=-lncursesw check_curses); then
+	HAVE_NCURSESW=1
+	LDFLAGS="${LDFLAGS} -lncursesw"
+else
+	fatal "curses library not found"
+fi
+
+check_dead __dead && HAVE_DEAD=1
+check_dead __dead2 && HAVE_DEAD2=1
+check_dead '__attribute__((__noreturn__))' && HAVE_NORETURN=1
+check_gnu_source && HAVE_GNU_SOURCE=1
+check_pledge && HAVE_PLEDGE=1
+check_reallocarray && HAVE_REALLOCARRAY=1
+check_strtonum && HAVE_STRTONUM=1
+
+MALLOC_OPTIONS=$(check_malloc_options)
+
+# Order is important, must be present before any includes.
+(
+[ $HAVE_GNU_SOURCE -eq 1 ] && printf '#define _GNU_SOURCE\n'
+
+# Ensure this subshell always exits 0.
+true
+) >config.h
+
+# Headers needed for function prototypes and curses.
+(
+[ $HAVE_CURSES -eq 1 ] && echo curses.h term.h
+[ $HAVE_NCURSESW -eq 1 ] && echo ncursesw/curses.h ncursesw/term.h
+[ $HAVE_PLEDGE -eq 0 ] && echo stdlib.h
+[ $HAVE_REALLOCARRAY -eq 0 ] && echo stdlib.h
+[ $HAVE_STRTONUM -eq 0 ] && echo stdlib.h
+) | sort | uniq | headers >>config.h
+
+(
+[ $HAVE_PLEDGE -eq 1 ] && printf '#define HAVE_PLEDGE\t1\n'
+[ $HAVE_REALLOCARRAY -eq 1 ] && printf '#define HAVE_REALLOCARRAY\t1\n'
+[ $HAVE_STRTONUM -eq 1 ] && printf '#define HAVE_STRTONUM\t1\n'
+
+if [ $HAVE_DEAD -eq 1 ]; then
+	:
+elif [ $HAVE_DEAD2 -eq 1 ]; then
+	printf '#define __dead __dead2\n'
+elif [ $HAVE_NORETURN -eq 1 ]; then
+	printf '#define __dead __attribute__((__noreturn__))\n'
+else
+	printf '#define __dead\n'
+fi
+
+[ $HAVE_PLEDGE -eq 0 ] && \
+	printf 'int pledge(const char *, const char *);\n'
+[ $HAVE_REALLOCARRAY -eq 0 ] && \
+	printf 'void *reallocarray(void *, size_t, size_t);\n'
+[ $HAVE_STRTONUM -eq 0 ] && \
+	printf 'long long strtonum(const char *, long long, long long, const char **);\n'
+
+# Ensure this subshell always exits 0.
+true
+) >>config.h
+
+# Use echo to normalize whitespace.
+cat <<EOF >Makefile.inc
+CC=		$(echo $CC)
+CFLAGS=		$(echo $CFLAGS)
+CPPFLAGS=	$(echo $CPPFLAGS)
+DEBUG=		$(echo $DEBUG)
+INSTALL=	$(echo $INSTALL)
+LDFLAGS=	$(echo $LDFLAGS)
+MALLOC_OPTIONS=	$(echo $MALLOC_OPTIONS)
+EOF

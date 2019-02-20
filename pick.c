@@ -1,6 +1,4 @@
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <sys/ioctl.h>
 
@@ -17,16 +15,6 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-
-#ifdef HAVE_NCURSESW_H
-#include <ncursesw/curses.h>
-#include <ncursesw/term.h>
-#else
-#include <curses.h>
-#include <term.h>
-#endif
-
-#include "compat.h"
 
 #define tty_putp(capability, fatal) do {				\
 	if (tputs((capability), 1, tty_putc) == ERR && (fatal))		\
@@ -124,10 +112,8 @@ main(int argc, char *argv[])
 
 	setlocale(LC_CTYPE, "");
 
-#ifdef HAVE_PLEDGE
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
-#endif
 
 	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
 		switch (c) {
@@ -156,7 +142,7 @@ main(int argc, char *argv[])
 			sort = 0;
 			break;
 		case 'v':
-			puts(PACKAGE_VERSION);
+			puts(VERSION);
 			exit(0);
 		case 'x':
 			use_alternate_screen = 1;
@@ -181,10 +167,8 @@ main(int argc, char *argv[])
 	input = get_choices();
 	tty_init(1);
 
-#ifdef HAVE_PLEDGE
 	if (pledge("stdio tty", NULL) == -1)
 		err(1, "pledge");
-#endif
 
 	choice = selected_choice();
 	tty_restore(1);
