@@ -141,6 +141,7 @@ INSTALL=$(makevar INSTALL)
 : "${INSTALL:=install}"
 : "${LDFLAGS:=}"
 : "${PREFIX:=/usr/local}"
+: "${MANDIR:=${PREFIX}/man}"
 
 exec 3>&1 4>&2
 exec 1>config.log 2>&1
@@ -227,4 +228,5 @@ LDFLAGS=	$(echo $LDFLAGS)
 MALLOC_OPTIONS=	$(echo $MALLOC_OPTIONS)
 
 PREFIX?=	$(echo $PREFIX)
+MANDIR?=	$(echo $MANDIR)
 EOF
