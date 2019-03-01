@@ -67,7 +67,7 @@ DISTFILES+=	tests/opt-x.t
 DISTFILES+=	tests/pick-test.c
 DISTFILES+=	tests/pick-test.sh
 
-PREFIX=	/usr/local
+PREFIX?=	/usr/local
 
 all: ${PROG}
 
