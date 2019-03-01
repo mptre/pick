@@ -68,6 +68,7 @@ DISTFILES+=	tests/pick-test.c
 DISTFILES+=	tests/pick-test.sh
 
 PREFIX?=	/usr/local
+MANDIR?=	${PREFIX}/share/man
 
 all: ${PROG}
 
@@ -100,8 +101,8 @@ distclean: clean
 install: ${PROG}
 	@mkdir -p ${DESTDIR}${PREFIX}/bin
 	${INSTALL} ${PROG} ${DESTDIR}${PREFIX}/bin
-	@mkdir -p ${DESTDIR}${PREFIX}/man/man1
-	${INSTALL} ${.CURDIR}/pick.1 ${DESTDIR}${PREFIX}/man/man1
+	@mkdir -p ${DESTDIR}${MANDIR}/man1
+	${INSTALL} ${.CURDIR}/pick.1 ${DESTDIR}${MANDIR}/man1
 .PHONY: install
 
 test: ${PROG}
