@@ -135,13 +135,16 @@ CC=$(makevar CC)
 CFLAGS=$(makevar CFLAGS)
 CFLAGS="${CFLAGS} ${DEBUG} -Wall -Wextra -MD -MP"
 INSTALL=$(makevar INSTALL)
+INSTALL_MAN=$(makevar INSTALL_MAN)
 
 : "${CPPFLAGS:=}"
 : "${DEBUG:=}"
-: "${INSTALL:=install}"
 : "${LDFLAGS:=}"
+
 : "${PREFIX:=/usr/local}"
 : "${MANDIR:=${PREFIX}/man}"
+: "${INSTALL:=install}"
+: "${INSTALL_MAN:=install -m 444}"
 
 exec 3>&1 4>&2
 exec 1>config.log 2>&1
@@ -223,10 +226,11 @@ CC=		$(echo $CC)
 CFLAGS=		$(echo $CFLAGS)
 CPPFLAGS=	$(echo $CPPFLAGS)
 DEBUG=		$(echo $DEBUG)
-INSTALL=	$(echo $INSTALL)
 LDFLAGS=	$(echo $LDFLAGS)
 MALLOC_OPTIONS=	$(echo $MALLOC_OPTIONS)
 
 PREFIX?=	$(echo $PREFIX)
 MANDIR?=	$(echo $MANDIR)
+INSTALL?=	$(echo $INSTALL)
+INSTALL_MAN?=	$(echo $INSTALL_MAN)
 EOF
