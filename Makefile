@@ -96,8 +96,8 @@ distclean: clean
 .PHONY: distclean
 
 install: ${PROG}
-	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	${INSTALL} ${PROG} ${DESTDIR}${PREFIX}/bin
+	@mkdir -p ${DESTDIR}${BINDIR}
+	${INSTALL} ${PROG} ${DESTDIR}${BINDIR}
 	@mkdir -p ${DESTDIR}${MANDIR}/man1
 	${INSTALL_MAN} ${.CURDIR}/pick.1 ${DESTDIR}${MANDIR}/man1
 .PHONY: install

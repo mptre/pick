@@ -142,6 +142,7 @@ INSTALL_MAN=$(makevar INSTALL_MAN)
 : "${LDFLAGS:=}"
 
 : "${PREFIX:=/usr/local}"
+: "${BINDIR:=${PREFIX}/bin}"
 : "${MANDIR:=${PREFIX}/man}"
 : "${INSTALL:=install}"
 : "${INSTALL_MAN:=install -m 444}"
@@ -229,7 +230,7 @@ DEBUG=		$(echo $DEBUG)
 LDFLAGS=	$(echo $LDFLAGS)
 MALLOC_OPTIONS=	$(echo $MALLOC_OPTIONS)
 
-PREFIX?=	$(echo $PREFIX)
+BINDIR?=	$(echo $BINDIR)
 MANDIR?=	$(echo $MANDIR)
 INSTALL?=	$(echo $INSTALL)
 INSTALL_MAN?=	$(echo $INSTALL_MAN)
