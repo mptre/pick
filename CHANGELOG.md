@@ -1,3 +1,23 @@
+# v3.0.1 - 2019-03-10
+
+## Bug fixes
+
+- Honor `PREFIX` during configure.
+  (adcba3c)
+  (Anton Lindqvist)
+
+- Honor `MANDIR` during configure and install.
+  (8c56f54)
+  (Aggelos Avgerinos)
+
+- Honor `INSTALL_MAN` during configure and install.
+  (869536f)
+  (Leonardo Taccari)
+
+- Honor `BINDIR` during configure and install.
+  (434c496)
+  (Anton Lindqvist)
+
 # v3.0.0 - 2019-02-27
 
 ## Changes
