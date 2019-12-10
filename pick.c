@@ -377,7 +377,8 @@ selected_choice(void)
 			break;
 		case INSERT:	/* Norton Commander (nc,mc,total-comander,dblcmd,krusader,...) */
 		case CTRL_T:	/* mark/unmark selection */
-			choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
+			if ( opt_mark )
+				choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
 			break;
 		case ALT_ENTER:
 			choices.v[choices.length].string = query;
