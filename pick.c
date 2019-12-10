@@ -25,6 +25,7 @@ enum key {
 	UNKNOWN,
 	ALT_ENTER,
 	BACKSPACE,
+	INSERT,
 	DEL,
 	ENTER,
 	CTRL_A,
@@ -33,6 +34,7 @@ enum key {
 	CTRL_K,
 	CTRL_L,
 	CTRL_O,
+	CTRL_T,
 	CTRL_U,
 	CTRL_W,
 	CTRL_Z,
@@ -54,7 +56,10 @@ struct choice {
 	ssize_t		 match_start;	/* inclusive match start offset */
 	ssize_t		 match_end;	/* exclusive match end offset */
 	double		 score;
+	int			mark;			/* is it marked? */
 };
+
+static int			opt_mark;	/* multiple choices option */
 
 static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
@@ -69,8 +74,14 @@ static int			 isword(const char *);
 static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
 static size_t			 print_choices(size_t, size_t);
+
+/* print_line's bit flags */
+#define PL_SOUT		0x01
+#define	PL_MARK		0x02
+
 static void			 print_line(const char *, size_t, int, ssize_t,
 				    ssize_t);
+
 static const struct choice	*selected_choice(void);
 static size_t			 skipescseq(const char *);
 static const char		*strcasechr(const char *, const char *);
@@ -106,7 +117,7 @@ main(int argc, char *argv[])
 {
 	const struct choice	*choice;
 	char			*input;
-	int			 c;
+	int			 c, inlen;
 	int			 output_description = 0;
 	int			 rc = 0;
 
@@ -115,7 +126,7 @@ main(int argc, char *argv[])
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 
-	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhomq:KSvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -150,6 +161,9 @@ main(int argc, char *argv[])
 		case 'X':
 			use_alternate_screen = 0;
 			break;
+		case 'm':
+			opt_mark = 1;				/* enable multiple selections */
+			break;
 		default:
 			usage(1);
 		}
@@ -165,6 +179,7 @@ main(int argc, char *argv[])
 	}
 
 	input = get_choices();
+	inlen = choices.length;
 	tty_init(1);
 
 	if (pledge("stdio tty", NULL) == -1)
@@ -173,10 +188,23 @@ main(int argc, char *argv[])
 	choice = selected_choice();
 	tty_restore(1);
 	if (choice != NULL) {
-		printf("%s\n", choice->string);
-		if (output_description)
-			printf("%s\n", choice->description);
-	} else {
+		if ( opt_mark ) {
+			for ( int i = 0; i < inlen; i ++ ) {
+				struct choice *c = &choices.v[i];
+				if ( c->mark ) {
+					printf("%s\n", c->string);
+					if (output_description)
+						printf("%s\n", c->description);
+					}
+				}
+			}
+		else {
+			printf("%s\n", choice->string);
+			if (output_description)
+				printf("%s\n", choice->description);
+			}
+		}
+	else {
 		rc = 1;
 	}
 
@@ -197,6 +225,7 @@ usage(int status)
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
+	    "    -m          enable multiple choices\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
@@ -252,6 +281,7 @@ get_choices(void)
 		choices.v[choices.length].match_start = -1;
 		choices.v[choices.length].match_end = -1;
 		choices.v[choices.length].score = 0;
+		choices.v[choices.length].mark = 0;
 
 		start = stop + 1;
 
@@ -319,7 +349,9 @@ selected_choice(void)
 			xscroll = cursor_position - tty_columns + 1;
 		else
 			xscroll = 0;
+
 		print_line(&query[xscroll], query_length - xscroll, 0, -1, -1);
+
 		if (dochoices) {
 			if (selection - yscroll >= choices_lines)
 				yscroll = selection - choices_lines + 1;
@@ -342,6 +374,10 @@ selected_choice(void)
 		case ENTER:
 			if (choices_count > 0)
 				return &choices.v[selection];
+			break;
+		case INSERT:	/* Norton Commander (nc,mc,total-comander,dblcmd,krusader,...) */
+		case CTRL_T:	/* mark/unmark selection */
+			choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
 			break;
 		case ALT_ENTER:
 			choices.v[choices.length].string = query;
@@ -759,7 +795,7 @@ tty_size(void)
 }
 
 void
-print_line(const char *str, size_t len, int standout,
+print_line(const char *str, size_t len, int flags,
     ssize_t enter_underline, ssize_t exit_underline)
 {
 	size_t		i;
@@ -767,7 +803,11 @@ print_line(const char *str, size_t len, int standout,
 	unsigned int	col;
 	int		nbytes, width;
 
-	if (standout)
+	if ( flags & PL_MARK ) { // *commander uses yellow...
+//		tty_putp(enter_bold_mode, 1);
+		tty_putp(tty_parm1(set_a_foreground, 3), 1);
+		}
+	if ( flags & PL_SOUT )
 		tty_putp(enter_standout_mode, 1);
 
 	col = i = 0;
@@ -849,10 +889,12 @@ print_choices(size_t offset, size_t selection)
 		if (choice->score == 0 && query_length > 0)
 			break;
 
-		if (i - offset < choices_lines)
+		if (i - offset < choices_lines) {
 			print_line(choice->string, choice->length,
-			    i == selection, choice->match_start,
-			    choice->match_end);
+				((i == selection) ? PL_SOUT : 0) |\
+				((choice->mark)   ? PL_MARK : 0),\
+				choice->match_start, choice->match_end);
+			}
 	}
 
 	if (i - offset < choices.length && i - offset < choices_lines) {
@@ -904,6 +946,7 @@ get_key(const char **key)
 		KEY(CTRL_K,	"\013"),
 		KEY(CTRL_L,	"\014"),
 		KEY(CTRL_O,	"\017"),
+		KEY(CTRL_T,	"\024"),
 		KEY(CTRL_U,	"\025"),
 		KEY(CTRL_W,	"\027"),
 		KEY(CTRL_W,	"\033\177"),
@@ -933,6 +976,8 @@ get_key(const char **key)
 		CAP(RIGHT,	"kcuf1"),
 		KEY(RIGHT,	"\006"),
 		KEY(RIGHT,	"\033OC"),
+		CAP(INSERT,		"kich1"),
+		KEY(INSERT,		"\033[2~"),
 		KEY(UNKNOWN,	NULL),
 	};
 	static unsigned char	buf[8];
