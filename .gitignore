@@ -1,3 +1,7 @@
 Makefile.inc
 config.h
 config.log
+*.o
+*.d
+pick
+		 
