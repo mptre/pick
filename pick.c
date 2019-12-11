@@ -59,6 +59,13 @@ struct choice {
 	int			mark;			/* is it marked? */
 };
 
+/* -- global options and states */
+static int			opt_mark;			/* multiple choices option */
+static int			opt_less;			/* less mode keys */
+static int			state_less_mode;	/* less-keys state: 0 = less, 1 = search */
+/* --- */
+
+/* -- key macros - begin */
 struct key_macro {
 	char	key;
 	char*	macro;
@@ -66,10 +73,7 @@ struct key_macro {
 #define MAX_MACROS 32
 static struct key_macro macros[MAX_MACROS];
 static int mc_count;
-
-static int			opt_mark;	/* multiple choices option */
-static int			opt_less;	/* less mode keys */
-static int			state_less_mode;	/* less-keys state: 0 = less, 1 = search */
+/* -- key macros - end */
 
 static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
@@ -85,7 +89,7 @@ static size_t			 min_match(const char *, size_t, ssize_t *,
 				    ssize_t *);
 static size_t			 print_choices(size_t, size_t);
 
-/* print_line's bit flags */
+/* -- print_line's bit flags */
 #define PL_SOUT		0x01
 #define	PL_MARK		0x02
 
@@ -165,6 +169,14 @@ main(int argc, char *argv[])
 		case 'v':
 			puts(VERSION);
 			exit(0);
+		case 'x':
+			use_alternate_screen = 1;
+			break;
+		case 'X':
+			use_alternate_screen = 0;
+			break;
+			
+		/* -- ndc options -- */
 		case 'k':
 			if ( optarg != NULL ) {
 				if ( optarg[1] == ':' ) {
@@ -179,18 +191,14 @@ main(int argc, char *argv[])
 				}
 			else err(1, "-k argument: missing");
 			break;
-		case 'x':
-			use_alternate_screen = 1;
-			break;
-		case 'X':
-			use_alternate_screen = 0;
-			break;
 		case 'm':
 			opt_mark = 1;				/* enable multiple selections */
 			break;
 		case 'l':
 			opt_less = 1;				/* enable less keys mode */
 			break;
+		/* --- */
+			
 		default:
 			usage(1);
 		}
@@ -246,18 +254,18 @@ __dead void
 usage(int status)
 {
 	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-l [-k key:macro]] [-m] [-q query]\n"
-	    "    -h          output this help message and exit\n"
-	    "    -v          output the version and exit\n"
-	    "    -K          disable toggling of keypad transmit mode\n"
-	    "    -S          disable sorting\n"
-	    "    -d          read and display descriptions\n"
-	    "    -o          output description of selected on exit\n"
-	    "    -m          enable multiple choices\n"
-	    "    -l          enable less keys mode\n"
-	    "    -k key:macro\n                         define macro for less-mode\n"
-	    "    -x          enable alternate screen\n"
-	    "    -X          disable alternate screen\n"
-	    "    -q query    supply an initial search query\n");
+	    "    -h              output this help message and exit\n"
+	    "    -v              output the version and exit\n"
+	    "    -K              disable toggling of keypad transmit mode\n"
+	    "    -S              disable sorting\n"
+	    "    -d              read and display descriptions\n"
+	    "    -o              output description of selected on exit\n"
+	    "    -m              enable multiple choices\n"
+	    "    -l              enable less keys mode\n"
+	    "    -k key:macro    define macro for less-mode\n"
+	    "    -x              enable alternate screen\n"
+	    "    -X              disable alternate screen\n"
+	    "    -q query        supply an initial search query\n");
 
 	exit(status);
 }
