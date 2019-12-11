@@ -60,6 +60,8 @@ struct choice {
 };
 
 static int			opt_mark;	/* multiple choices option */
+static int			opt_less;	/* less mode keys */
+static int			state_less_mode;	/* less-keys state: 0 = less, 1 = search */
 
 static int			 choicecmp(const void *, const void *);
 static void			 delete_between(char *, size_t, size_t, size_t);
@@ -126,7 +128,7 @@ main(int argc, char *argv[])
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 
-	while ((c = getopt(argc, argv, "dhomq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhomlq:KSvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -163,6 +165,9 @@ main(int argc, char *argv[])
 			break;
 		case 'm':
 			opt_mark = 1;				/* enable multiple selections */
+			break;
+		case 'l':
+			opt_less = 1;				/* enable less keys mode */
 			break;
 		default:
 			usage(1);
@@ -218,7 +223,7 @@ main(int argc, char *argv[])
 __dead void
 usage(int status)
 {
-	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-l] [-m] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -K          disable toggling of keypad transmit mode\n"
@@ -226,6 +231,7 @@ usage(int status)
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
 	    "    -m          enable multiple choices\n"
+	    "    -l          enable less keys mode\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
@@ -506,6 +512,31 @@ selected_choice(void)
 			yscroll = selection = 0;
 			break;
 		case PRINTABLE:
+			if ( opt_less && state_less_mode == 0 ) {
+				switch ( buf[0] ) {
+				case 'q': return NULL;
+				case '/': state_less_mode = 1; break;
+				case 'g':
+					yscroll = selection = 0;
+					break;
+				case 'G':
+					if (choices_count > 0)
+						selection = choices_count - 1;
+					break;
+				case 't':
+					if ( opt_mark )
+						choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
+					break;
+					}
+				break;
+				}
+			else if ( opt_less ) {
+				if ( buf[0] == '\033' || buf[0] == '\n' ) {
+					state_less_mode = 0;
+					break;
+					}
+				}
+			
 			length = strlen(buf);
 
 			if (query_length + length >= query_size) {
