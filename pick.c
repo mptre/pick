@@ -378,6 +378,12 @@ selected_choice(void)
 
 		switch (get_key(&buf)) {
 		case ENTER:
+			if ( opt_less ) {
+				if ( state_less_mode == 1 ) {
+					state_less_mode = 0;
+					break;
+					}
+				}
 			if (choices_count > 0)
 				return &choices.v[selection];
 			break;
@@ -512,33 +518,38 @@ selected_choice(void)
 			yscroll = selection = 0;
 			break;
 		case PRINTABLE:
-			if ( opt_less && state_less_mode == 0 ) {
-				switch ( buf[0] ) {
-				case 'q': return NULL;
-				case '/': state_less_mode = 1; break;
-				case 'g':
-					yscroll = selection = 0;
-					break;
-				case 'G':
-					if (choices_count > 0)
-						selection = choices_count - 1;
-					break;
-				case 't':
-					if ( opt_mark )
-						choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
-					break;
+			length = strlen(buf);
+
+			if ( opt_less ) {
+				if ( state_less_mode == 0 ) {
+					switch ( buf[0] ) {
+					case 'q': return NULL;
+					case '/': state_less_mode = 1; break;
+					case 'g':
+						yscroll = selection = 0;
+						break;
+					case 'G':
+						if (choices_count > 0)
+							selection = choices_count - 1;
+						break;
+					case 't':
+						if ( opt_mark )
+							choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
+						break;
+					default:
+						if ( buf[0] == '\033' && length == 1 )
+							return NULL;
+						}
+					continue;
 					}
-				break;
-				}
-			else if ( opt_less ) {
-				if ( buf[0] == '\033' || buf[0] == '\n' ) {
-					state_less_mode = 0;
-					break;
+				else {
+					if ( (buf[0] == '\033' && length == 1) || buf[0] == '\n' ) {
+						state_less_mode = 0;
+						continue;
+						}
 					}
 				}
 			
-			length = strlen(buf);
-
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
