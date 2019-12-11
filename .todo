@@ -3,4 +3,7 @@
     <note priority="medium" time="1576038018">
         if there is /usr/local/share/man prefer it instead of /usr/local/man
     </note>
+    <note priority="medium" time="1576038400">
+        man page needs update
+    </note>
 </todo>
