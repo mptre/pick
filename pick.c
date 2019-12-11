@@ -59,6 +59,14 @@ struct choice {
 	int			mark;			/* is it marked? */
 };
 
+struct key_macro {
+	char	key;
+	char*	macro;
+	};
+#define MAX_MACROS 32
+static struct key_macro macros[MAX_MACROS];
+static int mc_count;
+
 static int			opt_mark;	/* multiple choices option */
 static int			opt_less;	/* less mode keys */
 static int			state_less_mode;	/* less-keys state: 0 = less, 1 = search */
@@ -118,7 +126,7 @@ int
 main(int argc, char *argv[])
 {
 	const struct choice	*choice;
-	char			*input;
+	char		*input;
 	int			 c, inlen;
 	int			 output_description = 0;
 	int			 rc = 0;
@@ -128,7 +136,7 @@ main(int argc, char *argv[])
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 
-	while ((c = getopt(argc, argv, "dhomlq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhomlk:q:KSvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -157,6 +165,20 @@ main(int argc, char *argv[])
 		case 'v':
 			puts(VERSION);
 			exit(0);
+		case 'k':
+			if ( optarg != NULL ) {
+				if ( optarg[1] == ':' ) {
+					if ( mc_count < MAX_MACROS ) {
+						macros[mc_count].key   = optarg[0];
+						macros[mc_count].macro = strdup(optarg+2);
+						mc_count ++;
+						}
+					else err(1, "-k argument: macros limit reached");
+					}
+				else err(1, "-k argument: syntax error");
+				}
+			else err(1, "-k argument: missing");
+			break;
 		case 'x':
 			use_alternate_screen = 1;
 			break;
@@ -223,7 +245,7 @@ main(int argc, char *argv[])
 __dead void
 usage(int status)
 {
-	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-l] [-m] [-q query]\n"
+	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-l [-k key:macro]] [-m] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -K          disable toggling of keypad transmit mode\n"
@@ -232,6 +254,7 @@ usage(int status)
 	    "    -o          output description of selected on exit\n"
 	    "    -m          enable multiple choices\n"
 	    "    -l          enable less keys mode\n"
+	    "    -k key:macro\n                         define macro for less-mode\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
@@ -315,6 +338,106 @@ eager_strpbrk(const char *string, const char *separators)
 		ptr = tmp_ptr++;
 
 	return ptr;
+}
+
+/*
+ * Returns a new allocated string with den POS'th word or NULL
+ */
+char *getword(const char *source, int pos)
+{
+	const char *p = source, *ps;
+	int	count = 0;
+
+	while ( isspace(*p) ) p ++;
+	ps = p;
+	while ( *p ) {
+		if ( isspace(*p) ) {
+			count ++;
+			if ( count == pos ) { // found
+				char *new_str = (char *) malloc((p-ps)+1);
+				char *t;
+				strncpy(new_str, ps, p-ps);
+				new_str[p-ps] = '\0';
+				t = new_str;
+				while ( *t ) {
+					if ( isspace(*t) ) {
+						*t = '\0';
+						break;
+						}
+					t ++;
+					}
+				return new_str; // found
+				}
+			else {
+				// next word
+				while ( *p && !isspace(*p) ) p ++;
+				while ( isspace(*p) ) p ++;
+				ps = p;
+				}
+			}
+		else
+			p ++;
+		}
+	if ( strlen(ps) ) {
+		if ( (count + 1) == pos )
+			return strdup(ps); // it is the last word
+		}
+	return NULL; // not found
+}
+
+/*
+ * Expand macro: Returns a newly allocated string with the expanded text
+ * %[1-9] = the nth word
+ * %0 = the whole "key"
+ */
+char *mac_expand(const char *source, const char *key)
+{
+	const char *p  = source;
+	int			ls = strlen(source);
+	int			lk = strlen(key);
+	int			sz = ls + 1;
+	char		*buf = (char *) malloc(sz);
+	char		*t;
+
+	t = buf;
+	while ( *p ) {
+		if ( *p == '%' ) {
+			if ( *(p+1) == '0' ) {
+				size_t dif = p - source;
+				sz += lk;
+				buf = (char *) realloc(buf, sz);
+				t = buf + dif;
+				*t = '\0';
+				strcat(t, key);
+				t += lk;
+				p ++;
+				}
+			else if ( isdigit(*(p+1)) ) {
+				int	n = p[1] - 48;
+				char *w = getword(key, n);
+				if ( w ) {
+					size_t dif = p - source;
+					int  lw = strlen(w);
+					
+					sz += lw;
+					buf = (char *) realloc(buf, sz);
+					t = buf + dif;
+					*t = '\0';
+					strcat(t, w);
+					t += lw;
+					free(w);
+					}
+				p ++;
+				}
+			else
+				*t ++ = *p;
+			}
+		else
+			*t ++ = *p;
+		p ++;
+		}
+	*t = '\0';
+	return buf;
 }
 
 const struct choice *
@@ -522,6 +645,17 @@ selected_choice(void)
 
 			if ( opt_less ) {
 				if ( state_less_mode == 0 ) {
+					int		i;
+					
+					for ( i = 0; i < mc_count; i ++ ) {
+						if ( buf[0] == macros[i].key ) {
+							char *mac = mac_expand(macros[i].macro, choices.v[selection].string);
+							system(mac);
+							free(mac);
+							break;
+							}
+						}
+					
 					switch ( buf[0] ) {
 					case 'q': return NULL;
 					case '/': state_less_mode = 1; break;
@@ -847,7 +981,7 @@ print_line(const char *str, size_t len, int flags,
 	int		nbytes, width;
 
 	if ( flags & PL_MARK ) { // *commander uses yellow...
-//		tty_putp(enter_bold_mode, 1);
+//		tty_putp(enter_bold_mode, 1);	// it works but i liked without it
 		tty_putp(tty_parm1(set_a_foreground, 3), 1);
 		}
 	if ( flags & PL_SOUT )
