@@ -16,6 +16,11 @@
 #include <wchar.h>
 #include <wctype.h>
 
+static int			opt_mark;			/* option: multiple choices */
+/* multiple choices: print_line now takes bit-flags instead of boolean standout */
+#define PL_STDOUT 0x01	/* standout flag */
+#define PL_MARKED 0x02	/* marked item */
+
 #define tty_putp(capability, fatal) do {				\
 	if (tputs((capability), 1, tty_putc) == ERR && (fatal))		\
 		errx(1, #capability ": unknown terminfo capability");	\
@@ -27,12 +32,14 @@ enum key {
 	BACKSPACE,
 	DEL,
 	ENTER,
+	INSERT,
 	CTRL_A,
 	CTRL_C,
 	CTRL_E,
 	CTRL_K,
 	CTRL_L,
 	CTRL_O,
+	CTRL_T,
 	CTRL_U,
 	CTRL_W,
 	CTRL_Z,
@@ -54,6 +61,7 @@ struct choice {
 	ssize_t		 match_start;	/* inclusive match start offset */
 	ssize_t		 match_end;	/* exclusive match end offset */
 	double		 score;
+	int			 mark; /* true if its marked */
 };
 
 static int			 choicecmp(const void *, const void *);
@@ -115,7 +123,7 @@ main(int argc, char *argv[])
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 
-	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhmoq:KSvxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -150,6 +158,9 @@ main(int argc, char *argv[])
 		case 'X':
 			use_alternate_screen = 0;
 			break;
+		case 'm':		/* enable multiple selections */
+			opt_mark = 1;
+			break;
 		default:
 			usage(1);
 		}
@@ -173,10 +184,22 @@ main(int argc, char *argv[])
 	choice = selected_choice();
 	tty_restore(1);
 	if (choice != NULL) {
-		printf("%s\n", choice->string);
-		if (output_description)
-			printf("%s\n", choice->description);
-	} else {
+		if ( opt_mark ) { /* if multiple choices, print out all selected strings */
+			for ( size_t i = 0; i < choices.length; i ++ ) {
+				if ( choices.v[i].mark ) {
+					printf("%s\n", choices.v[i].string);
+					if (output_description)
+						printf("%s\n", choices.v[i].description);
+					}
+				}
+			}
+		else {
+			printf("%s\n", choice->string);
+			if (output_description)
+				printf("%s\n", choice->description);
+			}
+		}
+	else {
 		rc = 1;
 	}
 
@@ -197,6 +220,7 @@ usage(int status)
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
 	    "    -o          output description of selected on exit\n"
+	    "    -m          enable multiple selections\n"
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
@@ -252,6 +276,7 @@ get_choices(void)
 		choices.v[choices.length].match_start = -1;
 		choices.v[choices.length].match_end = -1;
 		choices.v[choices.length].score = 0;
+		choices.v[choices.length].mark = 0;
 
 		start = stop + 1;
 
@@ -347,6 +372,11 @@ selected_choice(void)
 			choices.v[choices.length].string = query;
 			choices.v[choices.length].description = "";
 			return &choices.v[choices.length];
+		case INSERT:	/* Norton Commander (nc,mc,total-comander,dblcmd,krusader,...) */
+		case CTRL_T:	/* mark/unmark selection */
+			if ( opt_mark )
+				choices.v[selection].mark = (choices.v[selection].mark) ? 0 : 1;
+			break;
 		case CTRL_C:
 			return NULL;
 		case CTRL_Z:
@@ -759,7 +789,7 @@ tty_size(void)
 }
 
 void
-print_line(const char *str, size_t len, int standout,
+print_line(const char *str, size_t len, int flags,
     ssize_t enter_underline, ssize_t exit_underline)
 {
 	size_t		i;
@@ -767,7 +797,11 @@ print_line(const char *str, size_t len, int standout,
 	unsigned int	col;
 	int		nbytes, width;
 
-	if (standout)
+	if ( flags & PL_MARKED ) { // *commander uses yellow...
+//		tty_putp(enter_bold_mode, 1);	// it works but i liked without it
+		tty_putp(tty_parm1(set_a_foreground, 3), 1);
+		}
+	if ( flags & PL_STDOUT )
 		tty_putp(enter_standout_mode, 1);
 
 	col = i = 0;
@@ -851,7 +885,8 @@ print_choices(size_t offset, size_t selection)
 
 		if (i - offset < choices_lines)
 			print_line(choice->string, choice->length,
-			    i == selection, choice->match_start,
+					((i == selection) ? PL_STDOUT : 0) |\
+					((choice->mark  ) ? PL_MARKED : 0), choice->match_start,
 			    choice->match_end);
 	}
 
@@ -904,6 +939,7 @@ get_key(const char **key)
 		KEY(CTRL_K,	"\013"),
 		KEY(CTRL_L,	"\014"),
 		KEY(CTRL_O,	"\017"),
+		KEY(CTRL_T,	"\024"),
 		KEY(CTRL_U,	"\025"),
 		KEY(CTRL_W,	"\027"),
 		KEY(CTRL_W,	"\033\177"),
@@ -933,6 +969,8 @@ get_key(const char **key)
 		CAP(RIGHT,	"kcuf1"),
 		KEY(RIGHT,	"\006"),
 		KEY(RIGHT,	"\033OC"),
+		CAP(INSERT,		"kich1"),
+		KEY(INSERT,		"\033[2~"),
 		KEY(UNKNOWN,	NULL),
 	};
 	static unsigned char	buf[8];
