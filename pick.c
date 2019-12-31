@@ -185,14 +185,7 @@ main(int argc, char *argv[])
 __dead void
 usage(void)
 {
-	fprintf(stderr, "usage: pick [-dKoSXx] [-q query]\n"
-	    "    -K          disable toggling of keypad transmit mode\n"
-	    "    -S          disable sorting\n"
-	    "    -d          read and display descriptions\n"
-	    "    -o          output description of selected on exit\n"
-	    "    -x          enable alternate screen\n"
-	    "    -X          disable alternate screen\n"
-	    "    -q query    supply an initial search query\n");
+	fprintf(stderr, "usage: pick [-dKoSXx] [-q query]\n");
 	exit(1);
 }
 
