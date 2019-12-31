@@ -190,7 +190,7 @@ main(int argc, char *argv[])
 __dead void
 usage(int status)
 {
-	fprintf(stderr, "usage: pick [-hvKS] [-d [-o]] [-x | -X] [-q query]\n"
+	fprintf(stderr, "usage: pick [-dhKoSvXx] [-q query]\n"
 	    "    -h          output this help message and exit\n"
 	    "    -v          output the version and exit\n"
 	    "    -K          disable toggling of keypad transmit mode\n"
