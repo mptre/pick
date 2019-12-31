@@ -55,7 +55,6 @@ DISTFILES+=	tests/key-unknown.t
 DISTFILES+=	tests/misc-match.t
 DISTFILES+=	tests/misc-realloc.t
 DISTFILES+=	tests/opt-d.t
-DISTFILES+=	tests/opt-h.t
 DISTFILES+=	tests/opt-k.t
 DISTFILES+=	tests/opt-o.t
 DISTFILES+=	tests/opt-q.t

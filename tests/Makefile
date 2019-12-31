@@ -35,7 +35,6 @@ TESTS+=	key-unknown.t
 TESTS+=	misc-match.t
 TESTS+=	misc-realloc.t
 TESTS+=	opt-d.t
-TESTS+=	opt-h.t
 TESTS+=	opt-k.t
 TESTS+=	opt-o.t
 TESTS+=	opt-q.t

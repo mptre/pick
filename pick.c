@@ -82,7 +82,7 @@ static const char		*tty_parm1(char *, int);
 static int			 tty_putc(int);
 static void			 tty_restore(int);
 static void			 tty_size(void);
-static __dead void		 usage(int);
+static __dead void		 usage(void);
 static int			 xmbtowc(wchar_t *, const char *);
 
 static struct termios		 tio;
@@ -115,13 +115,11 @@ main(int argc, char *argv[])
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 
-	while ((c = getopt(argc, argv, "dhoq:KSxX")) != -1)
+	while ((c = getopt(argc, argv, "doq:KSxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
 			break;
-		case 'h':
-			usage(0);
 		case 'K':
 			use_keypad = 0;
 			break;
@@ -148,12 +146,12 @@ main(int argc, char *argv[])
 			use_alternate_screen = 0;
 			break;
 		default:
-			usage(1);
+			usage();
 		}
 	argc -= optind;
 	argv += optind;
 	if (argc > 0)
-		usage(1);
+		usage();
 
 	if (query == NULL) {
 		query_size = 64;
@@ -185,10 +183,9 @@ main(int argc, char *argv[])
 }
 
 __dead void
-usage(int status)
+usage(void)
 {
-	fprintf(stderr, "usage: pick [-dhKoSXx] [-q query]\n"
-	    "    -h          output this help message and exit\n"
+	fprintf(stderr, "usage: pick [-dKoSXx] [-q query]\n"
 	    "    -K          disable toggling of keypad transmit mode\n"
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"
@@ -196,8 +193,7 @@ usage(int status)
 	    "    -x          enable alternate screen\n"
 	    "    -X          disable alternate screen\n"
 	    "    -q query    supply an initial search query\n");
-
-	exit(status);
+	exit(1);
 }
 
 char *
