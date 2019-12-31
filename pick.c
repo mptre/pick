@@ -115,7 +115,7 @@ main(int argc, char *argv[])
 	if (pledge("stdio tty rpath wpath cpath", NULL) == -1)
 		err(1, "pledge");
 
-	while ((c = getopt(argc, argv, "dhoq:KSvxX")) != -1)
+	while ((c = getopt(argc, argv, "dhoq:KSxX")) != -1)
 		switch (c) {
 		case 'd':
 			descriptions = 1;
@@ -141,9 +141,6 @@ main(int argc, char *argv[])
 		case 'S':
 			sort = 0;
 			break;
-		case 'v':
-			puts(VERSION);
-			exit(0);
 		case 'x':
 			use_alternate_screen = 1;
 			break;
@@ -190,9 +187,8 @@ main(int argc, char *argv[])
 __dead void
 usage(int status)
 {
-	fprintf(stderr, "usage: pick [-dhKoSvXx] [-q query]\n"
+	fprintf(stderr, "usage: pick [-dhKoSXx] [-q query]\n"
 	    "    -h          output this help message and exit\n"
-	    "    -v          output the version and exit\n"
 	    "    -K          disable toggling of keypad transmit mode\n"
 	    "    -S          disable sorting\n"
 	    "    -d          read and display descriptions\n"

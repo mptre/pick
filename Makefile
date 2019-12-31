@@ -13,7 +13,6 @@ OBJS=	${SRCS:.c=.o}
 DEPS=   ${SRCS:.c=.d}
 
 CFLAGS+=	${DEBUG}
-CFLAGS+=	-DVERSION=\"${VERSION}\"
 
 DISTFILES+=	CHANGELOG.md
 DISTFILES+=	CODE_OF_CONDUCT.md
@@ -62,7 +61,6 @@ DISTFILES+=	tests/opt-o.t
 DISTFILES+=	tests/opt-q.t
 DISTFILES+=	tests/opt-s.t
 DISTFILES+=	tests/opt-unknown.t
-DISTFILES+=	tests/opt-v.t
 DISTFILES+=	tests/opt-x.t
 DISTFILES+=	tests/pick-test.c
 DISTFILES+=	tests/pick-test.sh

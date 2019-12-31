@@ -41,7 +41,6 @@ TESTS+=	opt-o.t
 TESTS+=	opt-q.t
 TESTS+=	opt-s.t
 TESTS+=	opt-unknown.t
-TESTS+=	opt-v.t
 TESTS+=	opt-x.t
 
 all: ${PROG}
