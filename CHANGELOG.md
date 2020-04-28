@@ -1,3 +1,28 @@
+# v4.0.0 - 2020-04-28
+
+## Changes
+
+- Remove `-v` option, your package manager of choice can already provide the
+  same information
+  (2905675)
+  (Anton Lindqvist)
+
+- Remove `-h` option in favor of the manual.
+  (93a552b)
+  (Anton Lindqvist)
+
+- Do not output options as part of the usage output, in favor of the manual
+  instead.
+  (e253d7d)
+  (Anton Lindqvist)
+
+## Bug fixes
+
+- Mark `unused` variables in compat files as `extern` in order to compile using
+  GCC 10.
+  (160d7be)
+  (Benjamin Porter)
+
 # v3.0.1 - 2019-03-10
 
 ## Bug fixes
