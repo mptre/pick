@@ -87,12 +87,13 @@ Internal documentation on crafting a release.
    * Jenz Guenther <dbotw@gmx.net> (NetBSD)
    * Neel Chauhan <neel@neelc.org> (FreeBSD)
    * 6c37 team <camille@airmail.cc> (CRUX)
+   * Benjamin Porter <pick@tamx.org> (Fedora/RHEL/CentOS)
 
    ```
    To: pick-maintainers@calleerlandsson.com
    Bcc: evaggelos.avgerinos@gmail.com, xuchunyang.me@gmail.com,
         fredrik@fornwall.net, dbotw@gmx.net, neel@neelc.org,
-        camille@airmail.cc
+        camille@airmail.cc, pick@tamx.org
    Subject: pick 0.0.2
    ```
 
