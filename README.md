@@ -42,6 +42,24 @@ Package is available from the [official repo][gentoo].
 emerge pick
 ```
 
+### Fedora/RHEL/CentOS
+
+The RPM builds are not yet in the official repositories, but you can install a
+community-built RPM.
+
+If you are running Fedora 32 on x86_64, you can `wget` and install with `dnf`:
+
+```sh
+wget https://github.com/FreedomBen/pick-rpm/releases/download/v4.0.0/pick-4.0.0-1.fc32.x86_64.rpm
+sudo dnf install pick-4.0.0-1.fc32.x86_64.rpm
+```
+
+Otherwise if running CentOS, Fedora 30 or 31, take a look at the
+[RPM project releases page](https://github.com/FreedomBen/pick-rpm/releases).
+
+For more information or to contribute to the RPM build, see the
+[RPM project page](https://github.com/FreedomBen/pick-rpm).
+
 ### Void Linux
 
 Package is available from the [official repo][void].
