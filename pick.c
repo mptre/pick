@@ -899,6 +899,7 @@ get_key(const char **key)
 		CAP(END,	"kend"),
 		KEY(END,	"\033>"),
 		KEY(ENTER,	"\n"),
+		CAP(ENTER,	"kent"),
 		CAP(HOME,	"khome"),
 		KEY(HOME,	"\033<"),
 		CAP(LEFT,	"kcub1"),
