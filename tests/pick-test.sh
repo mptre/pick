@@ -45,6 +45,11 @@ done
 shift $((OPTIND - 1))
 { [ $# -eq 0 ] || [ -z "$picktest" ]; } && usage
 
+# Enable hardening malloc(3) options on OpenBSD.
+case "$(uname -s)" in
+OpenBSD)	export MALLOC_OPTIONS="RS";;
+esac
+
 nerr=0
 
 in=$(mktemp -t pick-test.XXXXXX)

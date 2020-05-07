@@ -1,4 +1,4 @@
-include ${.CURDIR}/Makefile.inc
+include ${.CURDIR}/config.mk
 
 VERSION=	4.0.0
 
@@ -11,8 +11,6 @@ SRCS+= pick.c
 
 OBJS=	${SRCS:.c=.o}
 DEPS=   ${SRCS:.c=.d}
-
-CFLAGS+=	${DEBUG}
 
 DISTFILES+=	CHANGELOG.md
 DISTFILES+=	CODE_OF_CONDUCT.md
@@ -92,16 +90,16 @@ distclean: clean
 		${.CURDIR}/${PROG}-${VERSION}.sha256
 .PHONY: distclean
 
-install: ${PROG}
+install: all
 	@mkdir -p ${DESTDIR}${BINDIR}
 	${INSTALL} ${PROG} ${DESTDIR}${BINDIR}
 	@mkdir -p ${DESTDIR}${MANDIR}/man1
 	${INSTALL_MAN} ${.CURDIR}/pick.1 ${DESTDIR}${MANDIR}/man1
 .PHONY: install
 
-test: ${PROG}
+test: all
 	${MAKE} -C ${.CURDIR}/tests \
-		"MALLOC_OPTIONS=${MALLOC_OPTIONS}" "PICK=${.OBJDIR}/${PROG}"
+		"PICK=${.OBJDIR}/${PROG}"
 .PHONY: test
 
 -include ${DEPS}

@@ -1,4 +1,4 @@
-include ${.CURDIR}/../Makefile.inc
+include ${.CURDIR}/../config.mk
 
 PROG=	pick-test
 

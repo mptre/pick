@@ -3,19 +3,20 @@
 set -e
 
 atexit() {
-	err=$?
+	local _err="$?"
 
 	# Dump contents of generated files to config.log.
+	exec 1>>config.log 2>&1
 	set -x
-	cat config.h
-	cat Makefile.inc
+	[ -e config.h ] && cat config.h
+	[ -e config.mk ] && cat config.mk
 	rm -f "$@"
-	[ $err -ne 0 ] && fatal
+	[ "$_err" -ne 0 ] && fatal
 	exit 0
 }
 
 compile() {
-	$CC -Werror -o /dev/null -x c - $LDFLAGS
+	$CC -Werror -o /dev/null -x c - $@
 }
 
 fatal() {
@@ -26,21 +27,23 @@ fatal() {
 }
 
 headers() {
-	cat >"$TMP"
-	[ -s "$TMP" ] || return 0
+	cat >"$TMP1"
+	[ -s "$TMP1" ] || return 0
 
-	xargs printf '#include <%s>\n' <"$TMP"
+	xargs printf '#include <%s>\n' <"$TMP1"
 }
 
 makevar() {
-	make -sf - <<EOF
-all:
-	@echo \${${1}}
-EOF
+	var="$(printf 'all:\n\t@echo ${%s}\n' "$1" | make -sf -)"
+	if [ -n "$var" ]; then
+		echo "$var"
+	else
+		return 1
+	fi
 }
 
 check_curses() {
-	compile <<-EOF
+	compile $@ <<-EOF
 	#include <curses.h>
 	#include <term.h>
 
@@ -62,33 +65,20 @@ check_dead() {
 	EOF
 }
 
-# Check if wcwidth(3) is hidden behind _GNU_SOURCE.
+# Check if strptime(3) is hidden behind _GNU_SOURCE.
 check_gnu_source() {
-	compile <<-EOF && return 1
-	#include <wchar.h>
+	cat <<-EOF >"$TMP1"
+	#include <time.h>
 
 	int main(void) {
-		wchar_t c = 0;
-		return !(wcwidth(c) == 0);
+		struct tm tm;
+		return !(strptime("0", "%s", &tm) != NULL);
 	}
 	EOF
 
-	compile <<-EOF
-	#define _GNU_SOURCE
-	#include <wchar.h>
+	compile <"$TMP1" && return 1
 
-	int main(void) {
-		wchar_t c = 0;
-		return !(wcwidth(c) == 0);
-	}
-	EOF
-}
-
-
-check_malloc_options() {
-	case "$(uname -s)" in
-	OpenBSD)	echo "RS";;
-	esac
+	{ echo "#define _GNU_SOURCE"; cat "$TMP1"; } | compile
 }
 
 check_pledge() {
@@ -121,6 +111,17 @@ check_strtonum() {
 	EOF
 }
 
+TMP1=$(mktemp -t configure.XXXXXX)
+trap "atexit $TMP1" EXIT
+
+exec 3>&1 4>&2
+exec 1>config.log 2>&1
+
+# At this point, all variables used must be defined.
+set -u
+# Enable tracing, will end up in config.log.
+set -x
+
 HAVE_CURSES=0
 HAVE_DEAD2=0
 HAVE_DEAD=0
@@ -131,37 +132,26 @@ HAVE_PLEDGE=0
 HAVE_REALLOCARRAY=0
 HAVE_STRTONUM=0
 
-CC=$(makevar CC)
-CFLAGS=$(makevar CFLAGS)
+# Order is important, must come first if not defined.
+DEBUG="$(makevar DEBUG || :)"
+
+CC=$(makevar CC || fatal "CC: not defined")
+CFLAGS=$(DEBUG= makevar CFLAGS || :)
 CFLAGS="${CFLAGS} ${DEBUG} -Wall -Wextra -MD -MP"
-INSTALL=$(makevar INSTALL)
-INSTALL_MAN=$(makevar INSTALL_MAN)
+CPPFLAGS="$(makevar CPPFLAGS || :)"
+CPPFLAGS="${CPPFLAGS} -I\${.CURDIR}"
+LDFLAGS="$(DEBUG= makevar LDFLAGS || :)"
 
-: "${CPPFLAGS:=}"
-: "${DEBUG:=}"
-: "${LDFLAGS:=}"
+PREFIX="$(makevar PREFIX || echo /usr/local)"
+BINDIR="$(makevar BINDIR || echo "${PREFIX}/bin")"
+MANDIR="$(makevar MANDIR || echo "${PREFIX}/man")"
+INSTALL="$(makevar INSTALL || echo install)"
+INSTALL_MAN="$(makevar INSTALL_MAN || echo install)"
 
-: "${PREFIX:=/usr/local}"
-: "${BINDIR:=${PREFIX}/bin}"
-: "${MANDIR:=${PREFIX}/man}"
-: "${INSTALL:=install}"
-: "${INSTALL_MAN:=install -m 444}"
-
-exec 3>&1 4>&2
-exec 1>config.log 2>&1
-
-TMP=$(mktemp -t configure.XXXXXX)
-trap "atexit $TMP" EXIT
-
-# At this point, all variables used must be defined.
-set -u
-# Enable tracing, will end up in config.log.
-set -x
-
-if (LDFLAGS=-lcurses check_curses); then
+if check_curses -lcurses; then
 	HAVE_CURSES=1
 	LDFLAGS="${LDFLAGS} -lcurses"
-elif (LDFLAGS=-lncursesw check_curses); then
+elif check_curses -lncursesw; then
 	HAVE_NCURSESW=1
 	LDFLAGS="${LDFLAGS} -lncursesw"
 else
@@ -176,26 +166,21 @@ check_pledge && HAVE_PLEDGE=1
 check_reallocarray && HAVE_REALLOCARRAY=1
 check_strtonum && HAVE_STRTONUM=1
 
-MALLOC_OPTIONS=$(check_malloc_options)
+# Redirect stdout to config.h.
+exec 1>config.h
 
 # Order is important, must be present before any includes.
-(
 [ $HAVE_GNU_SOURCE -eq 1 ] && printf '#define _GNU_SOURCE\n'
 
-# Ensure this subshell always exits 0.
-true
-) >config.h
-
-# Headers needed for function prototypes and curses.
-(
+# Headers needed for function prototypes.
+{
 [ $HAVE_CURSES -eq 1 ] && echo curses.h term.h
 [ $HAVE_NCURSESW -eq 1 ] && echo ncursesw/curses.h ncursesw/term.h
 [ $HAVE_PLEDGE -eq 0 ] && echo stdlib.h
 [ $HAVE_REALLOCARRAY -eq 0 ] && echo stdlib.h
 [ $HAVE_STRTONUM -eq 0 ] && echo stdlib.h
-) | sort | uniq | headers >>config.h
+} | sort | uniq | headers
 
-(
 [ $HAVE_PLEDGE -eq 1 ] && printf '#define HAVE_PLEDGE\t1\n'
 [ $HAVE_REALLOCARRAY -eq 1 ] && printf '#define HAVE_REALLOCARRAY\t1\n'
 [ $HAVE_STRTONUM -eq 1 ] && printf '#define HAVE_STRTONUM\t1\n'
@@ -217,21 +202,19 @@ fi
 [ $HAVE_STRTONUM -eq 0 ] && \
 	printf 'long long strtonum(const char *, long long, long long, const char **);\n'
 
-# Ensure this subshell always exits 0.
-true
-) >>config.h
+# Redirect stdout to config.mk.
+exec 1>config.mk
 
 # Use echo to normalize whitespace.
-cat <<EOF >Makefile.inc
+cat <<EOF
 CC=		$(echo $CC)
 CFLAGS=		$(echo $CFLAGS)
 CPPFLAGS=	$(echo $CPPFLAGS)
 DEBUG=		$(echo $DEBUG)
 LDFLAGS=	$(echo $LDFLAGS)
-MALLOC_OPTIONS=	$(echo $MALLOC_OPTIONS)
 
 BINDIR?=	$(echo $BINDIR)
 MANDIR?=	$(echo $MANDIR)
 INSTALL?=	$(echo $INSTALL)
-INSTALL_MAN?=	$(echo $INSTALL_MAN)
+INSTALL_MAN?=	\${INSTALL}
 EOF
