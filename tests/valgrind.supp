@@ -1,0 +1,6 @@
+{
+   <libtinfo>
+   Memcheck:Leak
+   ...
+   obj:*/libtinfo.so.*
+}

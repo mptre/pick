@@ -26,41 +26,42 @@ DISTFILES+=	configure
 DISTFILES+=	pick.1
 DISTFILES+=	pick.c
 DISTFILES+=	tests/GNUmakefile
+DISTFILES+=	tests/key-alt-enter.sh
+DISTFILES+=	tests/key-backspace.sh
+DISTFILES+=	tests/key-ctrl-a.sh
+DISTFILES+=	tests/key-ctrl-c.sh
+DISTFILES+=	tests/key-ctrl-e.sh
+DISTFILES+=	tests/key-ctrl-k.sh
+DISTFILES+=	tests/key-ctrl-l.sh
+DISTFILES+=	tests/key-ctrl-o.sh
+DISTFILES+=	tests/key-ctrl-u.sh
+DISTFILES+=	tests/key-ctrl-w.sh
+DISTFILES+=	tests/key-del.sh
+DISTFILES+=	tests/key-end.sh
+DISTFILES+=	tests/key-enter.sh
+DISTFILES+=	tests/key-home.sh
+DISTFILES+=	tests/key-left.sh
+DISTFILES+=	tests/key-line-down.sh
+DISTFILES+=	tests/key-line-up.sh
+DISTFILES+=	tests/key-page-down.sh
+DISTFILES+=	tests/key-page-up.sh
+DISTFILES+=	tests/key-printable.sh
+DISTFILES+=	tests/key-right.sh
+DISTFILES+=	tests/key-unknown.sh
 DISTFILES+=	tests/Makefile
-DISTFILES+=	tests/README.md
-DISTFILES+=	tests/key-alt-enter.t
-DISTFILES+=	tests/key-backspace.t
-DISTFILES+=	tests/key-ctrl-a.t
-DISTFILES+=	tests/key-ctrl-c.t
-DISTFILES+=	tests/key-ctrl-e.t
-DISTFILES+=	tests/key-ctrl-k.t
-DISTFILES+=	tests/key-ctrl-l.t
-DISTFILES+=	tests/key-ctrl-o.t
-DISTFILES+=	tests/key-ctrl-u.t
-DISTFILES+=	tests/key-ctrl-w.t
-DISTFILES+=	tests/key-del.t
-DISTFILES+=	tests/key-end.t
-DISTFILES+=	tests/key-enter.t
-DISTFILES+=	tests/key-home.t
-DISTFILES+=	tests/key-left.t
-DISTFILES+=	tests/key-line-down.t
-DISTFILES+=	tests/key-line-up.t
-DISTFILES+=	tests/key-page-down.t
-DISTFILES+=	tests/key-page-up.t
-DISTFILES+=	tests/key-printable.t
-DISTFILES+=	tests/key-right.t
-DISTFILES+=	tests/key-unknown.t
-DISTFILES+=	tests/misc-match.t
-DISTFILES+=	tests/misc-realloc.t
-DISTFILES+=	tests/opt-d.t
-DISTFILES+=	tests/opt-k.t
-DISTFILES+=	tests/opt-o.t
-DISTFILES+=	tests/opt-q.t
-DISTFILES+=	tests/opt-s.t
-DISTFILES+=	tests/opt-unknown.t
-DISTFILES+=	tests/opt-x.t
-DISTFILES+=	tests/pick-test.c
-DISTFILES+=	tests/pick-test.sh
+DISTFILES+=	tests/misc-match.sh
+DISTFILES+=	tests/misc-realloc.sh
+DISTFILES+=	tests/opt-d.sh
+DISTFILES+=	tests/opt-k.sh
+DISTFILES+=	tests/opt-o.sh
+DISTFILES+=	tests/opt-q.sh
+DISTFILES+=	tests/opt-s.sh
+DISTFILES+=	tests/opt-unknown.sh
+DISTFILES+=	tests/opt-x.sh
+DISTFILES+=	tests/pty.c
+DISTFILES+=	tests/t.sh
+DISTFILES+=	tests/util.sh
+DISTFILES+=	tests/valgrind.supp
 
 all: ${PROG}
 
@@ -85,9 +86,12 @@ dist:
 .PHONY: dist
 
 distclean: clean
-	rm -f ${.CURDIR}/Makefile.inc ${.CURDIR}/config.h \
-		${.CURDIR}/config.log ${.CURDIR}/${PROG}-${VERSION}.tar.gz \
-		${.CURDIR}/${PROG}-${VERSION}.sha256
+	rm -f \
+		${.CURDIR}/config.h \
+		${.CURDIR}/config.log \
+		${.CURDIR}/config.mk \
+		${.CURDIR}/${PROG}-${VERSION}.sha256 \
+		${.CURDIR}/${PROG}-${VERSION}.tar.gz
 .PHONY: distclean
 
 install: all

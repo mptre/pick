@@ -1,41 +1,69 @@
 sudo: false
 dist: xenial
 language: c
+
+env:
+  global:
+    - CFLAGS=-Werror
+    - CPPFLAGS=-D_FORTIFY_SOURCE=2
+    - DEBUG="-g -O2"
+
 matrix:
   include:
-    - os: linux
+    - arch: amd64
+      os: linux
       compiler: clang
       env:
-        - T=linux-clang-asan
-        - CFLAGS=-Werror
-        - DEBUG='-g -fsanitize=address -fno-sanitize-recover=all'
+        - T=amd64-linux-clang-asan
+        - DEBUG="${DEBUG} -fsanitize=address -fno-sanitize-recover=all"
 
-    - os: linux
+    - arch: amd64
+      os: linux
       compiler: clang
       env:
-        - T=linux-clang-ubsan
-        - CFLAGS=-Werror
-        - DEBUG='-g -fsanitize=undefined -fno-sanitize-recover=all'
+        - T=amd64-linux-clang-ubsan
+        - DEBUG="${DEBUG} -fsanitize=undefined,unsigned-integer-overflow -fno-sanitize-recover=all"
 
-    - os: linux
+    - arch: amd64
+      os: linux
       compiler: gcc
       env:
-        - T=linux-gcc-asan
-        - CFLAGS=-Werror
-        - DEBUG='-g -fsanitize=address -fno-sanitize-recover=all'
+        - T=amd64-linux-gcc-asan
+        - CFLAGS="${CFLAGS} -Wformat-signedness"
+        - DEBUG="${DEBUG} -fsanitize=address -fno-sanitize-recover=all"
 
-    - os: linux
+    - arch: amd64
+      os: linux
       compiler: gcc
       env:
-        - T=linux-gcc-ubsan
-        - CFLAGS=-Werror
-        - DEBUG='-g -fsanitize=undefined -fno-sanitize-recover=all'
+        - T=amd64-linux-gcc-ubsan
+        - CFLAGS="${CFLAGS} -Wformat-signedness"
+        - DEBUG="${DEBUG} -fsanitize=undefined -fno-sanitize-recover=all"
 
-    - os: osx
+    - arch: amd64
+      os: linux
       compiler: clang
       env:
-        - T=macos-clang
-        - CFLAGS=-Werror
+        - T=amd64-linux-valgrind
+        - EXEC=valgrind
+        - VALGRIND_OPTS="--quiet --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all --show-leak-kinds=all --suppressions=${PWD}/tests/valgrind.supp"
+      addons:
+        apt:
+          packages:
+            - valgrind
+
+    - arch: amd64
+      os: osx
+      compiler: clang
+      env:
+        - T=amd64-macos-clang
+
+    - arch: arm64
+      os: linux
+      compiler: gcc
+      env:
+        - T=arm64-linux-gcc
+        - CFLAGS="${DEBUG} -Wformat-signedness"
 
 script:
   - |
