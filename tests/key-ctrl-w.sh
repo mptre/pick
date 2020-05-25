@@ -1,13 +1,13 @@
 if testcase "ctrl-w deletes the ascii word behind the cursor"; then
 	{ echo ab; echo ab cd; } >"$STDIN"
-	pick -k "^W ab\\ cd ^W ^W \\n" -- <<-EOF
+	pick -k "^W ab\\\\ cd ^W ^W \\n" -- <<-EOF
 	ab
 	EOF
 fi
 
 if testcase "ctrl-w deletes the utf-8 word behind the cursor"; then
 	{ echo aa Åå aa; echo aa Åå aa aa; } >"$STDIN"
-	pick -k "aa\\ Åå ^W aa\\ aa \\n" -- <<-EOF
+	pick -k "aa\\\\ Åå ^W aa\\\\ aa \\n" -- <<-EOF
 	aa Åå aa aa
 	EOF
 fi
@@ -28,7 +28,7 @@ fi
 
 if testcase "alt-backspace is an alias for ctrl-w"; then
 	{ echo aa Åå aa; echo aa Åå aa aa; } >"$STDIN"
-	pick -k "aa\\ Åå \\033\\b aa\\ aa \\n" -- <<-EOF
+	pick -k "aa\\\\ Åå \\033\\b aa\\\\ aa \\n" -- <<-EOF
 	aa Åå aa aa
 	EOF
 fi

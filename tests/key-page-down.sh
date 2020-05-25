@@ -28,7 +28,7 @@ fi
 
 if testcase "alt-space is an alias for page down"; then
 	{ echo 1; echo 2; echo 3; echo 4; echo 5; } >"$STDIN"
-	pick -k "\\033\\  \\n" -l 5 <<-EOF
+	pick -k "\\033\\\\  \\n" -l 5 <<-EOF
 	5
 	EOF
 fi
