@@ -78,8 +78,9 @@ dist:
 	mkdir $$d; \
 	for f in ${DISTFILES}; do \
 		mkdir -p $$d/`dirname $$f`; \
-		cp ${.CURDIR}/$$f $$d/$$f; \
+		cp -p ${.CURDIR}/$$f $$d/$$f; \
 	done; \
+	find $$d -type d -exec touch -r ${.CURDIR}/Makefile {} \;; \
 	tar czvf ${.CURDIR}/$$d.tar.gz $$d; \
 	(cd ${.CURDIR}; sha256 $$d.tar.gz >$$d.sha256); \
 	rm -r $$d
