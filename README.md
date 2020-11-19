@@ -47,14 +47,14 @@ emerge pick
 The RPM builds are not yet in the official repositories, but you can install a
 community-built RPM.
 
-If you are running Fedora 32 on x86_64, you can `wget` and install with `dnf`:
+If you are running Fedora 33 on x86_64, you can `wget` and install with `dnf`:
 
 ```sh
-wget https://github.com/FreedomBen/pick-rpm/releases/download/v4.0.0/pick-4.0.0-1.fc32.x86_64.rpm
-sudo dnf install pick-4.0.0-1.fc32.x86_64.rpm
+wget https://github.com/FreedomBen/pick-rpm/releases/download/v4.0.0/pick-4.0.0-1.fc33.x86_64.rpm
+sudo dnf install pick-4.0.0-1.fc33.x86_64.rpm
 ```
 
-Otherwise if running CentOS, Fedora 30 or 31, take a look at the
+Otherwise if running CentOS, Fedora 31, or 32, take a look at the
 [RPM project releases page](https://github.com/FreedomBen/pick-rpm/releases).
 
 For more information or to contribute to the RPM build, see the
