@@ -45,7 +45,18 @@ emerge pick
 ### Fedora/RHEL/CentOS
 
 The RPM builds are not yet in the official repositories, but you can install a
-community-built RPM if you are running Fedora 33 on x86_64:
+community-built RPM.  You can use
+[the COPR repo](https://copr.fedorainfracloud.org/coprs/freedomben/pick/) for all currently
+supported distro versions (see [Active Releases](https://copr.fedorainfracloud.org/coprs/freedomben/pick/)):
+
+```sh
+sudo dnf install -y dnf-plugins-core && \
+sudo dnf copr enable -y freedomben/pick && \
+sudo dnf install -y pick
+```
+
+Alternatively, if you don't like using COPR and want to install the RPM direct, if you are
+running Fedora 33 on x86_64:
 
 ```sh
 wget https://github.com/FreedomBen/pick-rpm/releases/download/v4.0.0/pick-4.0.0-1.fc33.x86_64.rpm
