@@ -37,8 +37,20 @@ _assert_eq() {
 
 # assert_file file0 file1 [message]
 assert_file() {
-	if ! _assert_file "$1" "$2"; then
-		diff -u -L want -L got "$1" "$2" 2>&1 |
+	local _file0
+	local _file1
+
+	_file0="$1"; _file1="$2"
+	if [ "$_file0" = "-" ]; then
+		_file0="${TSHDIR}/assert_file"
+		cat >"$_file0"
+	elif [ "$_file1" = "-" ]; then
+		_file1="${TSHDIR}/assert_file"
+		cat >"$_file1"
+	fi
+
+	if ! _assert_file "$_file0" "$_file1"; then
+		diff -u -L want -L got "$_file0" "$_file1" 2>&1 |
 		fail - "${3:-assert_file}"
 	fi
 }
@@ -174,7 +186,8 @@ EXCLUDE="$(mktemp -t t.sh.XXXXXX)"
 NERR="$(mktemp -t t.sh.XXXXXX)"
 NTEST="$(mktemp -t t.sh.XXXXXX)"
 TSHDIR="$(mktemp -d -t t.sh.XXXXXX)"
-trap 'atexit $INCLUDE $EXCLUDE $NERR $NTEST $TSHDIR' EXIT
+TSHCLEAN=""
+trap 'atexit $INCLUDE $EXCLUDE $NERR $NTEST $TSHCLEAN $TSHDIR' EXIT
 
 # Exit on first failure.
 FAST=0
