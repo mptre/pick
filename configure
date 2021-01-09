@@ -151,6 +151,9 @@ INSTALL_MAN="$(makevar INSTALL_MAN || echo install)"
 if check_curses -lcurses; then
 	HAVE_CURSES=1
 	LDFLAGS="${LDFLAGS} -lcurses"
+elif check_curses -ltinfow; then
+	HAVE_NCURSESW=1
+	LDFLAGS="${LDFLAGS} -ltinfow"
 elif check_curses -lncursesw; then
 	HAVE_NCURSESW=1
 	LDFLAGS="${LDFLAGS} -lncursesw"
