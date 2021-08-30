@@ -12,6 +12,9 @@ SRCS+= pick.c
 OBJS=	${SRCS:.c=.o}
 DEPS=   ${SRCS:.c=.d}
 
+KNFMT+=	compat-pledge.c
+KNFMT+=	pick.c
+
 DISTFILES+=	CHANGELOG.md
 DISTFILES+=	CODE_OF_CONDUCT.md
 DISTFILES+=	CONTRIBUTING.md
@@ -86,12 +89,20 @@ dist:
 	rm -r $$d
 .PHONY: dist
 
+format:
+	cd ${.CURDIR} && knfmt -i ${KNFMT}
+.PHONY: format
+
 install: all
 	@mkdir -p ${DESTDIR}${BINDIR}
 	${INSTALL} ${PROG} ${DESTDIR}${BINDIR}
 	@mkdir -p ${DESTDIR}${MANDIR}/man1
 	${INSTALL_MAN} ${.CURDIR}/pick.1 ${DESTDIR}${MANDIR}/man1
 .PHONY: install
+
+lint:
+	cd ${.CURDIR} && knfmt -d ${KNFMT}
+.PHONY: lint
 
 test: all
 	${MAKE} -C ${.CURDIR}/tests \
