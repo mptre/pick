@@ -67,10 +67,10 @@ static int			 isu8cont(unsigned char);
 static int			 isu8start(unsigned char);
 static int			 isword(const char *);
 static size_t			 min_match(const char *, size_t, ssize_t *,
-				    ssize_t *);
+    ssize_t *);
 static size_t			 print_choices(size_t, size_t);
 static void			 print_line(const char *, size_t, int, ssize_t,
-				    ssize_t);
+    ssize_t);
 static const struct choice	*selected_choice(void);
 static size_t			 skipescseq(const char *);
 static const char		*strcasechr(const char *, const char *);
@@ -90,7 +90,7 @@ static struct {
 	size_t		 size;
 	size_t		 length;
 	struct choice	*v;
-}				 choices;
+} choices;
 static FILE			*tty_in, *tty_out;
 static char			*query;
 static size_t			 query_length, query_size;
@@ -104,11 +104,11 @@ static int			 use_keypad = 1;
 int
 main(int argc, char *argv[])
 {
-	const struct choice	*choice;
-	char			*input;
-	int			 c;
-	int			 output_description = 0;
-	int			 rc = 0;
+	const struct choice *choice;
+	char *input;
+	int c;
+	int output_description = 0;
+	int rc = 0;
 
 	setlocale(LC_CTYPE, "");
 
@@ -192,10 +192,10 @@ usage(void)
 char *
 get_choices(void)
 {
-	char		*buf, *description, *ifs, *start, *stop;
-	ssize_t		 n;
-	size_t		 length = 0;
-	size_t		 size = BUFSIZ;
+	char *buf, *description, *ifs, *start, *stop;
+	ssize_t n;
+	size_t length = 0;
+	size_t size = BUFSIZ;
 
 	if ((ifs = getenv("IFS")) == NULL || *ifs == '\0')
 		ifs = " ";
@@ -219,7 +219,7 @@ get_choices(void)
 
 	choices.size = 16;
 	if ((choices.v = reallocarray(NULL, choices.size,
-			    sizeof(struct choice))) == NULL)
+	    sizeof(struct choice))) == NULL)
 		err(1, NULL);
 
 	start = buf;
@@ -245,7 +245,7 @@ get_choices(void)
 			continue;
 		choices.size *= 2;
 		if ((choices.v = reallocarray(choices.v, choices.size,
-				    sizeof(struct choice))) == NULL)
+		    sizeof(struct choice))) == NULL)
 			err(1, NULL);
 	}
 
@@ -255,12 +255,12 @@ get_choices(void)
 char *
 eager_strpbrk(const char *string, const char *separators)
 {
-	char	*tmp_ptr;
-	char	*ptr = NULL;
+	char *tmp_ptr;
+	char *ptr = NULL;
 
 	for (tmp_ptr = strpbrk(string, separators);
-	     tmp_ptr;
-	     tmp_ptr = strpbrk(tmp_ptr, separators))
+	    tmp_ptr;
+	    tmp_ptr = strpbrk(tmp_ptr, separators))
 		ptr = tmp_ptr++;
 
 	return ptr;
@@ -269,14 +269,14 @@ eager_strpbrk(const char *string, const char *separators)
 const struct choice *
 selected_choice(void)
 {
-	const char	*buf;
-	size_t		 cursor_position, i, j, length, xscroll;
-	size_t		 choices_count = 0;
-	size_t		 selection = 0;
-	size_t		 yscroll = 0;
-	int		 dochoices = 0;
-	int		 dofilter = 1;
-	int		 query_grew = 0;
+	const char *buf;
+	size_t cursor_position, i, j, length, xscroll;
+	size_t choices_count = 0;
+	size_t selection = 0;
+	size_t yscroll = 0;
+	int dochoices = 0;
+	int dofilter = 1;
+	int query_grew = 0;
 
 	cursor_position = query_length;
 
@@ -425,13 +425,13 @@ selected_choice(void)
 			}
 			break;
 		case LEFT:
-			while (cursor_position > 0
-			    && isu8cont(query[--cursor_position]))
+			while (cursor_position > 0 &&
+			    isu8cont(query[--cursor_position]))
 				continue;
 			break;
 		case RIGHT:
-			while (cursor_position < query_length
-			    && isu8cont(query[++cursor_position]))
+			while (cursor_position < query_length &&
+			    isu8cont(query[++cursor_position]))
 				continue;
 			break;
 		case PAGE_DOWN:
@@ -459,14 +459,14 @@ selected_choice(void)
 			if (query_length + length >= query_size) {
 				query_size = 2*query_length + length;
 				if ((query = reallocarray(query, query_size,
-					    sizeof(char))) == NULL)
+				    sizeof(char))) == NULL)
 					err(1, NULL);
 			}
 
 			if (cursor_position < query_length)
 				memmove(query + cursor_position + length,
-					query + cursor_position,
-					query_length - cursor_position);
+				    query + cursor_position,
+				    query_length - cursor_position);
 
 			memcpy(query + cursor_position, buf, length);
 			cursor_position += length;
@@ -489,15 +489,15 @@ selected_choice(void)
 int
 filter_choices(size_t nchoices)
 {
-	struct choice	*c;
-	struct pollfd	 pfd;
-	size_t		 i, match_length;
-	int		 nready;
+	struct choice *c;
+	struct pollfd pfd;
+	size_t i, match_length;
+	int nready;
 
 	for (i = 0; i < nchoices; i++) {
 		c = &choices.v[i];
 		if (min_match(c->string, 0,
-			    &c->match_start, &c->match_end) == INT_MAX) {
+		    &c->match_start, &c->match_end) == INT_MAX) {
 			c->match_start = c->match_end = -1;
 			c->score = 0;
 		} else if (!sort) {
@@ -524,7 +524,7 @@ filter_choices(size_t nchoices)
 int
 choicecmp(const void *p1, const void *p2)
 {
-	const struct choice	*c1, *c2;
+	const struct choice *c1, *c2;
 
 	c1 = p1;
 	c2 = p2;
@@ -549,8 +549,8 @@ choicecmp(const void *p1, const void *p2)
 size_t
 min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 {
-	const char	*e, *q, *s;
-	size_t		 length;
+	const char *e, *q, *s;
+	size_t length;
 
 	q = query;
 	if (*q == '\0' || (s = e = strcasechr(&string[offset], q)) == NULL)
@@ -567,8 +567,8 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 
 	length = e - s;
 	/* LEQ is used to obtain the shortest left-most match. */
-	if (length == query_length
-	    || length <= min_match(string, s - string + 1, start, end)) {
+	if (length == query_length ||
+	    length <= min_match(string, s - string + 1, start, end)) {
 		*start = s - string;
 		*end = e - string;
 	}
@@ -583,9 +583,9 @@ min_match(const char *string, size_t offset, ssize_t *start, ssize_t *end)
 const char *
 strcasechr(const char *s1, const char *s2)
 {
-	wchar_t	wc1, wc2;
-	size_t	i;
-	int	nbytes;
+	wchar_t wc1, wc2;
+	size_t i;
+	int nbytes;
 
 	if (xmbtowc(&wc2, s2) == 0)
 		return NULL;
@@ -610,9 +610,9 @@ strcasechr(const char *s1, const char *s2)
 size_t
 skipescseq(const char *str)
 {
-	size_t	i;
-	int	csi = 0;
-	int	osc = 0;
+	size_t i;
+	int csi = 0;
+	int osc = 0;
 
 	if (str[0] == '\033' && str[1] == '[')
 		csi = 1;
@@ -632,7 +632,7 @@ skipescseq(const char *str)
 void
 tty_init(int doinit)
 {
-	struct termios	new_attributes;
+	struct termios new_attributes;
 
 	if (doinit && (tty_in = fopen("/dev/tty", "r")) == NULL)
 		err(1, "fopen");
@@ -680,7 +680,7 @@ handle_sigwinch(int sig)
 void
 toggle_sigwinch(int enable)
 {
-	struct sigaction	sa;
+	struct sigaction sa;
 
 	sa.sa_flags = 0;
 	sa.sa_handler = enable ? handle_sigwinch : SIG_IGN;
@@ -714,9 +714,9 @@ tty_restore(int doclose)
 void
 tty_size(void)
 {
-	const char	*cp;
-	struct winsize	 ws;
-	int		 sz;
+	struct winsize ws;
+	const char *cp;
+	int sz;
 
 	if (ioctl(fileno(tty_in), TIOCGWINSZ, &ws) != -1) {
 		tty_columns = ws.ws_col;
@@ -744,13 +744,13 @@ tty_size(void)
 }
 
 void
-print_line(const char *str, size_t len, int standout,
-    ssize_t enter_underline, ssize_t exit_underline)
+print_line(const char *str, size_t len, int standout, ssize_t enter_underline,
+    ssize_t exit_underline)
 {
-	size_t		i;
-	wchar_t		wc;
-	unsigned int	col;
-	int		nbytes, width;
+	size_t i;
+	wchar_t wc;
+	unsigned int col;
+	int nbytes, width;
 
 	if (standout)
 		tty_putp(enter_standout_mode, 1);
@@ -826,8 +826,8 @@ print_line(const char *str, size_t len, int standout,
 size_t
 print_choices(size_t offset, size_t selection)
 {
-	const struct choice	*choice;
-	size_t			 i;
+	const struct choice *choice;
+	size_t i;
 
 	for (i = offset; i < choices.length; i++) {
 		choice = choices.v + i;
@@ -861,7 +861,7 @@ print_choices(size_t offset, size_t selection)
 		 * upwards if any choices where printed.
 		 */
 		tty_putp(tty_parm1(parm_up_cursor,
-			    i < choices_lines ? i : choices_lines), 1);
+		    i < choices_lines ? i : choices_lines), 1);
 	}
 
 	return i;
@@ -879,7 +879,7 @@ get_key(const char **key)
 		const char	*str;
 		size_t		 len;
 		int		 tio;
-	}			keys[] = {
+	} keys[] = {
 		KEY(ALT_ENTER,	"\033\n"),
 		KEY(BACKSPACE,	"\177"),
 		KEY(BACKSPACE,	"\b"),
@@ -921,9 +921,9 @@ get_key(const char **key)
 		KEY(RIGHT,	"\033OC"),
 		KEY(UNKNOWN,	NULL),
 	};
-	static unsigned char	buf[8];
-	size_t			len;
-	int			c, i;
+	static unsigned char buf[8];
+	size_t len;
+	int c, i;
 
 	memset(buf, 0, sizeof(buf));
 	*key = (const char *)buf;
@@ -1012,7 +1012,7 @@ get_key(const char **key)
 int
 tty_getc(void)
 {
-	int	c;
+	int c;
 
 	if ((c = getc(tty_in)) == ERR && !gotsigwinch)
 		err(1, "getc");
@@ -1023,7 +1023,7 @@ tty_getc(void)
 const char *
 tty_getcap(char *cap)
 {
-	char	*str;
+	char *str;
 
 	str = tigetstr(cap);
 	if (str == (char *)(-1) || str == NULL)
@@ -1059,7 +1059,7 @@ isu8start(unsigned char c)
 int
 isword(const char *s)
 {
-	wchar_t	wc;
+	wchar_t wc;
 
 	if (xmbtowc(&wc, s) == 0)
 		return 0;
@@ -1070,7 +1070,7 @@ isword(const char *s)
 int
 xmbtowc(wchar_t *wc, const char *s)
 {
-	int	n;
+	int n;
 
 	n = mbtowc(wc, s, MB_CUR_MAX);
 	if (n == -1) {
