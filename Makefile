@@ -86,15 +86,6 @@ dist:
 	rm -r $$d
 .PHONY: dist
 
-distclean: clean
-	rm -f \
-		${.CURDIR}/config.h \
-		${.CURDIR}/config.log \
-		${.CURDIR}/config.mk \
-		${.CURDIR}/${PROG}-${VERSION}.sha256 \
-		${.CURDIR}/${PROG}-${VERSION}.tar.gz
-.PHONY: distclean
-
 install: all
 	@mkdir -p ${DESTDIR}${BINDIR}
 	${INSTALL} ${PROG} ${DESTDIR}${BINDIR}
