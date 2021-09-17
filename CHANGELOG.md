@@ -99,7 +99,30 @@
 
 # v2.0.0 - 2017-11-07
 
-## New features
+## Changes
+
+- Optimize filtering by safely reducing the number of choices to reconsider
+  when the query grew longer.
+  (c0c18ef, #251)
+  (Anton Lindqvist)
+
+- Replace example in manual with a more portable but equally useful one.
+  (ad57355, 031817f, 871ddd9, #253)
+  (Jenz Guenther)
+
+- pick is now available as a package on Void Linux.
+  (dce2ddf, #257)
+  (Michael Gehring)
+
+- pick is now available as a package on CRUX.
+  (26eea32, #258)
+  (rtlanceroad)
+
+- Only redraw the choices when necessary.
+  (1e8fb53, #254, #264)
+  (Anton Lindqvist, Jenz Guenther)
+
+## News
 
 - Add `Ctrl-O` key binding used to toggle sorting.
   (d36423b)
@@ -124,58 +147,7 @@
   (f833b3a)
   (Anton Lindqvist)
 
-## Changes
-
-- Optimize filtering by safely reducing the number of choices to reconsider
-  when the query grew longer.
-  (c0c18ef, #251)
-  (Anton Lindqvist)
-
-- Replace example in manual with a more portable but equally useful one.
-  (ad57355, 031817f, 871ddd9, #253)
-  (Jenz Guenther)
-
-- pick is now available as a package on Void Linux.
-  (dce2ddf, #257)
-  (Michael Gehring)
-
-- pick is now available as a package on CRUX.
-  (26eea32, #258)
-  (rtlanceroad)
-
-- Only redraw the choices when necessary.
-  (1e8fb53, #254, #264)
-  (Anton Lindqvist, Jenz Guenther)
-
 # v1.9.0 - 2017-09-19
-
-## New features
-
-- Add `-K` option used to disable toggling of keypad transmit mode.
-  Fixes a bug causing the arrow keys to stop working after running pick from
-  within Vim.
-  (6fca1c4, #246, #247)
-  (Anton Lindqvist)
-
-## Bug fixes
-
-- Fix a path issue related to `make distcheck`.
-  (9034255, #242)
-  (Anton Lindqvist)
-
-- Do not reset the selection on redraw.
-  (58c5b46, #221)
-  (Anton Lindqvist, Jenz Guenther)
-
-- Explicitly handle `Ctrl-{C,Z}` control characters.
-  The previous `SIGINT` handler was broken since it invokes functions that are
-  not considered asynchronous safe.
-  Instead,
-  do not turn control characters into signal but instead handle the relevant
-  ones.
-  A pleasant side-effect is that suspend/resumes now behaves correctly.
-  (9886750, #240)
-  (Anton Lindqvist)
 
 ## Changes
 
@@ -207,9 +179,60 @@
   (99d5a6f, #243, #244)
   (Tim Harder)
 
+## News
+
+- Add `-K` option used to disable toggling of keypad transmit mode.
+  Fixes a bug causing the arrow keys to stop working after running pick from
+  within Vim.
+  (6fca1c4, #246, #247)
+  (Anton Lindqvist)
+
+## Bug fixes
+
+- Fix a path issue related to `make distcheck`.
+  (9034255, #242)
+  (Anton Lindqvist)
+
+- Do not reset the selection on redraw.
+  (58c5b46, #221)
+  (Anton Lindqvist, Jenz Guenther)
+
+- Explicitly handle `Ctrl-{C,Z}` control characters.
+  The previous `SIGINT` handler was broken since it invokes functions that are
+  not considered asynchronous safe.
+  Instead,
+  do not turn control characters into signal but instead handle the relevant
+  ones.
+  A pleasant side-effect is that suspend/resumes now behaves correctly.
+  (9886750, #240)
+  (Anton Lindqvist)
+
 # v1.8.0 - 2017-08-28
 
-## New features
+## Changes
+
+- Use `reallocarray(3)` in `pick-test(1)`.
+  (58b17e0, 478e715)
+  (Anton Lindqvist)
+
+- Run `cppcheck(1)` and Coverity Scan on Travis.
+  (1560686, f493b93)
+  (Anton Lindqvist)
+
+- NUL-terminate the input buffer by assignment rather than using `memset(3)`.
+  (3e04320)
+  (Anton Lindqvist)
+
+- Update documentation on development and contributing.
+  (50e2176, #214)
+  (Anton Lindqvist)
+
+- Lower requirements for autoconf and automake.
+  Makes it possible to compile pick on Debian 5.
+  (054b323, #220)
+  (Jenz Guenther)
+
+## News
 
 - Read arrow keys from the `terminfo(3)` database.
   (0c3369b, 2d57016, #206)
@@ -270,32 +293,21 @@
   (d7d25a8, #233)
   (Anton Lindqvist)
 
-## Changes
-
-- Use `reallocarray(3)` in `pick-test(1)`.
-  (58b17e0, 478e715)
-  (Anton Lindqvist)
-
-- Run `cppcheck(1)` and Coverity Scan on Travis.
-  (1560686, f493b93)
-  (Anton Lindqvist)
-
-- NUL-terminate the input buffer by assignment rather than using `memset(3)`.
-  (3e04320)
-  (Anton Lindqvist)
-
-- Update documentation on development and contributing.
-  (50e2176, #214)
-  (Anton Lindqvist)
-
-- Lower requirements for autoconf and automake.
-  Makes it possible to compile pick on Debian 5.
-  (054b323, #220)
-  (Jenz Guenther)
-
 # v1.7.0 - 2017-06-30
 
-## New features
+## Changes
+
+- Refactoring and cleanup (74aa733, 5b237d3, bfe26ae, c16475f, 7b99e29, #189)
+  (Anton Lindqvist)
+
+- Run `mandoc(1)` and UBSan on Travis (f37e5e8, 368d37d, #190, #193) (Anton
+  Lindqvist)
+
+- Update test suite documentation (9086de2) (Anton Lindqvist)
+
+- Enable `ICRNL` input mode (61a5ae5, #192) (Anton Lindqvist)
+
+## News
 
 - Add support for HOME and END keys (10f04ae, 0a545bc, 1402ecc, #195) (Jenz
   Guenther)
@@ -314,18 +326,6 @@
 
 - Selection bar vanishes on Page-Down (92e492b, #199, #200) (Jenz Guenther)
 
-## Changes
-
-- Refactoring and cleanup (74aa733, 5b237d3, bfe26ae, c16475f, 7b99e29, #189)
-  (Anton Lindqvist)
-
-- Run `mandoc(1)` and UBSan on Travis (f37e5e8, 368d37d, #190, #193) (Anton
-  Lindqvist)
-
-- Update test suite documentation (9086de2) (Anton Lindqvist)
-
-- Enable `ICRNL` input mode (61a5ae5, #192) (Anton Lindqvist)
-
 # v1.6.1 - 2017-04-24
 
 ## Bug fixes
@@ -333,6 +333,13 @@
 - Fix tab output bug (db2d9f4) (Anton Lindqvist)
 
 # v1.6.0 - 2017-04-19
+
+## News
+
+- Test suite improvements (5c339d8, 2a5196a, 618a490, fd824f5) (Anton Lindqvist)
+
+- Exit with `0` on success and `1` on failure instead of using the exit codes
+  defined in `sysexits.h` (e3a5207, #183) (Anton Lindqvist)
 
 ## Bug fixes
 
@@ -348,13 +355,6 @@
 - Define `_GNU_SOURCE` in order to make `wcwidth(3)` available on Linux
   (ffb4ca4, #185) (Anton Lindqvist)
 
-## New features
-
-- Test suite improvements (5c339d8, 2a5196a, 618a490, fd824f5) (Anton Lindqvist)
-
-- Exit with `0` on success and `1` on failure instead of using the exit codes
-  defined in `sysexits.h` (e3a5207, #183) (Anton Lindqvist)
-
 # v1.5.4 - 2017-01-23
 
 ## Bug fixes
@@ -366,7 +366,7 @@
 
 # v1.5.3 - 2016-12-07
 
-## New features
+## News
 
 - Favor linking against curses instead of ncursesw (#167) (Anton Lindqvist)
 
@@ -396,7 +396,7 @@
 
 # v1.5.1 - 2016-10-04
 
-## New features
+## News
 
 - Improve readability of tests by adding comment support and cleanup test code
   (#161) (Anton Lindqvist)
@@ -409,7 +409,7 @@
 
 # v1.5.0 - 2016-09-19
 
-## New features
+## News
 
 - Add FreeBSD installation instructions (#130) (Neel Chauhan)
 
@@ -443,7 +443,11 @@
 
 # v1.4.0 - 2016-06-03
 
-## New features
+## Changes
+
+- Remove altscreen condition if invoked from Vim (Anton Lindqvist)
+
+## News
 
 - Add a test suite (Anton Lindqvist, prahlad, Score_Under)
 
@@ -466,13 +470,9 @@
 
 - Refactoring and cleanup (Anton Lindqvist)
 
-## Removed features
-
-- Remove altscreen condition if invoked from Vim (Anton Lindqvist)
-
 # v1.3.0 - 2016-02-12
 
-## New features
+## News
 
 - Highlight the matched substring of choices (Anton Lindqvist)
 
@@ -508,7 +508,7 @@
 
 # v1.2.0 - 2015-08-07
 
-## New features
+## News
 
 - Allow users to pick the current input query. (Ross Hadden)
 
@@ -538,7 +538,7 @@
 
 # v1.1.0 - 2015-02-27
 
-## New features
+## News
 
 - Automatically disable alternate screen in Vim. (Calle Erlandsson)
 
@@ -556,7 +556,7 @@
 
 # v1.0.0 - 2015-02-26
 
-## New features
+## News
 
 - Emacs key bindings. (Keith Smiley, Calle Erlandsson)
 
@@ -574,7 +574,7 @@
 
 # v0.0.1 - 2014-08-18
 
-## New features
+## News
 
 - Fuzzy select anything. (Calle Erlandsson, Mike Burns)
 
