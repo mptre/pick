@@ -42,28 +42,17 @@ Package is available from the [official repo][gentoo].
 emerge pick
 ```
 
-### Fedora/RHEL/CentOS
+### Fedora Linux
 
-The RPM builds are not yet in the official repositories.
-But you can use the
-[COPR repo](https://copr.fedorainfracloud.org/coprs/freedomben/pick/)
-for all currently supported distro versions, see
-[Active Releases](https://copr.fedorainfracloud.org/coprs/freedomben/pick/):
+Package is available from the [official repo][fedora].
 
 ```sh
-sudo dnf install -y dnf-plugins-core && \
-sudo dnf copr enable -y freedomben/pick && \
-sudo dnf install -y pick
+dnf install pick
 ```
 
-Alternatively, on Fedora 33 on x86_64 the RPM can be installed directly:
+### RHEL/CentOS
 
-```sh
-wget https://github.com/FreedomBen/pick-rpm/releases/download/v4.0.0/pick-4.0.0-1.fc33.x86_64.rpm
-sudo dnf install pick-4.0.0-1.fc33.x86_64.rpm
-```
-
-If you are running RHEL, CentOS, Fedora 31/32, or if you are on ARM/aarch64
+If you are running RHEL, CentOS, Fedora 31-33, or if you are on ARM/aarch64
 architecture, you can find appropriate RPMs on the
 [RPM project releases page](https://github.com/FreedomBen/pick-rpm/releases).
 
@@ -135,3 +124,4 @@ Copyright (c) 2019 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 [release]: https://github.com/mptre/pick/releases/
 [ubuntu]: https://packages.ubuntu.com/xenial/pick
 [void]: https://github.com/void-linux/void-packages/blob/master/srcpkgs/pick/template
+[fedora]: https://src.fedoraproject.org/rpms/pick
