@@ -20,8 +20,8 @@ PROG_pty=	pty
 SRCS_pty+=	compat-reallocarray.c
 SRCS_pty+=	pty.c
 
-OBJS_pty+=	${SRCS_pty:.c=.o}
-DEPS_pty+=	${SRCS_pty:.c=.d}
+OBJS_pty=	${SRCS_pty:.c=.o}
+DEPS_pty=	${SRCS_pty:.c=.d}
 
 KNFMT+=	pty.c
 
@@ -38,7 +38,9 @@ DISTFILES+=	compat-strtonum.c
 DISTFILES+=	configure
 DISTFILES+=	pick.1
 DISTFILES+=	pick.c
+DISTFILES+=	pty.c
 DISTFILES+=	tests/GNUmakefile
+DISTFILES+=	tests/Makefile
 DISTFILES+=	tests/key-alt-enter.sh
 DISTFILES+=	tests/key-backspace.sh
 DISTFILES+=	tests/key-ctrl-a.sh
@@ -61,7 +63,6 @@ DISTFILES+=	tests/key-page-up.sh
 DISTFILES+=	tests/key-printable.sh
 DISTFILES+=	tests/key-right.sh
 DISTFILES+=	tests/key-unknown.sh
-DISTFILES+=	tests/Makefile
 DISTFILES+=	tests/misc-match.sh
 DISTFILES+=	tests/misc-realloc.sh
 DISTFILES+=	tests/opt-d.sh
@@ -71,7 +72,6 @@ DISTFILES+=	tests/opt-q.sh
 DISTFILES+=	tests/opt-s.sh
 DISTFILES+=	tests/opt-unknown.sh
 DISTFILES+=	tests/opt-x.sh
-DISTFILES+=	tests/pty.c
 DISTFILES+=	tests/t.sh
 DISTFILES+=	tests/util.sh
 DISTFILES+=	tests/valgrind.supp
