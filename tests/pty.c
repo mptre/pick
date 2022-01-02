@@ -35,7 +35,7 @@ static int		  gotsig;
 int
 main(int argc, char *argv[])
 {
-	char	*keys = "";
+	char	*keys = NULL;
 	pid_t	 pid;
 	int	 c, master, slave, status;
 
@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 		child(master, slave, argc, argv);
 		/* NOTREACHED */
 	default:
-		parent(master, slave, keys);
+		parent(master, slave, keys != NULL ? keys : "");
 		/* Wait and exit with code of the child process. */
 		waitpid(pid, &status, 0);
 		if (WIFSIGNALED(status))
@@ -79,6 +79,8 @@ main(int argc, char *argv[])
 		if (WIFEXITED(status))
 			exit(WEXITSTATUS(status));
 	}
+
+	free(keys);
 
 	return 0;
 }
