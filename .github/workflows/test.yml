@@ -1,0 +1,72 @@
+name: test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [gcc, clang]
+        mode: [asan, ubsan, valgrind]
+        exclude:
+          - os: macos-latest
+            compiler: gcc
+
+          - mode: valgrind
+            os: macos-latest
+
+          - mode: valgrind
+            os: ubuntu-latest
+            compiler: clang
+
+        include:
+          - os: ubuntu-latest
+            nproc: nproc
+
+          - os: macos-latest
+            nproc: sysctl -n hw.logicalcpu
+
+          - compiler: gcc
+            cflags: -Wformat-signedness
+
+          - mode: asan
+            debug: -fsanitize=address
+
+          - mode: ubsan
+            debug: -fsanitize=undefined -fno-sanitize-recover=all
+
+          - mode: valgrind
+            dependenices: valgrind
+            exec: valgrind
+            valgrind: --quiet --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all --show-leak-kinds=all --suppressions=valgrind.supp
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: dependenices
+        if: ${{matrix.dependenices}}
+        run: sudo apt-get update && sudo apt-get install ${{matrix.dependenices}}
+
+      - name: test
+        env:
+          CC: ${{matrix.cc || matrix.compiler}}
+          CFLAGS: -Werror -Wpedantic -Wshadow ${{matrix.cflags}}
+          CPPFLAGS: ${{matrix.cppflags}}
+          DEBUG: -g -O2 ${{matrix.debug}}
+          EXEC: ${{matrix.exec}}
+          VALGRIND_OPTS: ${{matrix.valgrind}}
+        run: |
+          set -ex
+          ${CC} -v
+          MAKE="make -j `${{matrix.nproc}}`"
+          ./configure || :
+          cat config.log
+          ${MAKE} test
+          # Ensure assertions are free from side effects.
+          env CPPFLAGS="${CPPFLAGS} -DNDEBUG" ./configure || :
+          cat config.log
+          ${MAKE} test
