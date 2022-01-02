@@ -113,7 +113,7 @@ make install
 
 ## Copyright
 
-Copyright (c) 2019 Calle Erlandsson, Anton Lindqvist & thoughtbot.
+Copyright (c) 2022 Calle Erlandsson, Anton Lindqvist & thoughtbot.
 
 [crux]: https://github.com/6c37/crux-ports
 [current]: https://github.com/mptre/pick/blob/master/CONTRIBUTING.md
