@@ -1,15 +1,3 @@
-include ${.CURDIR}/../config.mk
-
-PROG=	pty
-
-SRCS+=	pty.c
-SRCS+=	compat-reallocarray.c
-
-OBJS=	${SRCS:.c=.o}
-DEPS=	${SRCS:.c=.d}
-
-CFLAGS+=	-I${.CURDIR}/..
-
 TESTS+=	key-alt-enter.sh
 TESTS+=	key-backspace.sh
 TESTS+=	key-ctrl-a.sh
@@ -44,24 +32,7 @@ TESTS+=	opt-x.sh
 
 .SUFFIXES: .sh .fake
 
-all: ${PROG}
-	${MAKE} -C ${.CURDIR} \
-		"PTY=${.OBJDIR}/${PROG}" \
-		test
-
-${PROG}: ${OBJS}
-	${CC} ${DEBUG} -o ${PROG} ${OBJS}
-
-compat-reallocarray.c: ${.CURDIR}/../compat-reallocarray.c
-	@cp ${.CURDIR}/../compat-reallocarray.c .
-
-clean:
-	rm -f ${DEPS} ${OBJS} ${PROG} compat-reallocarray.c
-.PHONY: clean
-
 test: ${TESTS:.sh=.fake}
 
 .sh.fake:
 	sh ${.CURDIR}/t.sh ${TESTFLAGS} ${.CURDIR}/util.sh ${.CURDIR}/$<
-
--include ${DEPS}

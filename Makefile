@@ -4,16 +4,26 @@ VERSION=	4.0.0
 
 PROG=	pick
 
-SRCS+= compat-pledge.c
-SRCS+= compat-reallocarray.c
-SRCS+= compat-strtonum.c
-SRCS+= pick.c
+SRCS+=	compat-pledge.c
+SRCS+=	compat-reallocarray.c
+SRCS+=	compat-strtonum.c
+SRCS+=	pick.c
 
 OBJS=	${SRCS:.c=.o}
-DEPS=   ${SRCS:.c=.d}
+DEPS=	${SRCS:.c=.d}
 
 KNFMT+=	compat-pledge.c
 KNFMT+=	pick.c
+
+PROG_pty=	pty
+
+SRCS_pty+=	compat-reallocarray.c
+SRCS_pty+=	pty.c
+
+OBJS_pty+=	${SRCS_pty:.c=.o}
+DEPS_pty+=	${SRCS_pty:.c=.d}
+
+KNFMT+=	pty.c
 
 DISTFILES+=	CHANGELOG.md
 DISTFILES+=	CODE_OF_CONDUCT.md
@@ -71,8 +81,12 @@ all: ${PROG}
 ${PROG}: ${OBJS}
 	${CC} ${DEBUG} -o ${PROG} ${OBJS} ${LDFLAGS}
 
+${PROG_pty}: ${OBJS_pty}
+	${CC} ${DEBUG} -o ${PROG_pty} ${OBJS_pty} ${LDFLAGS}
+
 clean:
-	rm -f ${DEPS} ${OBJS} ${PROG}
+	rm -f ${DEPS} ${OBJS} ${PROG} \
+		${DEPS_pty} ${OBJS_pty} ${PROG_pty}
 .PHONY: clean
 
 dist:
@@ -104,9 +118,10 @@ lint:
 	cd ${.CURDIR} && knfmt -d ${KNFMT}
 .PHONY: lint
 
-test: all
+test: ${PROG} ${PROG_pty}
 	${MAKE} -C ${.CURDIR}/tests \
-		"PICK=${.OBJDIR}/${PROG}"
+		"PICK=${.OBJDIR}/${PROG}" \
+		"PTY=${.OBJDIR}/${PROG_pty}"
 .PHONY: test
 
 -include ${DEPS}
