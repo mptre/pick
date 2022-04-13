@@ -104,7 +104,7 @@ dist:
 .PHONY: dist
 
 format:
-	cd ${.CURDIR} && knfmt -i ${KNFMT}
+	cd ${.CURDIR} && knfmt -is ${KNFMT}
 .PHONY: format
 
 install: all
@@ -115,7 +115,7 @@ install: all
 .PHONY: install
 
 lint:
-	cd ${.CURDIR} && knfmt -d ${KNFMT}
+	cd ${.CURDIR} && knfmt -ds ${KNFMT}
 .PHONY: lint
 
 test: ${PROG} ${PROG_pty}
