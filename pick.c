@@ -106,9 +106,9 @@ main(int argc, char *argv[])
 {
 	const struct choice *choice;
 	char *input;
-	int c;
 	int output_description = 0;
 	int rc = 0;
+	int c;
 
 	setlocale(LC_CTYPE, "");
 
@@ -255,8 +255,8 @@ get_choices(void)
 char *
 eager_strpbrk(const char *string, const char *separators)
 {
-	char *tmp_ptr;
 	char *ptr = NULL;
+	char *tmp_ptr;
 
 	for (tmp_ptr = strpbrk(string, separators);
 	    tmp_ptr;
@@ -270,10 +270,10 @@ const struct choice *
 selected_choice(void)
 {
 	const char *buf;
-	size_t cursor_position, i, j, length, xscroll;
 	size_t choices_count = 0;
 	size_t selection = 0;
 	size_t yscroll = 0;
+	size_t cursor_position, i, j, length, xscroll;
 	int dochoices = 0;
 	int dofilter = 1;
 	int query_grew = 0;

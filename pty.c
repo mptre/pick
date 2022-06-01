@@ -100,7 +100,7 @@ parsekeys(const char *path)
 	char *buf;
 	size_t len = 0;
 	size_t size = 16;
-	int c, esc, ctrl;
+	int c, ctrl, esc;
 
 	if ((fh = fopen(path, "r")) == NULL)
 		err(1, "fopen: %s", path);
@@ -209,8 +209,8 @@ parent(int master, int slave, const char *keys)
 	char buf[BUFSIZ];
 	fd_set rfd;
 	struct timeval timeout;
-	size_t len;
 	size_t written = 0;
+	size_t len;
 
 	len = strlen(keys);
 
