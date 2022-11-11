@@ -69,6 +69,7 @@ check_dead() {
 check_gnu_source() {
 	cat <<-EOF >"$TMP1"
 	#include <time.h>
+	int wcwidth(wchar_t wc);
 
 	int main(void) {
 		struct tm tm;
@@ -84,6 +85,7 @@ check_gnu_source() {
 check_pledge() {
 	compile <<-EOF
 	#include <unistd.h>
+	int pledge(char*, char*);
 
 	int main(void) {
 		return !(pledge("stdio", NULL) == 0);
@@ -104,6 +106,7 @@ check_reallocarray() {
 check_strtonum() {
 	compile <<-EOF
 	#include <stdlib.h>
+	long long strtonum(const char *nptr, long long minval, long long maxval,const char **errstr);
 
 	int main(void) {
 		return !(strtonum("1", 1, 2, NULL) != 0);

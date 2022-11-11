@@ -21,6 +21,8 @@
 		errx(1, #capability ": unknown terminfo capability");	\
 } while (0)
 
+extern int wcwidth(wchar_t wc);
+
 enum key {
 	UNKNOWN = 0,
 	ALT_ENTER = 1,
