@@ -21,6 +21,12 @@ plugin.
 
 ## Installation
 
+### Arch Linux
+
+```sh
+yay -S pick
+```
+
 ### CRUX
 
 Available in [`6c37/crux-ports`][crux].
