@@ -89,6 +89,10 @@ clean:
 		${DEPS_pty} ${OBJS_pty} ${PROG_pty}
 .PHONY: clean
 
+cleandir: clean
+	cd ${.CURDIR} && rm -f config.h config.log config.mk
+.PHONY: cleandir
+
 dist:
 	set -e; \
 	d=${PROG}-${VERSION}; \
