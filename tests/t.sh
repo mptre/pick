@@ -97,19 +97,13 @@ testcase() {
 	done
 	TCDESC="$*"
 
-	if [ -s "$INCLUDE" ]; then
-		case "$FILTER" in
-		f)	echo "$TCDESC";;
-		t)	echo "$_tags";;
-		esac | grep -q -f "$INCLUDE" && return 0
-	elif [ -s "$EXCLUDE" ]; then
-		case "$FILTER" in
-		F)	echo "$TCDESC";;
-		T)	echo "$_tags";;
-		esac | grep -q -f "$EXCLUDE" || return 0
-	else
+	if _runnable "$TCDESC" "$_tags"; then
+		if command -v setup >/dev/null 2>&1; then
+			setup
+		fi
 		return 0
 	fi
+
 	_report -p SKIP
 	return 1
 }
@@ -149,6 +143,30 @@ _report() {
 		[ $_stdin -eq 1 ] && cat
 	} >"$_tmp"
 	cat <"$_tmp" 1>&2
+}
+
+# _runnable description [tags]
+_runnable() {
+	local _desc
+	local _tags
+
+	_desc="$1"; : "${_desc:?}"
+	_tags="$2"
+
+	if [ -s "$INCLUDE" ]; then
+		case "$FILTER" in
+		f)	echo "$_desc";;
+		t)	echo "$_tags";;
+		esac | grep -q -f "$INCLUDE" && return 0
+	elif [ -s "$EXCLUDE" ]; then
+		case "$FILTER" in
+		F)	echo "$_desc";;
+		T)	echo "$_tags";;
+		esac | grep -q -f "$EXCLUDE" || return 0
+	else
+		return 0
+	fi
+	return 1
 }
 
 # atexit file ...
