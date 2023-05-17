@@ -15,11 +15,11 @@
 #include <termios.h>
 #include <unistd.h>
 
-__dead static void	 child(int, int, int, char **);
+static __dead void	 child(int, int, int, char **);
 static void		 parent(int, int, const char *);
 static char		*parsekeys(const char *);
 static void		 sighandler(int);
-__dead static void	 usage(void);
+static __dead void	 usage(void);
 
 /*
  * Mandatory environment variables required by pick to operate correctly.
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 	return 0;
 }
 
-__dead static void
+static __dead void
 usage(void)
 {
 	fprintf(stderr, "usage: pick-test [-k path] -- utility "
@@ -142,7 +142,7 @@ sighandler(int sig)
 	gotsig = sig == SIGCHLD;
 }
 
-__dead static void
+static __dead void
 child(int master, int slave, int argc, char **argv)
 {
 	const char **env;

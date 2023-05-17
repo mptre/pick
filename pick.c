@@ -299,7 +299,7 @@ selected_choice(void)
 		}
 
 		tty_putp(cursor_invisible, 0);
-		tty_putp(carriage_return, 1);	/* move cursor to first column */
+		tty_putp(carriage_return, 1); /* move cursor to first column */
 		if (cursor_position >= tty_columns)
 			xscroll = cursor_position - tty_columns + 1;
 		else
@@ -310,7 +310,7 @@ selected_choice(void)
 				yscroll = selection - choices_lines + 1;
 			choices_count = print_choices(yscroll, selection);
 		}
-		tty_putp(carriage_return, 1);	/* move cursor to first column */
+		tty_putp(carriage_return, 1); /* move cursor to first column */
 		for (i = j = 0; i < cursor_position; j++)
 			while (isu8cont(query[++i]))
 				continue;
@@ -463,10 +463,11 @@ selected_choice(void)
 					err(1, NULL);
 			}
 
-			if (cursor_position < query_length)
+			if (cursor_position < query_length) {
 				memmove(query + cursor_position + length,
 				    query + cursor_position,
 				    query_length - cursor_position);
+			}
 
 			memcpy(query + cursor_position, buf, length);
 			cursor_position += length;
@@ -834,10 +835,11 @@ print_choices(size_t offset, size_t selection)
 		if (choice->score == 0 && query_length > 0)
 			break;
 
-		if (i - offset < choices_lines)
+		if (i - offset < choices_lines) {
 			print_line(choice->string, choice->length,
 			    i == selection, choice->match_start,
 			    choice->match_end);
+		}
 	}
 
 	if (i - offset < choices.length && i - offset < choices_lines) {
